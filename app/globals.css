@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+    --background: #ffffff;
+    --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #0a0a0a;
+        --foreground: #ededed;
+    }
+}
+
+body {
+    color: var(--foreground);
+    background: var(--background);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
+}
+
+/* Hide Next.js Dev Tools / Turbopack Indicator */
+nextjs-portal,
+#nextjs-dev-tools-overlay,
+[data-nextjs-toast] {
+    display: none !important;
+}
+
+/* Custom Map Popup Styles */
+.custom-popup-card .leaflet-popup-content-wrapper {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    overflow: visible !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.custom-popup-card .leaflet-popup-content {
+    margin: 0 !important;
+    width: 280px !important;
+    overflow: visible !important;
+}
+
+.custom-popup-card .leaflet-popup-tip-container {
+    /* Optional: Adjust tip or hide it if desired, but keeping it is fine */
+}
+
+.custom-popup-card .leaflet-popup-close-button {
+    display: none;
+    /* Hide default close button as per design or custom one */
+}
