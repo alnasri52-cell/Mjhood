@@ -7,6 +7,11 @@ export default function Home() {
         <p className="text-gray-500 max-w-md mx-auto">
           We are currently preparing our platform for launch. Please check back soon.
         </p>
+
+        {/* Secret Developer Access */}
+        <div className="pt-20 opacity-0 hover:opacity-100 transition-opacity duration-500">
+          <a href="/map" className="text-xs text-gray-800 hover:text-gray-600">Developer Access</a>
+        </div>
       </div>
     </div>
   );
