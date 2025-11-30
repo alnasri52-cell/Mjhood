@@ -16,7 +16,7 @@ export default function MapPage() {
     const { t, dir } = useLanguage();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
-    const [viewMode, setViewMode] = useState<'services' | 'needs' | 'both'>('services');
+    const [viewMode, setViewMode] = useState<'services' | 'needs' | 'both'>('both');
 
     // Get categories based on view mode
     // In "both" mode, only show "All" filter (Option B)
