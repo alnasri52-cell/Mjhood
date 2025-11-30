@@ -74,7 +74,7 @@ export default function MapHeader({
             </div>
 
             {/* View Mode Toggle - Moved below search */}
-            <div className="absolute top-24 left-1/2 transform -translate-x-1/2 z-[90] bg-white/90 backdrop-blur-sm rounded-full shadow-lg p-1 flex items-center border border-gray-200 mt-2">
+            <div className="absolute top-32 left-1/2 transform -translate-x-1/2 z-[90] bg-white/90 backdrop-blur-sm rounded-full shadow-lg p-1 flex items-center border border-gray-200">
                 <button
                     onClick={() => setViewMode('services')}
                     className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${viewMode === 'services'
