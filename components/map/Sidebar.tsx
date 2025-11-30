@@ -246,19 +246,19 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                     <div className="space-y-2">
                         <button
                             onClick={() => openModal('login')}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                            className="w-full flex items-center justify-center md:justify-start gap-0 md:gap-3 px-2 md:px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
                         >
                             <LogIn className="w-5 h-5 min-w-[20px]" />
-                            <span className="opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300 text-sm font-bold">
+                            <span className="opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300 text-sm font-bold overflow-hidden whitespace-nowrap">
                                 {t('login' as any)}
                             </span>
                         </button>
                         <button
                             onClick={() => openModal('signup')}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-[#00AEEF] text-white hover:bg-[#0095cc] transition-all shadow-md shadow-blue-200"
+                            className="w-full flex items-center justify-center md:justify-start gap-0 md:gap-3 px-2 md:px-3 py-2 rounded-lg bg-[#00AEEF] text-white hover:bg-[#0095cc] transition-all shadow-md shadow-blue-200"
                         >
                             <UserPlus className="w-5 h-5 min-w-[20px]" />
-                            <span className="opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300 text-sm font-bold">
+                            <span className="opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300 text-sm font-bold overflow-hidden whitespace-nowrap">
                                 {t('signup' as any)}
                             </span>
                         </button>
@@ -269,10 +269,10 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                 {onOpenGuide && (
                     <button
                         onClick={onOpenGuide}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                        className="w-full flex items-center justify-center md:justify-start gap-0 md:gap-3 px-2 md:px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
                     >
                         <HelpCircle className="w-5 h-5 min-w-[20px]" />
-                        <span className="opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300 text-sm font-medium">
+                        <span className="opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300 text-sm font-medium overflow-hidden whitespace-nowrap">
                             {t('howItWorks' as any)}
                         </span>
                     </button>
@@ -281,10 +281,10 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                 {/* Language Toggle */}
                 <button
                     onClick={toggleLanguage}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                    className="w-full flex items-center justify-center md:justify-start gap-0 md:gap-3 px-2 md:px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
                 >
                     <Globe className="w-5 h-5 min-w-[20px]" />
-                    <span className="opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300 text-sm font-medium">
+                    <span className="opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300 text-sm font-medium overflow-hidden whitespace-nowrap">
                         {language === 'en' ? 'العربية' : 'English'}
                     </span>
                 </button>

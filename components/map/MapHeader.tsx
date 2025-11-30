@@ -26,39 +26,8 @@ export default function MapHeader({
 
     return (
         <>
-            {/* View Mode Toggle */}
-            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[100] bg-white rounded-full shadow-lg p-1 flex items-center border border-gray-200">
-                <button
-                    onClick={() => setViewMode('services')}
-                    className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'services'
-                        ? 'bg-black text-white shadow-md'
-                        : 'bg-transparent text-gray-500 hover:text-gray-900'
-                        }`}
-                >
-                    {t('services' as any)}
-                </button>
-                <button
-                    onClick={() => setViewMode('needs')}
-                    className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'needs'
-                        ? 'bg-black text-white shadow-md'
-                        : 'bg-transparent text-gray-500 hover:text-gray-900'
-                        }`}
-                >
-                    {t('needs' as any)}
-                </button>
-                <button
-                    onClick={() => setViewMode('both')}
-                    className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'both'
-                        ? 'bg-black text-white shadow-md'
-                        : 'bg-transparent text-gray-500 hover:text-gray-900'
-                        }`}
-                >
-                    {t('both' as any)}
-                </button>
-            </div>
-
-            {/* Search & Filter */}
-            <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-[100] w-full pointer-events-none px-4">
+            {/* Search & Filter - Now at the top for better mobile access */}
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[100] w-full pointer-events-none px-4">
                 <div className="pointer-events-auto space-y-3 max-w-md mx-auto">
                     {/* Search Bar */}
                     <div className="relative">
@@ -77,7 +46,7 @@ export default function MapHeader({
                 {/* Category Pills - Only show when not in "both" mode */}
                 {viewMode !== 'both' && (
                     <div className="pointer-events-auto mt-3 overflow-x-auto pb-2 scrollbar-hide">
-                        <div className="flex gap-2 min-w-max px-2">
+                        <div className="flex gap-2 min-w-max px-2 justify-center">
                             <button
                                 onClick={() => onCategoryChange('')}
                                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shadow-md transition-colors ${selectedCategory === ''
@@ -102,6 +71,37 @@ export default function MapHeader({
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* View Mode Toggle - Moved below search */}
+            <div className="absolute top-24 left-1/2 transform -translate-x-1/2 z-[90] bg-white/90 backdrop-blur-sm rounded-full shadow-lg p-1 flex items-center border border-gray-200 mt-2">
+                <button
+                    onClick={() => setViewMode('services')}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${viewMode === 'services'
+                        ? 'bg-black text-white shadow-md'
+                        : 'bg-transparent text-gray-500 hover:text-gray-900'
+                        }`}
+                >
+                    {t('services' as any)}
+                </button>
+                <button
+                    onClick={() => setViewMode('needs')}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${viewMode === 'needs'
+                        ? 'bg-black text-white shadow-md'
+                        : 'bg-transparent text-gray-500 hover:text-gray-900'
+                        }`}
+                >
+                    {t('needs' as any)}
+                </button>
+                <button
+                    onClick={() => setViewMode('both')}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${viewMode === 'both'
+                        ? 'bg-black text-white shadow-md'
+                        : 'bg-transparent text-gray-500 hover:text-gray-900'
+                        }`}
+                >
+                    {t('both' as any)}
+                </button>
             </div>
         </>
     );
