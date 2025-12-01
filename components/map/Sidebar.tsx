@@ -188,9 +188,18 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                             alt="Mjhood Text"
                             className="h-24 w-auto object-contain"
                         />
-                        <span className="text-sm text-gray-500 font-bold mt-2 text-center whitespace-nowrap">
-                            {t('slogan')}
-                        </span>
+                        {/* Slogan */}
+                        <div className={`text-[11px] font-bold mt-1 transition-opacity duration-300 whitespace-nowrap`}>
+                            {language === 'en' ? (
+                                <span>
+                                    <span className="text-[#00AEEF]">Efforts</span> <span className="text-slate-700">meet</span> <span className="text-[#00AEEF]">Opportunities</span>
+                                </span>
+                            ) : (
+                                <span>
+                                    <span className="text-[#00AEEF]">إلتقاء</span> <span className="text-slate-700">الجهود</span> <span className="text-[#00AEEF]">بالفرص</span>
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </Link>
             </div>
