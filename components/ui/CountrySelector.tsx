@@ -19,7 +19,7 @@ export default function CountrySelector({ value, onChange, required = false, cla
             value={value}
             onChange={(e) => onChange(e.target.value)}
             required={required}
-            className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white ${className}`}
+            className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white text-black ${className}`}
         >
             <option value="">{t('selectCountry')}</option>
 

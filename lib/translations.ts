@@ -28,7 +28,7 @@ export const translations = {
         verifiedNeighbor: 'Verified Neighbor',
         neighbor: 'Neighbor',
         safetyTitle: 'Safety First:',
-        safetyText: 'Always meet in public places or verify details before inviting someone to your home. Local does not conduct background checks.',
+        safetyText: 'Always meet in public places or verify details before inviting someone to your home. Mjhood does not conduct background checks.',
 
         // My Services
         myServicesTitle: 'My Services',
@@ -73,7 +73,7 @@ export const translations = {
         noResults: 'No talents found matching your criteria. Try adjusting your filters.',
 
         // Map Page
-        mapSearchPlaceholder: 'Search Local...',
+        mapSearchPlaceholder: 'Search Mjhood...',
         allPill: 'All',
 
         // Categories
@@ -229,9 +229,9 @@ export const translations = {
         password: 'Password',
         signInButton: 'Sign In',
         signingIn: 'Signing In...',
-        newToLocal: 'New to Local?',
+        newToLocal: 'New to Mjhood?',
         createAccount: 'Create an account',
-        joinLocal: 'Join Local',
+        joinLocal: 'Join Mjhood',
         connectNeighborhood: 'Connect with your neighborhood.',
         fullName: 'Full Name',
         username: 'Username',
@@ -369,7 +369,7 @@ export const translations = {
         verifiedNeighbor: 'جار موثوق',
         neighbor: 'جار',
         safetyTitle: 'السلامة أولاً:',
-        safetyText: 'قابل دائماً في أماكن عامة أو تحقق من التفاصيل قبل دعوة شخص ما لمنزلك. "لوكال" لا يجري فحوصات خلفية.',
+        safetyText: 'قابل دائماً في أماكن عامة أو تحقق من التفاصيل قبل دعوة شخص ما لمنزلك. "مجهود" لا يجري فحوصات خلفية.',
 
         // My Services
         myServicesTitle: 'خدماتي',
@@ -570,9 +570,9 @@ export const translations = {
         password: 'كلمة المرور',
         signInButton: 'تسجيل الدخول',
         signingIn: 'جاري تسجيل الدخول...',
-        newToLocal: 'جديد في لوكال؟',
+        newToLocal: 'جديد في مجهود؟',
         createAccount: 'إنشاء حساب',
-        joinLocal: 'انضم إلى لوكال',
+        joinLocal: 'انضم إلى مجهود',
         connectNeighborhood: 'تواصل مع حيك.',
         fullName: 'الاسم الكامل',
         username: 'اسم المستخدم',
