@@ -1,8 +1,6 @@
 // Service Worker for Mjhood PWA
-const CACHE_NAME = 'mjhood-v1';
+const CACHE_NAME = 'mjhood-v2'; // Increment version to force update
 const urlsToCache = [
-    '/',
-    '/map',
     '/manifest.json',
     '/icons/icon-192x192.png',
     '/icons/icon-512x512.png',
@@ -20,33 +18,51 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-// Fetch event - serve from cache when offline
+// Fetch event - network-first for HTML, cache-first for assets
 self.addEventListener('fetch', (event) => {
+    const { request } = event;
+    const url = new URL(request.url);
+
+    // Network-first strategy for HTML pages
+    if (request.headers.get('accept').includes('text/html')) {
+        event.respondWith(
+            fetch(request)
+                .then((response) => {
+                    // Clone and cache the response
+                    const responseToCache = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(request, responseToCache);
+                    });
+                    return response;
+                })
+                .catch(() => {
+                    // If network fails, try cache
+                    return caches.match(request);
+                })
+        );
+        return;
+    }
+
+    // Cache-first strategy for static assets (images, fonts, etc.)
     event.respondWith(
-        caches.match(event.request)
+        caches.match(request)
             .then((response) => {
-                // Cache hit - return response
                 if (response) {
                     return response;
                 }
-                return fetch(event.request).then(
-                    (response) => {
-                        // Check if valid response
-                        if (!response || response.status !== 200 || response.type !== 'basic') {
-                            return response;
-                        }
-
-                        // Clone the response
-                        const responseToCache = response.clone();
-
-                        caches.open(CACHE_NAME)
-                            .then((cache) => {
-                                cache.put(event.request, responseToCache);
-                            });
-
+                return fetch(request).then((response) => {
+                    // Only cache successful responses
+                    if (!response || response.status !== 200 || response.type !== 'basic') {
                         return response;
                     }
-                );
+
+                    const responseToCache = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(request, responseToCache);
+                    });
+
+                    return response;
+                });
             })
     );
 });
