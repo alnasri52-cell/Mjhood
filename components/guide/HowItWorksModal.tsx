@@ -18,7 +18,7 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
         {
             title: t('guideWelcomeTitle'),
             text: t('guideWelcomeText'),
-            icon: <Heart className="w-16 h-16 text-blue-600" />,
+            icon: <img src="/mjhood-icon.png" alt="Mjhood Icon" className="w-32 h-32" />,
             color: 'bg-blue-50'
         },
         {
@@ -89,7 +89,7 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
                                 </div>
 
                                 <div className="mt-2 flex flex-col items-center text-center">
-                                    <div className={`w-32 h-32 rounded-full flex items-center justify-center mb-6 ${steps[step].color} transition-colors duration-300`}>
+                                    <div className="mb-6">
                                         {steps[step].icon}
                                     </div>
 
