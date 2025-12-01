@@ -155,9 +155,9 @@ export const translations = {
 
         // About Page
         aboutTitle: 'About Us',
-        aboutText1: 'Welcome to Mjhood, the community-driven platform where effort meets opportunity. Our mission is to bridge the gap between local needs and the talents of neighbors, fostering a self-reliant and thriving community.',
-        aboutText2: 'Whether you have a skill to offer or a need to be filled, Mjhood connects you. From home repairs to tutoring, we believe that every effort counts and every opportunity matters.',
-        aboutText3: 'Founded in 2024, Mjhood is dedicated to empowering neighborhoods by turning individual efforts into collective progress.',
+        aboutText1: 'Mjhood is more than just a directory; it is a living map of our community’s potential. We believe that every neighborhood holds two powerful things: unspoken needs and untapped talent. Too often, they simply miss each other.',
+        aboutText2: 'Our mission is to bridge that gap by building a transparent, open network where local hard workers get the visibility they deserve and neighbors find the reliable help they need. We don\'t hide information or gate opportunities; we open the doors.',
+        aboutText3: 'By validating honest effort and clarifying community demand, we aren\'t just solving daily problems—we are helping every contributor turn their hard work into a sustainable livelihood and every neighborhood into a thriving economy.',
 
         // Contact Page
         contactTitle: 'Contact Us',
@@ -331,7 +331,7 @@ export const translations = {
         // How to Use Guide
         howItWorks: 'How to Use',
         guideWelcomeTitle: 'Welcome to Mjhood!',
-        guideWelcomeText: 'A local platform connecting talented people with opportunities in your neighborhood. Find services you need or offer your skills to help others.',
+        guideWelcomeText: 'Mjhood is your community map. See where local talent is available and pinpoint neighborhood needs. We connect honest effort with opportunities to build a stronger local economy together.',
         guideNeedsVsServicesTitle: 'Two Types of Posts',
         guideNeedsVsServicesText: 'Blue pins are Services (what people offer like plumbing, design). Red pins are Needs (what people are looking for). Browse both to find opportunities!',
         guideHowToAddTitle: 'Adding to the Map',
@@ -496,9 +496,9 @@ export const translations = {
 
         // About Page
         aboutTitle: 'عن مجهود',
-        aboutText1: 'مرحبًا بك في مجهود، المنصة المجتمعية حيث يلتقي الجهد بالفرصة. مهمتنا هي سد الفجوة بين الاحتياجات المحلية ومواهب الجيران، لتعزيز مجتمع مكتفٍ ذاتيًا ومزدهر.',
-        aboutText2: 'سواء كان لديك مهارة لتقديمها أو حاجة لتلبيتها، مجهود يوصلك. من الإصلاحات المنزلية إلى التدريس، نؤمن بأن كل مجهود له قيمة وكل فرصة تهم.',
-        aboutText3: 'تأسست مجهود في عام 2024، وهي مكرسة لتمكين الأحياء من خلال تحويل الجهود الفردية إلى تقدم جماعي.',
+        aboutText1: 'مجهود هو أكثر من مجرد دليل؛ إنه خريطة حية لإمكانات مجتمعنا. نؤمن بأن كل حي يمتلك شيئين قويين: احتياجات غير معلنة ومواهب غير مستغلة. في كثير من الأحيان، تفوتهم فرصة اللقاء ببعضهم البعض.',
+        aboutText2: 'مهمتنا هي سد هذه الفجوة من خلال بناء شبكة شفافة ومفتوحة حيث يحصل العاملون المحليون المجدون على الظهور الذي يستحقونه ويجد الجيران المساعدة الموثوقة التي يحتاجونها. نحن لا نخفي المعلومات ولا نغلق الفرص؛ بل نفتح الأبواب.',
+        aboutText3: 'من خلال التحقق من الجهد الصادق وتوضيح طلب المجتمع، نحن لا نحل المشاكل اليومية فحسب - بل نساعد كل مساهم على تحويل عمله الجاد إلى مصدر رزق مستدام وكل حي إلى اقتصاد مزدهر.',
 
         // Contact Page
         contactTitle: 'اتصل بنا',
@@ -672,7 +672,7 @@ export const translations = {
         // How to Use Guide
         howItWorks: 'كيفية الاستخدام',
         guideWelcomeTitle: 'مرحباً بك في مجهود!',
-        guideWelcomeText: 'منصة محلية تربط الأشخاص الموهوبين بالفرص في حيك. ابحث عن الخدمات التي تحتاجها أو قدم مهاراتك لمساعدة الآخرين.',
+        guideWelcomeText: 'مجهود هو خريطة مجتمعك. اكتشف المواهب المحلية وحدد احتياجات الحي. نربط الجهد الصادق بالفرص لبناء اقتصاد محلي أقوى معًا.',
         guideNeedsVsServicesTitle: 'نوعان من المنشورات',
         guideNeedsVsServicesText: 'الدبابيس الزرقاء هي الخدمات (ما يقدمه الناس مثل السباكة والتصميم). الدبابيس الحمراء هي الاحتياجات (ما يبحث عنه الناس). تصفح كليهما للعثور على الفرص!',
         guideHowToAddTitle: 'الإضافة إلى الخريطة',
