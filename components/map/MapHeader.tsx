@@ -46,7 +46,7 @@ export default function MapHeader({
                     <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-lg p-1 flex items-center border border-gray-200">
                         <button
                             onClick={() => setViewMode('services')}
-                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${viewMode === 'services'
+                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'services'
                                 ? 'bg-black text-white shadow-md'
                                 : 'bg-transparent text-gray-500 hover:text-gray-900'
                                 }`}
@@ -55,7 +55,7 @@ export default function MapHeader({
                         </button>
                         <button
                             onClick={() => setViewMode('needs')}
-                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${viewMode === 'needs'
+                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'needs'
                                 ? 'bg-black text-white shadow-md'
                                 : 'bg-transparent text-gray-500 hover:text-gray-900'
                                 }`}
@@ -64,7 +64,7 @@ export default function MapHeader({
                         </button>
                         <button
                             onClick={() => setViewMode('both')}
-                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${viewMode === 'both'
+                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'both'
                                 ? 'bg-black text-white shadow-md'
                                 : 'bg-transparent text-gray-500 hover:text-gray-900'
                                 }`}
