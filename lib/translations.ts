@@ -357,7 +357,7 @@ export const translations = {
         downloadCV: 'Download CV',
 
         confirmDeleteCV: 'Are you sure you want to delete your CV? This will remove it from the map.',
-        cvDeleted: 'CV deleted successfully',
+
         jobTitle: 'Job Title',
         professionalSummary: 'Professional Summary',
         workExperience: 'Work Experience',
@@ -782,7 +782,7 @@ export const translations = {
         downloadCV: 'تحميل السيرة الذاتية',
         deleteCV: 'حذف السيرة الذاتية',
         confirmDeleteCV: 'هل أنت متأكد أنك تريد حذف سيرتك الذاتية؟ سيؤدي هذا إلى إزالتها من الخريطة.',
-        cvDeleted: 'تم حذف السيرة الذاتية بنجاح',
+
         jobTitle: 'المسمى الوظيفي',
         professionalSummary: 'الملخص المهني',
         workExperience: 'الخبرات العملية',
