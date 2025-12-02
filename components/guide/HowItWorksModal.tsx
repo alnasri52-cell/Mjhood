@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { X, MapPin, Heart, Plus } from 'lucide-react';
+import { X, MapPin, Heart, Plus, FileText, Filter } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 interface HowItWorksModalProps {
@@ -33,10 +33,22 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
             color: 'bg-purple-50'
         },
         {
+            title: t('guideCVsTitle'),
+            text: t('guideCVsText'),
+            icon: <FileText className="w-16 h-16 text-green-500" />,
+            color: 'bg-green-50'
+        },
+        {
+            title: t('guideMapFiltersTitle'),
+            text: t('guideMapFiltersText'),
+            icon: <Filter className="w-16 h-16 text-indigo-500" />,
+            color: 'bg-indigo-50'
+        },
+        {
             title: t('guideHowToAddTitle'),
             text: t('guideHowToAddText'),
-            icon: <Plus className="w-16 h-16 text-green-600" />,
-            color: 'bg-green-50'
+            icon: <Plus className="w-16 h-16 text-blue-600" />,
+            color: 'bg-blue-50'
         }
     ];
 

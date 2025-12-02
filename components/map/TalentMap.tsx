@@ -22,6 +22,7 @@ import {
     UserPlus, CheckCircle, FileText
 } from 'lucide-react';
 import AddNeedModal from './AddNeedModal';
+import CVDetailModal from '@/components/cvs/CVDetailModal';
 import { LocalNeedCategory } from '@/lib/constants';
 
 // New structure: Services grouped by user location
@@ -277,6 +278,10 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
     const [reportModalOpen, setReportModalOpen] = useState(false);
     const [reportTarget, setReportTarget] = useState<{ id: string; name: string; type: 'service' | 'need' } | null>(null);
+
+    // CV Modal State
+    const [selectedCV, setSelectedCV] = useState<CV | null>(null);
+    const [isCVModalOpen, setIsCVModalOpen] = useState(false);
 
     const handleReport = (item: Service | Need, type: 'service' | 'need') => {
         setReportTarget({
@@ -993,6 +998,11 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
                                 {/* View Full CV Button */}
                                 <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedCV(cv);
+                                        setIsCVModalOpen(true);
+                                    }}
                                     className="inline-block w-full bg-green-600 text-white text-sm font-bold py-3 rounded-full hover:bg-green-700 transition shadow-sm uppercase tracking-wide"
                                 >
                                     {t('viewFullCV' as any)}
@@ -1002,6 +1012,13 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                     </Marker>
                 ))}
             </MarkerClusterGroup>
+
+            {/* CV Detail Modal */}
+            <CVDetailModal
+                isOpen={isCVModalOpen}
+                onClose={() => setIsCVModalOpen(false)}
+                cv={selectedCV}
+            />
 
 
 

@@ -335,7 +335,11 @@ export const translations = {
         guideNeedsVsServicesTitle: 'Two Types of Posts',
         guideNeedsVsServicesText: 'Blue pins are Services (what people offer like plumbing, design). Red pins are Needs (what people are looking for). Browse both to find opportunities!',
         guideHowToAddTitle: 'Adding to the Map',
-        guideHowToAddText: 'To offer services: Go to "Map Profile" and add what you do. To post a need: Go to "Needs & Opportunities" and describe what you\'re looking for.',
+        guideHowToAddText: 'To offer services: Go to "Map Profile". To post a need: Go to "Needs & Opportunities". To add a CV: Go to "Map Profile" > "Add CV".',
+        guideCVsTitle: 'Showcase Your Resume',
+        guideCVsText: 'Green pins are CVs. Job seekers can upload their resumes and pin their location to find local opportunities.',
+        guideMapFiltersTitle: 'Filter Your View',
+        guideMapFiltersText: 'Use the tabs at the top of the map to switch between Services, Needs, and CVs, or view them all at once.',
         gotIt: 'Got it!',
 
         // Map View Modes
@@ -351,7 +355,9 @@ export const translations = {
         createCV: 'Create CV',
         uploadCV: 'Upload CV',
         downloadCV: 'Download CV',
-        deleteCV: 'Delete CV',
+
+        confirmDeleteCV: 'Are you sure you want to delete your CV? This will remove it from the map.',
+        cvDeleted: 'CV deleted successfully',
         jobTitle: 'Job Title',
         professionalSummary: 'Professional Summary',
         workExperience: 'Work Experience',
@@ -741,7 +747,11 @@ export const translations = {
         guideNeedsVsServicesTitle: 'نوعان من المنشورات',
         guideNeedsVsServicesText: 'الدبابيس الزرقاء هي الخدمات (ما يقدمه الناس مثل السباكة والتصميم). الدبابيس الحمراء هي الاحتياجات (ما يبحث عنه الناس). تصفح كليهما للعثور على الفرص!',
         guideHowToAddTitle: 'الإضافة إلى الخريطة',
-        guideHowToAddText: 'لتقديم الخدمات: انتقل إلى "ملف الخريطة" وأضف ما تفعله. لنشر حاجة: انتقل إلى "الاحتياجات والفرص" واوصف ما تبحث عنه.',
+        guideHowToAddText: 'لتقديم الخدمات: انتقل إلى "ملف الخريطة". لنشر حاجة: انتقل إلى "الاحتياجات والفرص". لإضافة سيرة ذاتية: انتقل إلى "ملف الخريطة" > "إضافة سيرة ذاتية".',
+        guideCVsTitle: 'اعرض سيرتك الذاتية',
+        guideCVsText: 'الدبابيس الخضراء هي السير الذاتية. يمكن للباحثين عن عمل رفع سيرهم الذاتية وتثبيت موقعهم للعثور على فرص محلية.',
+        guideMapFiltersTitle: 'تصفية العرض',
+        guideMapFiltersText: 'استخدم علامات التبويب في أعلى الخريطة للتبديل بين الخدمات، الاحتياجات، والسير الذاتية، أو عرضها جميعاً.',
         gotIt: 'فهمت!',
 
         // Map View Modes
@@ -759,6 +769,8 @@ export const translations = {
         uploadCV: 'رفع السيرة الذاتية',
         downloadCV: 'تحميل السيرة الذاتية',
         deleteCV: 'حذف السيرة الذاتية',
+        confirmDeleteCV: 'هل أنت متأكد أنك تريد حذف سيرتك الذاتية؟ سيؤدي هذا إلى إزالتها من الخريطة.',
+        cvDeleted: 'تم حذف السيرة الذاتية بنجاح',
         jobTitle: 'المسمى الوظيفي',
         professionalSummary: 'الملخص المهني',
         workExperience: 'الخبرات العملية',

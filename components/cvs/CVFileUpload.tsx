@@ -20,8 +20,8 @@ export default function CVFileUpload({ fileUrl, onUpload }: CVFileUploadProps) {
         if (!file) return;
 
         // Validate file type
-        if (file.type !== 'application/pdf') {
-            setError(t('onlyPDFAllowed' as any) || 'Only PDF files are allowed');
+        if (!['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+            setError(t('invalidFileType' as any) || 'Only PDF, JPG, and PNG files are allowed');
             return;
         }
 
@@ -90,11 +90,11 @@ export default function CVFileUpload({ fileUrl, onUpload }: CVFileUploadProps) {
                             <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
                             <label className="cursor-pointer">
                                 <span className="text-indigo-600 font-medium hover:text-indigo-700">
-                                    {t('uploadPDF' as any) || 'Upload PDF'}
+                                    {t('uploadCV' as any) || 'Upload CV (PDF or Image)'}
                                 </span>
                                 <input
                                     type="file"
-                                    accept=".pdf"
+                                    accept=".pdf,.jpg,.jpeg,.png"
                                     className="hidden"
                                     onChange={handleFileChange}
                                 />

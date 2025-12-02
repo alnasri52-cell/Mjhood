@@ -14,6 +14,7 @@ import EducationSection from './EducationSection';
 import SkillsSection from './SkillsSection';
 import LanguagesSection from './LanguagesSection';
 import CVFileUpload from './CVFileUpload';
+import Modal from '@/components/ui/Modal';
 import dynamic from 'next/dynamic';
 
 const LocationPicker = dynamic(() => import('./LocationPicker'), {
@@ -32,6 +33,7 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -128,6 +130,28 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
             setError(err.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        setLoading(true);
+        try {
+            if (!user) throw new Error('Not authenticated');
+
+            const { error } = await supabase
+                .from('cvs')
+                .update({ deleted_at: new Date().toISOString() })
+                .eq('user_id', user.id);
+
+            if (error) throw error;
+
+            router.push('/map?view=cvs');
+            router.refresh();
+        } catch (err: any) {
+            console.error('Error deleting CV:', err);
+            setError(err.message);
+            setLoading(false);
+            setShowDeleteConfirm(false);
         }
     };
 
@@ -312,12 +336,23 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
                     onUpload={(url: string) => updateField('cv_file_url', url)}
                 />
 
-                {/* Submit Button */}
-                <div className="flex justify-end pt-4">
+                {/* Action Buttons */}
+                <div className="flex justify-between pt-4">
+                    {isEditing && (
+                        <button
+                            type="button"
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-full font-bold hover:bg-red-100 transition-colors"
+                        >
+                            <Trash2 className="w-5 h-5" />
+                            {t('deleteCV')}
+                        </button>
+                    )}
+
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-full font-bold hover:bg-indigo-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-full font-bold hover:bg-indigo-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${!isEditing ? 'ml-auto' : ''}`}
                     >
                         {loading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
@@ -328,6 +363,18 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
                     </button>
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleDelete}
+                title={t('deleteCV')}
+                message={t('confirmDeleteCV' as any)}
+                type="error"
+                confirmText={t('delete' as any) || 'Delete'}
+                cancelText={t('cancel' as any) || 'Cancel'}
+            />
         </form>
     );
 }
