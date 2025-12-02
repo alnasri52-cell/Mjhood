@@ -217,7 +217,7 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                                 </span>
                             ) : (
                                 <span>
-                                    <span className="text-[#00AEEF]">الجهود</span> <span className="text-slate-700">تلتقي</span> <span className="text-[#00AEEF]">بالفرص</span>
+                                    <span className="text-slate-700">إلتقاء</span> <span className="text-[#00AEEF]">الجهود</span> <span className="text-[#00AEEF]">بالفرص</span>
                                 </span>
                             )}
                         </div>
