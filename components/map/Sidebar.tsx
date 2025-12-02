@@ -213,11 +213,11 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                         <div className="text-lg font-extrabold mt-2 transition-opacity duration-300 text-center leading-tight">
                             {language === 'en' ? (
                                 <span>
-                                    <span className="text-[#00AEEF]">Efforts</span> <span className="text-slate-700">meet</span> <span className="text-[#00AEEF]">Opportunities</span>
+                                    <span className="text-black">Efforts</span> <span className="text-black">meet</span> <span className="text-black">Opportunities</span>
                                 </span>
                             ) : (
                                 <span>
-                                    <span className="text-slate-700">إلتقاء</span> <span className="text-[#00AEEF]">الجهود</span> <span className="text-[#00AEEF]">بالفرص</span>
+                                    <span className="text-black">إلتقاء</span> <span className="text-black">الجهود</span> <span className="text-black">بالفرص</span>
                                 </span>
                             )}
                         </div>
