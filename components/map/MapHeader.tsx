@@ -105,7 +105,10 @@ export default function MapHeader({
                                         : 'bg-white text-gray-700 hover:bg-gray-50'
                                         }`}
                                 >
-                                    {t(cat as any)}
+                                    {viewMode === 'cvs'
+                                        ? t(getCVTranslationKey(cat) as any)
+                                        : t(cat as any)
+                                    }
                                 </button>
                             ))}
                         </div>
@@ -115,3 +118,16 @@ export default function MapHeader({
         </>
     );
 }
+
+// Helper to map CV categories to translation keys
+const getCVTranslationKey = (category: string): string => {
+    switch (category) {
+        case 'IT & Development': return 'cvCategoryIT';
+        case 'Design & Creative': return 'cvCategoryDesign';
+        case 'Business & Finance': return 'cvCategoryBusiness';
+        case 'Legal & Admin': return 'cvCategoryLegal';
+        case 'Hospitality & Services': return 'cvCategoryHospitality';
+        case 'Trades & Crafts': return 'cvCategoryTrades';
+        default: return `cvCategory${category}`;
+    }
+};

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import MapHeader from '@/components/map/MapHeader';
-import { SERVICE_CATEGORIES, LOCAL_NEEDS_CATEGORIES } from '@/lib/constants';
+import { SERVICE_CATEGORIES, LOCAL_NEEDS_CATEGORIES, CV_CATEGORIES } from '@/lib/constants';
 
 // Dynamically import map components to avoid SSR issues with Leaflet
 const TalentMap = dynamic(() => import('@/components/map/TalentMap'), {
@@ -20,8 +20,10 @@ export default function MapPage() {
 
     // Get categories based on view mode
     // In "both" mode, only show "All" filter (Option B)
-    // CVs don't have categories, so show empty array
-    const categories = viewMode === 'both' || viewMode === 'cvs' ? [] : (viewMode === 'services' ? SERVICE_CATEGORIES : LOCAL_NEEDS_CATEGORIES);
+    const categories = viewMode === 'both' ? [] :
+        viewMode === 'services' ? SERVICE_CATEGORIES :
+            viewMode === 'needs' ? LOCAL_NEEDS_CATEGORIES :
+                CV_CATEGORIES;
 
     // Reset search when switching modes
     const handleViewModeChange = (mode: 'services' | 'needs' | 'cvs' | 'both') => {

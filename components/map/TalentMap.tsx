@@ -169,6 +169,69 @@ const getCategoryIcon = (category: string) => {
     });
 };
 
+// Map CV job titles to categories
+const getCVCategory = (jobTitle: string): string => {
+    const title = jobTitle.toLowerCase();
+
+    // Engineering
+    if (title.includes('مهندس') || title.includes('engineer') || title.includes('هندسة')) {
+        return 'Engineering';
+    }
+
+    // Healthcare
+    if (title.includes('طبيب') || title.includes('doctor') || title.includes('ممرض') || title.includes('nurse') ||
+        title.includes('صيدلان') || title.includes('pharmac') || title.includes('معالج') || title.includes('therapist')) {
+        return 'Healthcare';
+    }
+
+    // Education
+    if (title.includes('معلم') || title.includes('teacher') || title.includes('مدرس') || title.includes('مدرب') ||
+        title.includes('trainer') || title.includes('أستاذ') || title.includes('professor')) {
+        return 'Education';
+    }
+
+    // IT & Development
+    if (title.includes('مطور') || title.includes('developer') || title.includes('مبرمج') || title.includes('programmer') ||
+        title.includes('برمج') || title.includes('coding') || title.includes('تقني') || title.includes('tech')) {
+        return 'IT & Development';
+    }
+
+    // Design & Creative
+    if (title.includes('مصمم') || title.includes('designer') || title.includes('تصميم') || title.includes('design') ||
+        title.includes('مصور') || title.includes('photographer') || title.includes('فنان') || title.includes('artist')) {
+        return 'Design & Creative';
+    }
+
+    // Business & Finance
+    if (title.includes('محاسب') || title.includes('accountant') || title.includes('مدير') || title.includes('manager') ||
+        title.includes('مبيعات') || title.includes('sales') || title.includes('تسويق') || title.includes('marketing') ||
+        title.includes('محلل') || title.includes('analyst')) {
+        return 'Business & Finance';
+    }
+
+    // Legal & Admin
+    if (title.includes('محامي') || title.includes('lawyer') || title.includes('قانون') || title.includes('legal') ||
+        title.includes('موظف') || title.includes('admin') || title.includes('سكرتير') || title.includes('secretary')) {
+        return 'Legal & Admin';
+    }
+
+    // Hospitality & Services
+    if (title.includes('طاهي') || title.includes('chef') || title.includes('طبخ') || title.includes('cook') ||
+        title.includes('سائق') || title.includes('driver') || title.includes('استقبال') || title.includes('reception')) {
+        return 'Hospitality & Services';
+    }
+
+    // Trades & Crafts
+    if (title.includes('كهربائي') || title.includes('electric') || title.includes('سباك') || title.includes('plumb') ||
+        title.includes('نجار') || title.includes('carpenter') || title.includes('فني') || title.includes('technician') ||
+        title.includes('حداد') || title.includes('welder')) {
+        return 'Trades & Crafts';
+    }
+
+    return 'Other';
+};
+
+
 const getNeedCategoryIcon = (category: LocalNeedCategory) => {
     const props = { className: "w-4 h-4 text-white" };
     switch (category) {
@@ -597,12 +660,20 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         return true;
     });
 
-    // Filter CVs based on search term
+    // Filter CVs based on search term and category
     const filteredCVs = cvs.filter(cv => {
         // 0. Check View Mode
         if (viewMode === 'services' || viewMode === 'needs') return false;
 
-        // 1. Filter by Search Term
+        // 1. Filter by Category
+        if (selectedCategory) {
+            const cvCategory = getCVCategory(cv.job_title || '');
+            if (cvCategory !== selectedCategory) {
+                return false;
+            }
+        }
+
+        // 2. Filter by Search Term
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             const nameMatch = cv.full_name?.toLowerCase().includes(term);
@@ -1042,7 +1113,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 <Popup
                     position={[clickedLocation.lat, clickedLocation.lng]}
                     closeButton={false}
-                    autoPan={true}
+                    autoPan={false}
                     maxWidth={200}
                     minWidth={100}
                 >

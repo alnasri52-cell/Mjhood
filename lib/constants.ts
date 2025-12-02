@@ -96,3 +96,18 @@ export const LOCAL_NEEDS_CATEGORIES = [
 ] as const;
 
 export type LocalNeedCategory = typeof LOCAL_NEEDS_CATEGORIES[number];
+
+export const CV_CATEGORIES = [
+    "Engineering",
+    "Healthcare",
+    "Education",
+    "IT & Development",
+    "Design & Creative",
+    "Business & Finance",
+    "Legal & Admin",
+    "Hospitality & Services",
+    "Trades & Crafts",
+    "Other"
+] as const;
+
+export type CVCategory = typeof CV_CATEGORIES[number];

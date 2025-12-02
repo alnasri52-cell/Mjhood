@@ -345,7 +345,7 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
                             className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-full font-bold hover:bg-red-100 transition-colors"
                         >
                             <Trash2 className="w-5 h-5" />
-                            {t('deleteCV')}
+                            {t('deleteCV' as any)}
                         </button>
                     )}
 
@@ -369,7 +369,7 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
                 isOpen={showDeleteConfirm}
                 onClose={() => setShowDeleteConfirm(false)}
                 onConfirm={handleDelete}
-                title={t('deleteCV')}
+                title={t('deleteCV' as any)}
                 message={t('confirmDeleteCV' as any)}
                 type="error"
                 confirmText={t('delete' as any) || 'Delete'}

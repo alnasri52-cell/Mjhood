@@ -412,6 +412,18 @@ export const translations = {
         to: 'To',
         present: 'Present',
         stillWorking: 'I currently work here',
+
+        // CV Categories
+        cvCategoryEngineering: 'Engineering',
+        cvCategoryHealthcare: 'Healthcare',
+        cvCategoryEducation: 'Education',
+        cvCategoryIT: 'IT & Development',
+        cvCategoryDesign: 'Design & Creative',
+        cvCategoryBusiness: 'Business & Finance',
+        cvCategoryLegal: 'Legal & Admin',
+        cvCategoryHospitality: 'Hospitality & Services',
+        cvCategoryTrades: 'Trades & Crafts',
+        cvCategoryOther: 'Other',
     },
     ar: {
         // Sidebar
@@ -823,6 +835,18 @@ export const translations = {
         from: 'من',
         to: 'إلى',
         present: 'الحاضر',
-        stillWorking: 'ما زلت أعمل هنا',
+        stillWorking: 'أعمل هنا حالياً',
+
+        // CV Categories
+        cvCategoryEngineering: 'هندسة',
+        cvCategoryHealthcare: 'صحة',
+        cvCategoryEducation: 'تعليم',
+        cvCategoryIT: 'تقنية وبرمجة',
+        cvCategoryDesign: 'تصميم وإبداع',
+        cvCategoryBusiness: 'أعمال ومالية',
+        cvCategoryLegal: 'قانوني وإداري',
+        cvCategoryHospitality: 'ضيافة وخدمات',
+        cvCategoryTrades: 'حرف ومهن',
+        cvCategoryOther: 'أخرى',
     }
 };
