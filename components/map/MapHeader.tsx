@@ -4,8 +4,8 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Search } from 'lucide-react';
 
 interface MapHeaderProps {
-    viewMode: 'services' | 'needs' | 'both';
-    setViewMode: (mode: 'services' | 'needs' | 'both') => void;
+    viewMode: 'services' | 'needs' | 'cvs' | 'both';
+    setViewMode: (mode: 'services' | 'needs' | 'cvs' | 'both') => void;
     searchTerm: string;
     onSearchChange: (value: string) => void;
     selectedCategory: string;
@@ -42,7 +42,7 @@ export default function MapHeader({
                         <Search className={`absolute top-3.5 ${dir === 'rtl' ? 'right-4' : 'left-4'} text-gray-400`} size={20} />
                     </div>
 
-                    {/* View Mode Toggle - Now below search */}
+                    {/* View Mode Toggle - Now below search with CVs option */}
                     <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-lg p-1 flex items-center border border-gray-200">
                         <button
                             onClick={() => setViewMode('services')}
@@ -61,6 +61,15 @@ export default function MapHeader({
                                 }`}
                         >
                             {t('needs' as any)}
+                        </button>
+                        <button
+                            onClick={() => setViewMode('cvs')}
+                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'cvs'
+                                ? 'bg-black text-white shadow-md'
+                                : 'bg-transparent text-gray-500 hover:text-gray-900'
+                                }`}
+                        >
+                            {t('cvs' as any)}
                         </button>
                         <button
                             onClick={() => setViewMode('both')}

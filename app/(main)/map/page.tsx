@@ -16,14 +16,15 @@ export default function MapPage() {
     const { t, dir } = useLanguage();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
-    const [viewMode, setViewMode] = useState<'services' | 'needs' | 'both'>('both');
+    const [viewMode, setViewMode] = useState<'services' | 'needs' | 'cvs' | 'both'>('both');
 
     // Get categories based on view mode
     // In "both" mode, only show "All" filter (Option B)
-    const categories = viewMode === 'both' ? [] : (viewMode === 'services' ? SERVICE_CATEGORIES : LOCAL_NEEDS_CATEGORIES);
+    // CVs don't have categories, so show empty array
+    const categories = viewMode === 'both' || viewMode === 'cvs' ? [] : (viewMode === 'services' ? SERVICE_CATEGORIES : LOCAL_NEEDS_CATEGORIES);
 
     // Reset search when switching modes
-    const handleViewModeChange = (mode: 'services' | 'needs' | 'both') => {
+    const handleViewModeChange = (mode: 'services' | 'needs' | 'cvs' | 'both') => {
         setViewMode(mode);
         setSearchTerm('');
         setSelectedCategory('');

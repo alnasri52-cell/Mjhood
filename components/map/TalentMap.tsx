@@ -19,7 +19,7 @@ import {
     Instagram, Twitter, MessageCircle, Flag,
     ThumbsUp, ThumbsDown, ShoppingCart, Pill, DollarSign, Trees, DoorClosed,
     Moon, School, Stethoscope, Dumbbell, Coffee, Bus, Mail, BookOpen, Users,
-    UserPlus, CheckCircle
+    UserPlus, CheckCircle, FileText
 } from 'lucide-react';
 import AddNeedModal from './AddNeedModal';
 import { LocalNeedCategory } from '@/lib/constants';
@@ -93,10 +93,32 @@ interface Need {
     created_at: string;
 }
 
+interface CV {
+    id: string;
+    user_id: string;
+    full_name: string;
+    job_title: string;
+    summary: string;
+    latitude: number;
+    longitude: number;
+    phone?: string;
+    email?: string;
+    avatar_url?: string;
+    cv_file_url?: string;
+    work_experience?: any[];
+    education?: any[];
+    skills?: string[];
+    languages?: any[];
+    certifications?: any[];
+    portfolio_urls?: string[];
+    created_at: string;
+}
+
+
 interface TalentMapProps {
     searchTerm?: string;
     selectedCategory?: string;
-    viewMode?: 'services' | 'needs' | 'both';
+    viewMode?: 'services' | 'needs' | 'cvs' | 'both';
 }
 
 const getCategoryIcon = (category: string) => {
@@ -183,6 +205,22 @@ const getNeedIcon = (category: LocalNeedCategory) => {
     });
 };
 
+const getCVIcon = () => {
+    const iconHtml = renderToStaticMarkup(
+        <div className="w-8 h-8 rounded-full bg-[#10b981] flex items-center justify-center shadow-lg border-2 border-white">
+            <FileText className="w-4 h-4 text-white" />
+        </div>
+    );
+
+    return L.divIcon({
+        html: iconHtml,
+        className: 'custom-marker-icon',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+    });
+};
+
 import { useSearchParams } from 'next/navigation';
 
 // ...
@@ -224,6 +262,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     const { t } = useLanguage();
     const [services, setServices] = useState<Service[]>([]);
     const [needs, setNeeds] = useState<Need[]>([]);
+    const [cvs, setCvs] = useState<CV[]>([]);
     const [loading, setLoading] = useState(true);
     const [visibleServices, setVisibleServices] = useState<Service[]>([]);
     const map = useMap();
@@ -269,6 +308,28 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         } catch (err) {
             console.error('[TalentMap] Unexpected error fetching needs:', err);
             setNeeds([]);
+        }
+    };
+
+    const fetchCVs = async () => {
+        console.log('[TalentMap] Starting to fetch CVs...');
+        try {
+            let { data, error } = await supabase
+                .from('cvs')
+                .select('*')
+                .is('deleted_at', null)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.warn('[TalentMap] Error fetching CVs:', error);
+                setCvs([]);
+            } else {
+                console.log(`[TalentMap] Successfully fetched ${data?.length || 0} CVs`);
+                setCvs(data || []);
+            }
+        } catch (err) {
+            console.error('[TalentMap] Unexpected error fetching CVs:', err);
+            setCvs([]);
         }
     };
 
@@ -391,6 +452,9 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             if (viewMode === 'needs' || viewMode === 'both') {
                 fetchNeeds();
             }
+            if (viewMode === 'cvs' || viewMode === 'both') {
+                fetchCVs();
+            }
         }, 100);
 
         // Real-time subscription for services
@@ -431,6 +495,25 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             )
             .subscribe();
 
+        // Real-time subscription for CVs
+        const cvsChannel = supabase
+            .channel('cvs-map-realtime')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'cvs'
+                },
+                () => {
+                    // Simple refresh on change
+                    if (viewMode === 'cvs' || viewMode === 'both') {
+                        fetchCVs();
+                    }
+                }
+            )
+            .subscribe();
+
         // Polling fallback (every 30 seconds)
         const intervalId = setInterval(() => {
             if (viewMode === 'services' || viewMode === 'both') {
@@ -439,20 +522,24 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             if (viewMode === 'needs' || viewMode === 'both') {
                 fetchNeeds();
             }
+            if (viewMode === 'cvs' || viewMode === 'both') {
+                fetchCVs();
+            }
         }, 30000);
 
         return () => {
             clearTimeout(timeoutId);
             supabase.removeChannel(servicesChannel);
             supabase.removeChannel(needsChannel);
+            supabase.removeChannel(cvsChannel);
             clearInterval(intervalId);
         };
-    }, [viewMode]); // Removed fetchServices/fetchNeeds from dependency array to avoid loops if they are not stable
+    }, [viewMode]); // Removed fetchServices/fetchNeeds/fetchCVs from dependency array to avoid loops if they are not stable
 
     // Filter services based on search term and category
     const filteredServices = services.filter(service => {
         // 0. Check View Mode
-        if (viewMode === 'needs') return false;
+        if (viewMode === 'needs' || viewMode === 'cvs') return false;
 
         // Safety check for deleted items
         if ((service as any).deleted_at) return false;
@@ -482,7 +569,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     // Filter needs based on search term and category
     const filteredNeeds = needs.filter(need => {
         // 0. Check View Mode
-        if (viewMode === 'services') return false;
+        if (viewMode === 'services' || viewMode === 'cvs') return false;
 
         // 1. Filter by Category
         if (selectedCategory) {
@@ -498,6 +585,26 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             const descMatch = need.description?.toLowerCase().includes(term);
 
             if (!titleMatch && !descMatch) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    // Filter CVs based on search term
+    const filteredCVs = cvs.filter(cv => {
+        // 0. Check View Mode
+        if (viewMode === 'services' || viewMode === 'needs') return false;
+
+        // 1. Filter by Search Term
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            const nameMatch = cv.full_name?.toLowerCase().includes(term);
+            const jobTitleMatch = cv.job_title?.toLowerCase().includes(term);
+            const summaryMatch = cv.summary?.toLowerCase().includes(term);
+
+            if (!nameMatch && !jobTitleMatch && !summaryMatch) {
                 return false;
             }
         }
@@ -786,8 +893,8 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                                         }}
                                         disabled={votedNeeds.has(need.id)}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${votedNeeds.has(need.id)
-                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                : 'bg-green-50 text-green-600 hover:bg-green-100'
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                            : 'bg-green-50 text-green-600 hover:bg-green-100'
                                             }`}
                                     >
                                         <ThumbsUp className="w-4 h-4" />
@@ -810,8 +917,8 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                                         }}
                                         disabled={votedNeeds.has(need.id)}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${votedNeeds.has(need.id)
-                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                : 'bg-red-50 text-red-600 hover:bg-red-100'
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                            : 'bg-red-50 text-red-600 hover:bg-red-100'
                                             }`}
                                     >
                                         <ThumbsDown className="w-4 h-4" />
@@ -828,6 +935,67 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                                 >
                                     <Flag className="w-3 h-3" />
                                     Report this need
+                                </button>
+                            </div>
+                        </Popup>
+                    </Marker>
+                ))}
+            </MarkerClusterGroup>
+
+            {/* CVs Cluster Group */}
+            <MarkerClusterGroup
+                chunkedLoading
+                iconCreateFunction={(cluster: any) => {
+                    return L.divIcon({
+                        html: `<div class="flex items-center justify-center w-full h-full bg-[#10b981] text-white font-bold rounded-full border-2 border-white shadow-lg text-sm">
+                            ${cluster.getChildCount()}
+                        </div>`,
+                        className: 'custom-cluster-icon',
+                        iconSize: L.point(40, 40, true),
+                        iconAnchor: [20, 20],
+                    });
+                }}
+                maxClusterRadius={60}
+                spiderfyOnMaxZoom={true}
+            >
+                {filteredCVs.map((cv) => (
+                    <Marker
+                        key={cv.id}
+                        position={[cv.latitude, cv.longitude]}
+                        icon={getCVIcon()}
+                    >
+                        <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
+                            <div className="p-4 text-center">
+                                <h3 className="font-bold text-lg text-gray-900 mb-1">{cv.full_name}</h3>
+                                <span className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full mb-3">
+                                    {cv.job_title || t('cv' as any)}
+                                </span>
+
+                                {cv.summary && (
+                                    <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                                        {cv.summary}
+                                    </p>
+                                )}
+
+                                {/* Contact buttons */}
+                                <div className="flex justify-center gap-3 mb-4">
+                                    {cv.phone && (
+                                        <a
+                                            href={`https://wa.me/${cv.phone.replace(/\D/g, '')}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600 hover:bg-green-100 transition shadow-sm"
+                                        >
+                                            <MessageCircle className="w-4 h-4" />
+                                        </a>
+                                    )}
+                                </div>
+
+                                {/* View Full CV Button */}
+                                <button
+                                    className="inline-block w-full bg-green-600 text-white text-sm font-bold py-3 rounded-full hover:bg-green-700 transition shadow-sm uppercase tracking-wide"
+                                >
+                                    {t('viewFullCV' as any)}
                                 </button>
                             </div>
                         </Popup>

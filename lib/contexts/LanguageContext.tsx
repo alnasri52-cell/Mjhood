@@ -19,6 +19,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         const savedLang = localStorage.getItem('language') as Language;
         if (savedLang) {
             setLanguage(savedLang);
+        } else {
+            // Default to Arabic if no language is saved
+            setLanguage('ar');
+            localStorage.setItem('language', 'ar');
         }
     }, []);
 
