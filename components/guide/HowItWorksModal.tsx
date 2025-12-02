@@ -11,6 +11,7 @@ interface HowItWorksModalProps {
 }
 
 export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
+    // Force rebuild for guide updates
     const { t, dir } = useLanguage();
     const [step, setStep] = useState(0);
 
