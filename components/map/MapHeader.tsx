@@ -4,8 +4,8 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Search } from 'lucide-react';
 
 interface MapHeaderProps {
-    viewMode: 'services' | 'needs' | 'cvs' | 'both';
-    setViewMode: (mode: 'services' | 'needs' | 'cvs' | 'both') => void;
+    viewMode: 'services' | 'needs' | 'cvs' | 'resources' | 'both';
+    setViewMode: (mode: 'services' | 'needs' | 'cvs' | 'resources' | 'both') => void;
     searchTerm: string;
     onSearchChange: (value: string) => void;
     selectedCategory: string;
@@ -70,6 +70,15 @@ export default function MapHeader({
                                 }`}
                         >
                             {t('cvs' as any)}
+                        </button>
+                        <button
+                            onClick={() => setViewMode('resources')}
+                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'resources'
+                                ? 'bg-black text-white shadow-md'
+                                : 'bg-transparent text-gray-500 hover:text-gray-900'
+                                }`}
+                        >
+                            {t('resources' as any)}
                         </button>
                         <button
                             onClick={() => setViewMode('both')}

@@ -115,11 +115,29 @@ interface CV {
     created_at: string;
 }
 
+interface Resource {
+    id: string;
+    user_id: string;
+    title: string;
+    category: string;
+    description: string;
+    latitude: number;
+    longitude: number;
+    availability_type: 'rent' | 'borrow' | 'both';
+    price_type?: 'fixed' | 'range' | 'negotiable' | 'free';
+    price_min?: number;
+    price_max?: number;
+    price_currency?: string;
+    contact_phone?: string;
+    contact_method?: string;
+    created_at: string;
+}
+
 
 interface TalentMapProps {
     searchTerm?: string;
     selectedCategory?: string;
-    viewMode?: 'services' | 'needs' | 'cvs' | 'both';
+    viewMode?: 'services' | 'needs' | 'cvs' | 'resources' | 'both';
 }
 
 const getCategoryIcon = (category: string) => {
@@ -285,6 +303,39 @@ const getCVIcon = () => {
     });
 };
 
+const getResourceCategoryIcon = (category: string) => {
+    const props = { className: "w-4 h-4 text-white" };
+    switch (category) {
+        case "Tools & Equipment": return <Wrench {...props} />;
+        case "Vehicles": return <Car {...props} />;
+        case "Storage Space": return <DoorClosed {...props} />;
+        case "Event Space": return <Calendar {...props} />;
+        case "Parking Space": return <Car {...props} />;
+        case "Sports Equipment": return <Dumbbell {...props} />;
+        case "Electronics": return <Laptop {...props} />;
+        case "Furniture": return <HelpCircle {...props} />;
+        case "Garden Equipment": return <Flower {...props} />;
+        case "Party Supplies": return <Utensils {...props} />;
+        default: return <HelpCircle {...props} />;
+    }
+};
+
+const getResourceIcon = (category: string) => {
+    const iconHtml = renderToStaticMarkup(
+        <div className="w-8 h-8 rounded-full bg-[#9333ea] flex items-center justify-center shadow-lg border-2 border-white">
+            {getResourceCategoryIcon(category)}
+        </div>
+    );
+
+    return L.divIcon({
+        html: iconHtml,
+        className: 'custom-marker-icon',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+    });
+};
+
 import { useSearchParams } from 'next/navigation';
 
 // ...
@@ -327,6 +378,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     const [services, setServices] = useState<Service[]>([]);
     const [needs, setNeeds] = useState<Need[]>([]);
     const [cvs, setCvs] = useState<CV[]>([]);
+    const [resources, setResources] = useState<Resource[]>([]);
     const [loading, setLoading] = useState(true);
     const [visibleServices, setVisibleServices] = useState<Service[]>([]);
     const map = useMap();
@@ -335,8 +387,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newNeedLocation, setNewNeedLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [votedNeeds, setVotedNeeds] = useState<Set<string>>(new Set());
-    const [showClickPopup, setShowClickPopup] = useState(false);
-    const [clickedLocation, setClickedLocation] = useState<{ lat: number; lng: number } | null>(null);
+
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
     const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -398,6 +449,28 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         } catch (err) {
             console.error('[TalentMap] Unexpected error fetching CVs:', err);
             setCvs([]);
+        }
+    };
+
+    const fetchResources = async () => {
+        console.log('[TalentMap] Starting to fetch resources...');
+        try {
+            let { data, error } = await supabase
+                .from('resources')
+                .select('*')
+                .is('deleted_at', null)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.warn('[TalentMap] Error fetching resources:', error);
+                setResources([]);
+            } else {
+                console.log(`[TalentMap] Successfully fetched ${data?.length || 0} resources`);
+                setResources(data || []);
+            }
+        } catch (err) {
+            console.error('[TalentMap] Unexpected error fetching resources:', err);
+            setResources([]);
         }
     };
 
@@ -523,6 +596,9 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             if (viewMode === 'cvs' || viewMode === 'both') {
                 fetchCVs();
             }
+            if (viewMode === 'resources' || viewMode === 'both') {
+                fetchResources();
+            }
         }, 100);
 
         // Real-time subscription for services
@@ -582,6 +658,25 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             )
             .subscribe();
 
+        // Real-time subscription for Resources
+        const resourcesChannel = supabase
+            .channel('resources-map-realtime')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'resources'
+                },
+                () => {
+                    // Simple refresh on change
+                    if (viewMode === 'resources' || viewMode === 'both') {
+                        fetchResources();
+                    }
+                }
+            )
+            .subscribe();
+
         // Polling fallback (every 30 seconds)
         const intervalId = setInterval(() => {
             if (viewMode === 'services' || viewMode === 'both') {
@@ -593,6 +688,9 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             if (viewMode === 'cvs' || viewMode === 'both') {
                 fetchCVs();
             }
+            if (viewMode === 'resources' || viewMode === 'both') {
+                fetchResources();
+            }
         }, 30000);
 
         return () => {
@@ -600,6 +698,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             supabase.removeChannel(servicesChannel);
             supabase.removeChannel(needsChannel);
             supabase.removeChannel(cvsChannel);
+            supabase.removeChannel(resourcesChannel);
             clearInterval(intervalId);
         };
     }, [viewMode]); // Removed fetchServices/fetchNeeds/fetchCVs from dependency array to avoid loops if they are not stable
@@ -607,7 +706,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     // Filter services based on search term and category
     const filteredServices = services.filter(service => {
         // 0. Check View Mode
-        if (viewMode === 'needs' || viewMode === 'cvs') return false;
+        if (viewMode === 'needs' || viewMode === 'cvs' || viewMode === 'resources') return false;
 
         // Safety check for deleted items
         if ((service as any).deleted_at) return false;
@@ -637,7 +736,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     // Filter needs based on search term and category
     const filteredNeeds = needs.filter(need => {
         // 0. Check View Mode
-        if (viewMode === 'services' || viewMode === 'cvs') return false;
+        if (viewMode === 'services' || viewMode === 'cvs' || viewMode === 'resources') return false;
 
         // 1. Filter by Category
         if (selectedCategory) {
@@ -663,7 +762,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     // Filter CVs based on search term and category
     const filteredCVs = cvs.filter(cv => {
         // 0. Check View Mode
-        if (viewMode === 'services' || viewMode === 'needs') return false;
+        if (viewMode === 'services' || viewMode === 'needs' || viewMode === 'resources') return false;
 
         // 1. Filter by Category
         if (selectedCategory) {
@@ -681,6 +780,33 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             const summaryMatch = cv.summary?.toLowerCase().includes(term);
 
             if (!nameMatch && !jobTitleMatch && !summaryMatch) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    // Filter resources based on search term and category
+    const filteredResources = resources.filter(resource => {
+        // 0. Check View Mode
+        if (viewMode === 'services' || viewMode === 'needs' || viewMode === 'cvs') return false;
+
+        // 1. Filter by Category
+        if (selectedCategory) {
+            if (resource.category !== selectedCategory) {
+                return false;
+            }
+        }
+
+        // 2. Filter by Search Term
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            const titleMatch = resource.title?.toLowerCase().includes(term);
+            const descMatch = resource.description?.toLowerCase().includes(term);
+            const categoryMatch = resource.category?.toLowerCase().includes(term);
+
+            if (!titleMatch && !descMatch && !categoryMatch) {
                 return false;
             }
         }
@@ -740,36 +866,19 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         });
     };
 
-    // Map click handler component
-    function MapClickHandler() {
-        useMapEvents({
-            click(e) {
-                if (showClickPopup) {
-                    setShowClickPopup(false);
-                    setClickedLocation(null);
-                } else {
-                    setClickedLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
-                    setShowClickPopup(true);
-                }
-            },
+    // Custom Cluster Icon for Resources (Purple)
+    const createResourceClusterIcon = function (cluster: any) {
+        return L.divIcon({
+            html: `<div class="flex items-center justify-center w-full h-full bg-[#9333ea] text-white font-bold rounded-full border-2 border-white shadow-lg text-sm">
+                ${cluster.getChildCount()}
+            </div>`,
+            className: 'custom-cluster-icon',
+            iconSize: L.point(40, 40, true),
+            iconAnchor: [20, 20], // Center
         });
-        return null;
-    }
-
-    // Handle confirming to add a need
-    const handleConfirmAddNeed = () => {
-        if (clickedLocation) {
-            setNewNeedLocation(clickedLocation);
-            setIsModalOpen(true);
-            setShowClickPopup(false);
-        }
     };
 
-    // Handle canceling the popup
-    const handleCancelPopup = () => {
-        setShowClickPopup(false);
-        setClickedLocation(null);
-    };
+
 
     return (
         <>
@@ -1091,6 +1200,79 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 cv={selectedCV}
             />
 
+            {/* Resources Cluster Group */}
+            <MarkerClusterGroup
+                chunkedLoading
+                iconCreateFunction={createResourceClusterIcon}
+                maxClusterRadius={60}
+                spiderfyOnMaxZoom={true}
+            >
+                {filteredResources.map((resource) => (
+                    <Marker
+                        key={resource.id}
+                        position={[resource.latitude, resource.longitude]}
+                        icon={getResourceIcon(resource.category)}
+                    >
+                        <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
+                            <div className="p-4 text-center">
+                                <h3 className="font-bold text-lg text-gray-900 mb-1">{resource.title}</h3>
+                                <span className="inline-block px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full mb-3">
+                                    {t(resource.category as any)}
+                                </span>
+
+                                {resource.description && (
+                                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+                                        {resource.description}
+                                    </p>
+                                )}
+
+                                {/* Availability Type */}
+                                <div className="mb-3">
+                                    <span className="text-xs text-gray-500 uppercase tracking-wide">
+                                        {resource.availability_type === 'rent' ? t('forRent' as any) :
+                                            resource.availability_type === 'borrow' ? t('forBorrow' as any) :
+                                                t('rentOrBorrow' as any)}
+                                    </span>
+                                </div>
+
+                                {/* Pricing */}
+                                {resource.price_type && resource.price_type !== 'free' && (
+                                    <div className="mb-3 text-sm">
+                                        {resource.price_type === 'fixed' && resource.price_min && (
+                                            <p className="font-semibold text-gray-900">
+                                                {resource.price_min} {resource.price_currency || 'SAR'}
+                                            </p>
+                                        )}
+                                        {resource.price_type === 'range' && resource.price_min && resource.price_max && (
+                                            <p className="font-semibold text-gray-900">
+                                                {resource.price_min} - {resource.price_max} {resource.price_currency || 'SAR'}
+                                            </p>
+                                        )}
+                                        {resource.price_type === 'negotiable' && (
+                                            <p className="font-semibold text-gray-900">{t('negotiable' as any)}</p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Contact Button */}
+                                <div className="flex justify-center gap-3">
+                                    {resource.contact_phone && (
+                                        <a
+                                            href={`https://wa.me/${resource.contact_phone.replace(/\D/g, '')}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-block bg-purple-600 text-white text-sm font-bold py-3 px-6 rounded-full hover:bg-purple-700 transition shadow-sm uppercase tracking-wide"
+                                        >
+                                            {t('contact' as any)}
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        </Popup>
+                    </Marker>
+                ))}
+            </MarkerClusterGroup>
+
 
 
             {reportTarget && (
@@ -1103,34 +1285,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 />
             )}
 
-            {/* Map Click Handler */}
-            {/* Map Click Handler */}
-            <MapClickHandler />
 
-            {/* Click Confirmation Popup */}
-            {/* Click Confirmation Popup */}
-            {showClickPopup && clickedLocation && (
-                <Popup
-                    position={[clickedLocation.lat, clickedLocation.lng]}
-                    closeButton={false}
-                    autoPan={false}
-                    maxWidth={200}
-                    minWidth={100}
-                >
-                    <div className="p-1 text-center">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleConfirmAddNeed();
-                            }}
-                            className="w-full px-6 py-2.5 bg-[#00AEEF] text-white text-sm font-bold rounded-full hover:bg-[#0095cc] transition shadow-lg whitespace-nowrap flex items-center justify-center gap-2"
-                        >
-                            <span>{t('addToMap' as any)}</span>
-                            <UserPlus size={18} />
-                        </button>
-                    </div>
-                </Popup>
-            )}
 
             {newNeedLocation && (
                 <AddNeedModal
@@ -1177,32 +1332,50 @@ export default function TalentMap({ searchTerm, selectedCategory, viewMode = 'se
     // Fetch user's country on mount
     useEffect(() => {
         const fetchUserCountry = async () => {
-            // First check if country was passed as URL parameter (for new signups)
-            const newUserCountry = searchParams.get('newUserCountry');
-            if (newUserCountry) {
-                setUserCountry(newUserCountry);
-                setCountryLoading(false);
-                return;
-            }
-
-            // For existing users, fetch from profile
-            const { data: { user } } = await supabase.auth.getUser();
-
-            if (user?.id) {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('country')
-                    .eq('id', user.id)
-                    .single();
-
-                if (profile?.country) {
-                    setUserCountry(profile.country);
+            try {
+                // First check if country was passed as URL parameter (for new signups)
+                const newUserCountry = searchParams.get('newUserCountry');
+                if (newUserCountry) {
+                    setUserCountry(newUserCountry);
+                    setCountryLoading(false);
+                    return;
                 }
-            }
 
-            setCountryLoading(false);
+                // For existing users, fetch from profile
+                const { data: { user } } = await supabase.auth.getUser();
+
+                if (user?.id) {
+                    const { data: profile, error } = await supabase
+                        .from('profiles')
+                        .select('country')
+                        .eq('id', user.id)
+                        .single();
+
+                    if (error) {
+                        console.error('[TalentMap] Error fetching user country:', error);
+                    } else if (profile?.country) {
+                        setUserCountry(profile.country);
+                    }
+                }
+            } catch (error) {
+                console.error('[TalentMap] Unexpected error fetching user country:', error);
+            } finally {
+                // Always set loading to false, even if there's an error
+                setCountryLoading(false);
+            }
         };
-        fetchUserCountry();
+
+        // Set a timeout to prevent infinite loading (max 5 seconds)
+        const timeoutId = setTimeout(() => {
+            console.warn('[TalentMap] Country fetch timeout - proceeding with default');
+            setCountryLoading(false);
+        }, 5000);
+
+        fetchUserCountry().then(() => {
+            clearTimeout(timeoutId);
+        });
+
+        return () => clearTimeout(timeoutId);
     }, [searchParams]);
 
     useEffect(() => {

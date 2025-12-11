@@ -111,3 +111,19 @@ export const CV_CATEGORIES = [
 ] as const;
 
 export type CVCategory = typeof CV_CATEGORIES[number];
+
+export const RESOURCE_CATEGORIES = [
+    "Tools & Equipment",
+    "Vehicles",
+    "Storage Space",
+    "Event Space",
+    "Parking Space",
+    "Sports Equipment",
+    "Electronics",
+    "Furniture",
+    "Garden Equipment",
+    "Party Supplies",
+    "Other"
+] as const;
+
+export type ResourceCategory = typeof RESOURCE_CATEGORIES[number];

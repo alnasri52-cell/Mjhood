@@ -270,6 +270,22 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                                             <FileText className="w-4 h-4 text-gray-500" />
                                             <span className="text-sm font-medium text-gray-700">{t('addCV' as any)}</span>
                                         </Link>
+                                        <Link
+                                            href="/map-profile/add-need"
+                                            onClick={() => setShowMapProfileDropdown(false)}
+                                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                                        >
+                                            <MapPin className="w-4 h-4 text-orange-500" />
+                                            <span className="text-sm font-medium text-gray-700">{t('addNeedPage' as any)}</span>
+                                        </Link>
+                                        <Link
+                                            href="/map-profile/add-resource"
+                                            onClick={() => setShowMapProfileDropdown(false)}
+                                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                                        >
+                                            <Briefcase className="w-4 h-4 text-purple-500" />
+                                            <span className="text-sm font-medium text-gray-700">{t('addResourcePage' as any)}</span>
+                                        </Link>
                                     </div>
                                 )}
 
