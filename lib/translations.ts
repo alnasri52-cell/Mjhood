@@ -462,11 +462,12 @@ export const translations = {
         clickMapToSelectLocation: 'Click on the map to select location',
         needCreated: 'Need added successfully!',
         resourceCreated: 'Resource added successfully!',
-        selectLocationError: 'Please select a location on the map',
         contactInfo: 'Contact Information (Optional)',
         descriptionPlaceholder: 'Describe your resource...',
         resourceImages: 'Resource Images (Optional)',
         uploadResourceImages: 'Upload photos of your resource to attract more interest',
+        free: 'Free',
+        phone: 'Phone',
     },
     ar: {
         // Sidebar
@@ -929,10 +930,11 @@ export const translations = {
         clickMapToSelectLocation: 'اضغط على الخريطة لاختيار الموقع',
         needCreated: 'تمت إضافة الاحتياج بنجاح!',
         resourceCreated: 'تمت إضافة المورد بنجاح!',
-        selectLocationError: 'الرجاء اختيار موقع على الخريطة',
         contactInfo: 'معلومات الاتصال (اختياري)',
         descriptionPlaceholder: 'صف موردك...',
         resourceImages: 'صور المورد (اختياري)',
         uploadResourceImages: 'ارفع صور موردك لجذب المزيد من الاهتمام',
+        free: 'مجاني',
+        phone: 'هاتف',
     }
 };

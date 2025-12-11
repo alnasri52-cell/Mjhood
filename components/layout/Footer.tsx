@@ -23,7 +23,7 @@ export default function Footer() {
                         <Link href="/contact" className="hover:text-gray-900 transition">{t('contactUs')}</Link>
                     </div>
                     <div>
-                        &copy; {currentYear} Local
+                        &copy; {currentYear} Mjhood
                     </div>
                 </div>
             </footer>
@@ -37,10 +37,16 @@ export default function Footer() {
                     {/* Brand & Description */}
                     <div className="col-span-1 md:col-span-1">
                         <Link href="/map" className="flex items-center gap-2 mb-4">
-                            <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                                <span className="text-white font-bold text-xl">L</span>
-                            </div>
-                            <span className="text-xl font-bold tracking-tight">Local</span>
+                            <img
+                                src="/mjhood_symbol_final.png"
+                                alt="Mjhood Symbol"
+                                className="w-14 h-14 object-contain"
+                            />
+                            <img
+                                src="/mjhood_logo_text_final.png"
+                                alt="Mjhood"
+                                className="h-14 w-auto object-contain"
+                            />
                         </Link>
                         <p className="text-gray-500 text-sm mb-4">
                             {t('footerDescription')}
@@ -118,7 +124,7 @@ export default function Footer() {
 
                 <div className="mt-8 border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center">
                     <p className="text-base text-gray-400 text-center md:text-left">
-                        &copy; {currentYear} Local. {t('allRightsReserved')}
+                        &copy; {currentYear} Mjhood. {t('allRightsReserved')}
                     </p>
                 </div>
             </div>

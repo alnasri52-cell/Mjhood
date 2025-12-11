@@ -66,6 +66,7 @@ export default function AddNeedPage() {
             const { error } = await supabase
                 .from('local_needs')
                 .insert({
+                    user_id: user.id,
                     title,
                     category,
                     description: description || null,
