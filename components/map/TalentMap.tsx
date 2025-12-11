@@ -418,18 +418,18 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.warn('[TalentMap] Error fetching needs:', error);
+                console.error('[TalentMap] Error fetching needs:', error);
                 setNeeds([]);
-            } else {
-                console.log(`[TalentMap] Successfully fetched ${data?.length || 0} needs`);
-                setNeeds(data || []);
+                return;
             }
-        } catch (err) {
-            console.error('[TalentMap] Unexpected error fetching needs:', err);
+
+            console.log(`[TalentMap] Fetched ${data?.length || 0} needs`);
+            setNeeds(data || []);
+        } catch (error) {
+            console.error('[TalentMap] Unexpected error in fetchNeeds:', error);
             setNeeds([]);
         }
     };
-
     const fetchCVs = async () => {
         console.log('[TalentMap] Starting to fetch CVs...');
         try {
@@ -573,33 +573,57 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 });
 
                 console.log(`[TalentMap] Successfully fetched ${transformedServices.length} services from ${profilesData?.length || 0} providers`);
+                console.log(`[TalentMap] Final service count: ${transformedServices.length}`);
                 setServices(transformedServices);
             }
         } catch (err) {
             console.error('[TalentMap] Unexpected error:', err);
             setServices([]);
-        } finally {
-            setLoading(false);
         }
     };
 
     useEffect(() => {
-        // Small delay to ensure map is fully initialized before fetching
-        const timeoutId = setTimeout(() => {
-            console.log('[TalentMap] Initial fetch trigger. ViewMode:', viewMode);
-            if (viewMode === 'services' || viewMode === 'both') {
-                fetchServices();
+        const fetchAllData = async () => {
+            console.log('[TalentMap] Fetching all data in parallel. ViewMode:', viewMode);
+
+            try {
+                const promises = [];
+
+                // Build array of fetch promises based on view mode
+                if (viewMode === 'services' || viewMode === 'both') {
+                    promises.push(fetchServices());
+                }
+                if (viewMode === 'needs' || viewMode === 'both') {
+                    promises.push(fetchNeeds());
+                }
+                if (viewMode === 'cvs' || viewMode === 'both') {
+                    promises.push(fetchCVs());
+                }
+                if (viewMode === 'resources' || viewMode === 'both') {
+                    promises.push(fetchResources());
+                }
+
+                // Fetch all data in parallel (much faster than sequential)
+                const results = await Promise.allSettled(promises);
+
+                // Log any failures for debugging
+                results.forEach((result, index) => {
+                    if (result.status === 'rejected') {
+                        console.error(`[TalentMap] Fetch ${index} failed:`, result.reason);
+                    }
+                });
+
+                console.log('[TalentMap] All data fetched successfully');
+
+            } catch (error) {
+                console.error('[TalentMap] Unexpected error fetching data:', error);
+            } finally {
+                // Always set loading to false, even if some fetches failed
+                setLoading(false);
             }
-            if (viewMode === 'needs' || viewMode === 'both') {
-                fetchNeeds();
-            }
-            if (viewMode === 'cvs' || viewMode === 'both') {
-                fetchCVs();
-            }
-            if (viewMode === 'resources' || viewMode === 'both') {
-                fetchResources();
-            }
-        }, 100);
+        };
+
+        fetchAllData();
 
         // Real-time subscription for services
         const servicesChannel = supabase
@@ -694,11 +718,10 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         }, 30000);
 
         return () => {
-            clearTimeout(timeoutId);
-            supabase.removeChannel(servicesChannel);
-            supabase.removeChannel(needsChannel);
-            supabase.removeChannel(cvsChannel);
-            supabase.removeChannel(resourcesChannel);
+            servicesChannel.unsubscribe();
+            needsChannel.unsubscribe();
+            cvsChannel.unsubscribe();
+            resourcesChannel.unsubscribe();
             clearInterval(intervalId);
         };
     }, [viewMode]); // Removed fetchServices/fetchNeeds/fetchCVs from dependency array to avoid loops if they are not stable

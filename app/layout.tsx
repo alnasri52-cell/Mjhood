@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mjhood - مجهودكم",
+  title: "Mjhood - مجهود",
   description: "Effort meets opportunities - مجهودكم يلتقي بالفرص",
   manifest: "/manifest.json",
   appleWebApp: {
