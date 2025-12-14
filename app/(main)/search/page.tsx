@@ -164,7 +164,14 @@ export default function AdvancedSearchPage() {
                 // Apply Filters in JS (easier for mixed sources)
                 let filtered = fetchedServices;
                 if (selectedCategory) filtered = filtered.filter(s => s.service.category === selectedCategory);
-                if (searchTerm) filtered = filtered.filter(s => s.service.title.toLowerCase().includes(searchTerm.toLowerCase()));
+                if (searchTerm) {
+                    const lowerQ = searchTerm.toLowerCase();
+                    filtered = filtered.filter(s =>
+                        s.service.title?.toLowerCase().includes(lowerQ) ||
+                        s.profile.full_name?.toLowerCase().includes(lowerQ) ||
+                        s.service.category?.toLowerCase().includes(lowerQ)
+                    );
+                }
                 setResults(filtered);
 
             } else if (viewMode === 'needs') {
@@ -179,7 +186,8 @@ export default function AdvancedSearchPage() {
                     const lowerQ = searchTerm.toLowerCase();
                     filtered = filtered.filter((n: any) =>
                         n.title?.toLowerCase().includes(lowerQ) ||
-                        n.description?.toLowerCase().includes(lowerQ)
+                        n.description?.toLowerCase().includes(lowerQ) ||
+                        n.category?.toLowerCase().includes(lowerQ)
                     );
                 }
 
@@ -206,7 +214,9 @@ export default function AdvancedSearchPage() {
                     const lowerQ = searchTerm.toLowerCase();
                     filtered = filtered.filter((cv: any) =>
                         cv.full_name?.toLowerCase().includes(lowerQ) ||
-                        cv.job_title?.toLowerCase().includes(lowerQ)
+                        cv.job_title?.toLowerCase().includes(lowerQ) ||
+                        cv.summary?.toLowerCase().includes(lowerQ) ||
+                        (Array.isArray(cv.skills) && cv.skills.some((skill: string) => skill.toLowerCase().includes(lowerQ)))
                     );
                 }
 
@@ -227,7 +237,8 @@ export default function AdvancedSearchPage() {
                     const lowerQ = searchTerm.toLowerCase();
                     filtered = filtered.filter((r: any) =>
                         r.title?.toLowerCase().includes(lowerQ) ||
-                        r.description?.toLowerCase().includes(lowerQ)
+                        r.description?.toLowerCase().includes(lowerQ) ||
+                        r.category?.toLowerCase().includes(lowerQ)
                     );
                 }
 
