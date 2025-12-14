@@ -57,9 +57,7 @@ export const translations = {
         goOffline: 'Go Offline',
         goOfflineText: 'Temporarily hide your pins from the map. Your services/resources will be saved.',
         nowOffline: 'You are now offline.',
-        workExperience: 'Work Experience',
-        education: 'Education',
-        skills: 'Skills',
+
 
         // General
         loading: 'Loading...',
@@ -293,7 +291,7 @@ export const translations = {
         deleteConfirm: 'Are you sure you want to delete this service?',
         serviceDeleted: 'Service deleted successfully!',
         errorDeleting: 'Error deleting service: ',
-        nowOffline: 'You are now offline.',
+
         genericError: 'Error: ',
         locationRequired: 'Location Required',
         locationRequiredDesc: 'Please set your location in your profile settings to continue.',
@@ -950,31 +948,6 @@ export const translations = {
         "Party Supplies": "مستلزمات الحفلات",
 
         // Add Need/Resource Pages
-        addNeedPage: 'إضافة احتياج',
-        addResourcePage: 'إضافة مورد',
-        noNeedsFound: 'No needs found',
-        noNeedsSubtitle: 'Start by highlighting what your neighborhood is missing.',
-        needCategory: 'Category',
-        selectNeedCategory: 'Select a category',
-        needTitle: 'Need Title',
-        needDescription: 'Description (Optional)',
-        needDescriptionPlaceholder: 'Why is this needed here?',
-        addNeedButton: 'Add Need',
-        selectLocation: 'اختر الموقع',
-        clickMapToSelectLocation: 'اضغط على الخريطة لاختيار الموقع',
-        needCreated: 'تمت إضافة الاحتياج بنجاح!',
-        resourceCreated: 'تمت إضافة المورد بنجاح!',
-        contactInfo: 'معلومات الاتصال (اختياري)',
-        descriptionPlaceholder: 'صف موردك...',
-        resourceImages: 'صور المورد (اختياري)',
-        uploadResourceImages: 'ارفع صور موردك لجذب المزيد من الاهتمام',
-        free: 'مجاني',
-        workExperience: 'الخبرة العملية',
-        education: 'التعليم',
-        skills: 'المهارات',
-        languages: 'اللغات',
-        certifications: 'الشهادات',
-        portfolio: 'معرض الأعمال',
         phone: 'هاتف',
     }
 };
