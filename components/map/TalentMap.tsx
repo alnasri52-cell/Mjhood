@@ -587,6 +587,21 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         }
     };
 
+    // Re-fetch data when auth state changes (fixes race conditions)
+    useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            // Add a small delay to ensure session is propagating
+            setTimeout(() => {
+                if (viewMode === 'services' || viewMode === 'both') fetchServices();
+                if (viewMode === 'needs' || viewMode === 'both') fetchNeeds();
+                if (viewMode === 'cvs' || viewMode === 'both') fetchCVs();
+                if (viewMode === 'resources' || viewMode === 'both') fetchResources();
+            }, 500);
+        });
+
+        return () => subscription.unsubscribe();
+    }, [viewMode]);
+
     useEffect(() => {
         const fetchAllData = async () => {
             try {
