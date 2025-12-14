@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Instagram, Twitter, Globe } from 'lucide-react';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ServiceDetailModal from '@/components/services/ServiceDetailModal';
+import dynamic from 'next/dynamic';
 
 import { supabase } from '@/lib/database/supabase';
 import { notFound } from 'next/navigation';
@@ -11,12 +12,19 @@ import { notFound } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
+const LocationMap = dynamic(() => import('@/components/ui/LocationMap'), {
+    ssr: false,
+    loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse" />
+});
+
 interface Profile {
     id: string;
     full_name: string;
     role: string;
     latitude: number;
     longitude: number;
+    service_location_lat?: number;
+    service_location_lng?: number;
     rating: number;
     updated_at: string;
     phone?: string;
@@ -200,6 +208,20 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Location Map */}
+                {((profile.service_location_lat && profile.service_location_lng) || (profile.latitude && profile.longitude)) && (
+                    <div className="mt-8">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">{t('location')}</h2>
+                        <div className="h-64 w-full rounded-xl overflow-hidden border border-gray-200">
+                            <LocationMap
+                                lat={profile.service_location_lat || profile.latitude}
+                                lng={profile.service_location_lng || profile.longitude}
+                                title={profile.full_name}
+                            />
                         </div>
                     </div>
                 )}

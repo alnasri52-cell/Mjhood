@@ -29,18 +29,7 @@ export default function MapHeader({
             {/* Search & Filter & Toggle - All in one container for better flow */}
             <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[100] w-full pointer-events-none px-4">
                 <div className="pointer-events-auto space-y-3 max-w-md mx-auto flex flex-col items-center">
-                    {/* Search Bar */}
-                    <div className="relative w-full">
-                        <input
-                            type="text"
-                            placeholder={t('mapSearchPlaceholder')}
-                            value={searchTerm}
-                            onChange={(e) => onSearchChange(e.target.value)}
-                            className={`w-full h-12 bg-white rounded-xl shadow-lg border-0 focus:ring-2 focus:ring-black text-black placeholder:text-gray-500 transition-all ${dir === 'rtl' ? 'pr-12 pl-4' : 'pl-12 pr-4'
-                                }`}
-                        />
-                        <Search className={`absolute top-3.5 ${dir === 'rtl' ? 'right-4' : 'left-4'} text-gray-400`} size={20} />
-                    </div>
+
 
                     {/* View Mode Toggle - Now below search with CVs option */}
                     <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-lg p-1 flex items-center border border-gray-200">

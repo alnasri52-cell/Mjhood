@@ -148,7 +148,7 @@ export default function AdvancedSearchPage() {
 
                     if (legacyServices) {
                         fetchedServices = legacyServices.map((item: any) => ({
-                            type: 'service',
+                            type: 'service' as const,
                             profile: item.profiles,
                             service: {
                                 id: item.id,
