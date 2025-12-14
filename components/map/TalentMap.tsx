@@ -410,6 +410,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     // ... (rest of component)
 
     const fetchNeeds = async () => {
+        console.log('--- fetchNeeds: START ---');
         try {
             let { data, error } = await supabase
                 .from('local_needs')
@@ -429,6 +430,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 longitude: need.longitude || need.profiles?.service_location_lng || need.profiles?.longitude
             })) || [];
 
+            console.log('--- fetchNeeds: Mapped Count ---', mappedNeeds.length);
             setNeeds(mappedNeeds);
         } catch (error) {
             console.error('Error fetching needs:', error);
@@ -436,6 +438,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         }
     };
     const fetchCVs = async () => {
+        console.log('--- fetchCVs: START ---');
         try {
             let { data, error } = await supabase
                 .from('cvs')
@@ -452,6 +455,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                     latitude: cv.latitude || cv.profiles?.service_location_lat || cv.profiles?.latitude,
                     longitude: cv.longitude || cv.profiles?.service_location_lng || cv.profiles?.longitude
                 })) || [];
+                console.log('--- fetchCVs: Mapped Count ---', mappedCvs.length);
                 setCvs(mappedCvs);
             }
         } catch (err) {
@@ -461,6 +465,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     };
 
     const fetchResources = async () => {
+        console.log('--- fetchResources: START ---');
         try {
             let { data, error } = await supabase
                 .from('resources')
@@ -477,6 +482,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                     latitude: res.latitude || res.profiles?.service_location_lat || res.profiles?.latitude,
                     longitude: res.longitude || res.profiles?.service_location_lng || res.profiles?.longitude
                 })) || [];
+                console.log('--- fetchResources: Mapped Count ---', mappedResources.length);
                 setResources(mappedResources);
             }
         } catch (err) {
@@ -486,6 +492,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     };
 
     const fetchServices = async () => {
+        console.log('--- fetchServices: START ---');
         try {
             // NEW: Fetch from profiles with service_categories
             // This groups all services by user location
@@ -516,6 +523,12 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 .not('service_location_lng', 'is', null)
                 .is('service_categories.deleted_at', null);
 
+            if (profilesError) {
+                console.error('--- fetchServices: Profile Fetch Error ---', profilesError);
+            }
+
+            console.log('--- fetchServices: Profiles Data Found ---', profilesData?.length || 0);
+
             // Fallback if error OR if no data found in new structure (migration transition)
             if (profilesError || !profilesData || profilesData.length === 0) {
                 if (profilesError) {
@@ -542,6 +555,8 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                     .not('latitude', 'is', null)
                     .not('longitude', 'is', null)
                     .is('deleted_at', null);
+
+                console.log('--- fetchServices: Legacy Data Found ---', data?.length || 0);
 
                 if (error) {
                     console.error('Error fetching services (fallback):', JSON.stringify(error, null, 2));
@@ -584,6 +599,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                     });
                 });
 
+                console.log('--- fetchServices: Transformed Services Count ---', transformedServices.length);
                 setServices(transformedServices);
             }
         } catch (err) {
@@ -597,6 +613,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             // Add a small delay to ensure session is propagating
             setTimeout(() => {
+                console.log('--- AuthStateChange: Triggering Refetch ---', viewMode);
                 if (viewMode === 'services' || viewMode === 'both') fetchServices();
                 if (viewMode === 'needs' || viewMode === 'both') fetchNeeds();
                 if (viewMode === 'cvs' || viewMode === 'both') fetchCVs();
@@ -608,7 +625,9 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     }, [viewMode]);
 
     useEffect(() => {
+        console.log('--- useEffect [viewMode]: Running ---', viewMode);
         const fetchAllData = async () => {
+            console.log('--- fetchAllData: START ---', viewMode);
             try {
                 const promises = [];
 
