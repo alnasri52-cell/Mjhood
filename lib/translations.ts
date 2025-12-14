@@ -28,6 +28,8 @@ export const translations = {
         forRent: 'For Rent',
         forBorrow: 'For Borrow',
         rentOrBorrow: 'Rent or Borrow',
+        resource: 'Resource',
+        cv: 'CV',
 
         // Profile
         reviews: 'Reviews',
@@ -374,7 +376,6 @@ export const translations = {
         both: 'All',
 
         // CV Feature
-        cv: 'CV',
         cvs: 'CVs',
         addCV: 'Add CV',
         editCV: 'Edit CV',
@@ -515,6 +516,8 @@ export const translations = {
         whatsapp: 'واتساب',
         email: 'بريد إلكتروني',
         contactOwner: 'تواصل مع المالك',
+        resource: 'مورد',
+        cv: 'سيرة ذاتية',
 
         // Profile
         reviews: 'التقييمات',
@@ -857,8 +860,6 @@ export const translations = {
         both: 'الكل',
 
         // CV Feature
-        cv: 'السيرة الذاتية',
-        clickMapToSetLocation: 'انقر على الخريطة لتحديد موقعك',
         cvs: 'السير الذاتية',
         addCV: 'إضافة سيرة ذاتية',
         editCV: 'تعديل السيرة الذاتية',
