@@ -8,6 +8,9 @@ import { ArrowLeft } from 'lucide-react';
 import ImageUpload from '@/components/ui/ImageUpload';
 import Modal from '@/components/ui/Modal';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import dynamic from 'next/dynamic';
+
+const LocationPicker = dynamic(() => import('@/components/map/LocationPicker'), { ssr: false });
 
 export default function EditProfilePage() {
     const { t, dir } = useLanguage();
@@ -24,6 +27,9 @@ export default function EditProfilePage() {
     const [instagram, setInstagram] = useState('');
     const [twitter, setTwitter] = useState('');
     const [website, setWebsite] = useState('');
+    const [bio, setBio] = useState('');
+    const [lat, setLat] = useState<number | null>(null);
+    const [lng, setLng] = useState<number | null>(null);
 
     // Seller Profile State
     const [role, setRole] = useState('client');
@@ -65,10 +71,13 @@ export default function EditProfilePage() {
                     setPhone(profile.phone || '');
                     setContactEmail(profile.contact_email || '');
                     setAvatarUrl(profile.avatar_url || '');
+                    setBio(profile.bio || '');
                     setGalleryUrls(profile.gallery_urls || []);
                     setRole(profile.role || 'client');
                     setServiceTitle(profile.service_title || '');
                     setServiceDescription(profile.service_description || '');
+                    setLat(profile.latitude || profile.service_location_lat || null);
+                    setLng(profile.longitude || profile.service_location_lng || null);
 
                     const socials = profile.social_links || {};
                     setInstagram(socials.instagram || '');
@@ -100,12 +109,15 @@ export default function EditProfilePage() {
 
             const updates: any = {
                 full_name: fullName,
+                bio,
                 phone,
                 contact_email: contactEmail,
                 avatar_url: avatarUrl,
                 gallery_urls: galleryUrls,
                 social_links: socialLinks,
                 updated_at: new Date().toISOString(),
+                latitude: lat,
+                longitude: lng,
             };
 
             // Always save service fields if provided
@@ -130,9 +142,9 @@ export default function EditProfilePage() {
             setModalType('success');
             setShowModal(true);
 
-            // Redirect to map profile after successful save
+            // Redirect to profile page after successful save
             setTimeout(() => {
-                router.push('/map-profile');
+                router.push(`/profile/${user.id}`);
             }, 1000);
         } catch (error: any) {
             console.error('Error in handleSave:', error);
@@ -197,35 +209,35 @@ export default function EditProfilePage() {
                             defaultImage={avatarUrl}
                             onUpload={setAvatarUrl}
                         />
-                    </div>
 
-                    {/* Seller Profile Section - Show for all users so they can become talents */}
-                    <div className="border-b border-gray-100 pb-4 mb-4 pt-4">
-                        <h2 className="text-xl font-semibold text-gray-900">{t('sellerProfile')}</h2>
-                        <p className="text-gray-500 text-sm">{t('manageProfessionalInfo')}</p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('professionalTitle')}</label>
-                        <input
-                            type="text"
-                            value={serviceTitle}
-                            onChange={(e) => setServiceTitle(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black placeholder:text-gray-500"
-                            placeholder="e.g. Professional Plumber"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('bioAbout')}</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('bio' as any) || 'Bio'}</label>
                         <textarea
-                            rows={4}
-                            value={serviceDescription}
-                            onChange={(e) => setServiceDescription(e.target.value)}
+                            rows={3}
+                            value={bio}
+                            onChange={(e) => setBio(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black placeholder:text-gray-500"
-                            placeholder={t('tellNeighbors')}
+                            placeholder={t('bioPlaceholder' as any) || 'Tell us a little about yourself...'}
                         />
                     </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('location' as any) || 'Location'}</label>
+                        <p className="text-xs text-gray-500 mb-2">{t('locationHint' as any) || 'This location will be used for your profile, services, and resources.'}</p>
+                        <div className="h-64 rounded-lg overflow-hidden border border-gray-300">
+                            <LocationPicker
+                                value={lat && lng ? { lat, lng } : null}
+                                onChange={(newLat, newLng) => {
+                                    setLat(newLat);
+                                    setLng(newLng);
+                                }}
+                            />
+                        </div>
+                    </div>
+
+
 
                     {/* Social Media - Part of Service Profile */}
                     <div>

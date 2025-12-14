@@ -46,10 +46,7 @@ export default function MyServicesPage() {
     const [newGalleryUrls, setNewGalleryUrls] = useState<string[]>([]);
     const [saving, setSaving] = useState(false);
 
-    // Service Location (single location for all services)
-    const [serviceLat, setServiceLat] = useState<number | null>(null);
-    const [serviceLng, setServiceLng] = useState<number | null>(null);
-    const [savingLocation, setSavingLocation] = useState(false);
+
 
     // Modal state
     const [showModal, setShowModal] = useState(false);
@@ -57,11 +54,7 @@ export default function MyServicesPage() {
     const [modalType, setModalType] = useState<'success' | 'error' | 'confirm'>('success');
     const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
-    // Load LocationPicker dynamically to avoid SSR issues with Leaflet
-    const LocationPicker = dynamic(() => import('@/components/map/LocationPicker'), {
-        ssr: false,
-        loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center text-gray-400">{t('loading')}</div>
-    });
+
 
     useEffect(() => {
         const getUserAndServices = async () => {
@@ -84,11 +77,7 @@ export default function MyServicesPage() {
             if (profileData) {
                 setProfile(profileData);
 
-                // Load service location from profile
-                if (profileData.service_location_lat && profileData.service_location_lng) {
-                    setServiceLat(profileData.service_location_lat);
-                    setServiceLng(profileData.service_location_lng);
-                }
+                // Service location is now managed via Profile Edit page
 
                 // Check if profile is complete
                 const isComplete =
@@ -119,7 +108,10 @@ export default function MyServicesPage() {
         };
 
         getUserAndServices();
-    }, []); // Remove router from dependencies
+        getUserAndServices();
+    }, []);
+
+    const hasLocation = profile?.latitude && profile?.longitude;
 
     const handleSaveService = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -249,38 +241,7 @@ export default function MyServicesPage() {
         setShowModal(true);
     };
 
-    const handleSaveServiceLocation = async () => {
-        if (!user || !serviceLat || !serviceLng) {
-            setModalMessage(t('selectLocationError'));
-            setModalType('error');
-            setShowModal(true);
-            return;
-        }
 
-        setSavingLocation(true);
-        try {
-            const { error } = await supabase
-                .from('profiles')
-                .update({
-                    service_location_lat: serviceLat,
-                    service_location_lng: serviceLng,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', user.id);
-
-            if (error) throw error;
-
-            setModalMessage(t('locationSaved'));
-            setModalType('success');
-            setShowModal(true);
-        } catch (error: any) {
-            setModalMessage(t('errorSaving') + error.message);
-            setModalType('error');
-            setShowModal(true);
-        } finally {
-            setSavingLocation(false);
-        }
-    };
 
     const handleGoOffline = async () => {
         setModalMessage(t('goOfflineText'));
@@ -355,116 +316,9 @@ export default function MyServicesPage() {
                 {/* Profile Complete - Show Services Management */}
                 {isProfileComplete && (
                     <>
-                        {/* Service Profile Card */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h2 className="text-2xl font-bold text-gray-900">{profile?.service_title || t('professionalTitle')}</h2>
-                                    <p className="text-gray-500 text-sm mt-1">{t('serviceProfile')}</p>
-                                </div>
-                                <Link
-                                    href="/profile/edit"
-                                    className="flex items-center text-blue-600 hover:text-blue-700 font-medium text-sm transition"
-                                >
-                                    <Edit className="w-4 h-4 mr-1" />
-                                    {t('editProfile')}
-                                </Link>
-                            </div>
 
-                            {/* Service Description */}
-                            {profile?.service_description && (
-                                <div className="mb-6">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('bioAbout')}</h3>
-                                    <p className="text-gray-600 text-sm leading-relaxed">{profile.service_description}</p>
-                                </div>
-                            )}
 
-                            {/* Social Media Links */}
-                            {profile?.social_links && Object.keys(profile.social_links).length > 0 && (
-                                <div className="mb-6">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('socialMedia')}</h3>
-                                    <div className="flex flex-wrap gap-3">
-                                        {profile.social_links.instagram && (
-                                            <a
-                                                href={`https://instagram.com/${profile.social_links.instagram}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
-                                            >
-                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
-                                                @{profile.social_links.instagram}
-                                            </a>
-                                        )}
-                                        {profile.social_links.twitter && (
-                                            <a
-                                                href={`https://twitter.com/${profile.social_links.twitter}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-2 px-3 py-2 bg-black text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
-                                            >
-                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-                                                @{profile.social_links.twitter}
-                                            </a>
-                                        )}
-                                        {profile.social_links.website && (
-                                            <a
-                                                href={profile.social_links.website}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
-                                                {t('website')}
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
 
-                            {/* Work Samples Gallery */}
-                            {profile?.gallery_urls && profile.gallery_urls.length > 0 && (
-                                <div>
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('workSamples')}</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                        {profile.gallery_urls.map((url: string, index: number) => (
-                                            <div key={index} className="aspect-square rounded-lg overflow-hidden border border-gray-200">
-                                                <img
-                                                    src={url}
-                                                    alt={`Work sample ${index + 1}`}
-                                                    className="w-full h-full object-cover hover:scale-105 transition duration-300"
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Service Location Section */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-                            <div className="mb-4">
-                                <h2 className="text-xl font-bold text-gray-900">{t('serviceLocationTitle')}</h2>
-                                <p className="text-gray-500 text-sm mt-1">{t('serviceLocationDesc')}</p>
-                            </div>
-
-                            <div className="mb-4">
-                                <LocationPicker
-                                    value={serviceLat && serviceLng ? { lat: serviceLat, lng: serviceLng } : null}
-                                    onChange={(lat, lng) => {
-                                        setServiceLat(lat);
-                                        setServiceLng(lng);
-                                    }}
-                                />
-                            </div>
-
-                            <button
-                                onClick={handleSaveServiceLocation}
-                                disabled={savingLocation || !serviceLat || !serviceLng}
-                                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {savingLocation ? t('saving') : t('saveLocation')}
-                            </button>
-                        </div>
 
                         {/* Header & Add Button */}
                         <div className="flex justify-between items-center mb-6">
@@ -472,14 +326,24 @@ export default function MyServicesPage() {
                                 <h2 className="text-xl font-bold text-gray-900">{t('yourOfferings')}</h2>
                                 <p className="text-gray-500 text-sm">{t('manageServices')}</p>
                             </div>
-                            {!isAdding && (
-                                <button
-                                    onClick={() => setIsAdding(true)}
-                                    className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+                            {hasLocation ? (
+                                !isAdding && (
+                                    <button
+                                        onClick={() => setIsAdding(true)}
+                                        className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+                                    >
+                                        <Plus className={`w-4 h-4 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+                                        {t('addService')}
+                                    </button>
+                                )
+                            ) : (
+                                <Link
+                                    href="/profile/edit"
+                                    className="flex items-center bg-gray-100 text-gray-500 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition border border-gray-200"
                                 >
-                                    <Plus className={`w-4 h-4 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
-                                    {t('addService')}
-                                </button>
+                                    <MapPin className={`w-4 h-4 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+                                    {t('setLocationToAdd' as any) || 'Set Location to Add'}
+                                </Link>
                             )}
                         </div>
 

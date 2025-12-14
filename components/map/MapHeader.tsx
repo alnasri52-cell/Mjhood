@@ -47,7 +47,7 @@ export default function MapHeader({
                         <button
                             onClick={() => setViewMode('services')}
                             className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'services'
-                                ? 'bg-black text-white shadow-md'
+                                ? 'bg-blue-600 text-white shadow-md'
                                 : 'bg-transparent text-gray-500 hover:text-gray-900'
                                 }`}
                         >
@@ -56,29 +56,29 @@ export default function MapHeader({
                         <button
                             onClick={() => setViewMode('needs')}
                             className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'needs'
-                                ? 'bg-black text-white shadow-md'
+                                ? 'bg-red-600 text-white shadow-md'
                                 : 'bg-transparent text-gray-500 hover:text-gray-900'
                                 }`}
                         >
                             {t('needs' as any)}
                         </button>
                         <button
-                            onClick={() => setViewMode('cvs')}
-                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'cvs'
-                                ? 'bg-black text-white shadow-md'
-                                : 'bg-transparent text-gray-500 hover:text-gray-900'
-                                }`}
-                        >
-                            {t('cvs' as any)}
-                        </button>
-                        <button
                             onClick={() => setViewMode('resources')}
                             className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'resources'
-                                ? 'bg-black text-white shadow-md'
+                                ? 'bg-purple-600 text-white shadow-md'
                                 : 'bg-transparent text-gray-500 hover:text-gray-900'
                                 }`}
                         >
                             {t('resources' as any)}
+                        </button>
+                        <button
+                            onClick={() => setViewMode('cvs')}
+                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'cvs'
+                                ? 'bg-green-600 text-white shadow-md'
+                                : 'bg-transparent text-gray-500 hover:text-gray-900'
+                                }`}
+                        >
+                            {t('cvs' as any)}
                         </button>
                         <button
                             onClick={() => setViewMode('both')}

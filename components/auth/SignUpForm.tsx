@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/database/supabase';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import CountrySelector from '@/components/ui/CountrySelector';
+import dynamic from 'next/dynamic';
+
+const LocationPicker = dynamic(() => import('@/components/map/LocationPicker'), { ssr: false });
 
 interface SignUpFormProps {
     onSuccess?: () => void;
@@ -23,6 +26,8 @@ export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormPro
     const [role, setRole] = useState<'client' | 'talent'>('client');
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [lat, setLat] = useState<number | null>(null);
+    const [lng, setLng] = useState<number | null>(null);
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,6 +36,8 @@ export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormPro
             alert('Please provide either a Username or an Email.');
             return;
         }
+
+
 
         setLoading(true);
 
@@ -52,8 +59,10 @@ export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormPro
                         role: role,
                         full_name: fullName,
                         username: username || '',
-                        contact_email: email || '', // Store real email if provided
-                        country: country, // Save country code
+                        contact_email: email || '',
+                        country: country,
+                        latitude: lat,
+                        longitude: lng
                     },
                 },
             });
@@ -163,6 +172,20 @@ export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormPro
                         required
                         className="mt-1"
                     />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('location' as any) || 'Location'} <span className="text-gray-400 font-normal">({t('optional' as any) || 'Optional'})</span></label>
+                    <p className="text-xs text-gray-500 mb-2">{t('locationSignUpHint' as any) || 'Set your main location for profile and services.'}</p>
+                    <div className="h-64 rounded-lg overflow-hidden border border-gray-300">
+                        <LocationPicker
+                            value={lat && lng ? { lat, lng } : null}
+                            onChange={(newLat, newLng) => {
+                                setLat(newLat);
+                                setLng(newLng);
+                            }}
+                        />
+                    </div>
                 </div>
 
                 <button

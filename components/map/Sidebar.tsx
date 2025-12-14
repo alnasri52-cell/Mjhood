@@ -159,7 +159,6 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
 
     const navItems = [
         { icon: Home, label: 'home', href: '/' },
-        { icon: Search, label: 'advancedSearch', href: '/search' },
         { icon: MessageSquare, label: 'messages', href: '/messages', authRequired: true },
         { icon: User, label: 'profile', href: `/profile/${user?.id}`, authRequired: true },
         { icon: LayoutDashboard, label: 'Admin Portal', href: '/admin', authRequired: true, role: 'admin' },
@@ -255,36 +254,36 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                                 {showMapProfileDropdown && (
                                     <div className={`absolute ${dir === 'rtl' ? 'right-0' : 'left-0'} mt-2 w-full md:w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50`}>
                                         <Link
-                                            href="/map-profile"
+                                            href="/map-profile/services"
                                             onClick={() => setShowMapProfileDropdown(false)}
                                             className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
                                         >
-                                            <Briefcase className="w-4 h-4 text-gray-500" />
-                                            <span className="text-sm font-medium text-gray-700">{t('addService' as any)}</span>
+                                            <Briefcase className="w-4 h-4 text-blue-500" />
+                                            <span className="text-sm font-medium text-gray-700">{t('services')}</span>
                                         </Link>
                                         <Link
-                                            href="/cv/create"
+                                            href="/map-profile/needs"
                                             onClick={() => setShowMapProfileDropdown(false)}
                                             className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
                                         >
-                                            <FileText className="w-4 h-4 text-gray-500" />
-                                            <span className="text-sm font-medium text-gray-700">{t('addCV' as any)}</span>
+                                            <MapPin className="w-4 h-4 text-red-500" />
+                                            <span className="text-sm font-medium text-gray-700">{t('needs')}</span>
                                         </Link>
                                         <Link
-                                            href="/map-profile/add-need"
-                                            onClick={() => setShowMapProfileDropdown(false)}
-                                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                                        >
-                                            <MapPin className="w-4 h-4 text-orange-500" />
-                                            <span className="text-sm font-medium text-gray-700">{t('addNeedPage' as any)}</span>
-                                        </Link>
-                                        <Link
-                                            href="/map-profile/add-resource"
+                                            href="/map-profile/resources"
                                             onClick={() => setShowMapProfileDropdown(false)}
                                             className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
                                         >
                                             <Briefcase className="w-4 h-4 text-purple-500" />
-                                            <span className="text-sm font-medium text-gray-700">{t('addResourcePage' as any)}</span>
+                                            <span className="text-sm font-medium text-gray-700">{t('resources')}</span>
+                                        </Link>
+                                        <Link
+                                            href="/map-profile/cvs"
+                                            onClick={() => setShowMapProfileDropdown(false)}
+                                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                                        >
+                                            <FileText className="w-4 h-4 text-green-500" />
+                                            <span className="text-sm font-medium text-gray-700">{t('cv')}</span>
                                         </Link>
                                     </div>
                                 )}

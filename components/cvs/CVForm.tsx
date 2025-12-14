@@ -15,12 +15,7 @@ import SkillsSection from './SkillsSection';
 import LanguagesSection from './LanguagesSection';
 import CVFileUpload from './CVFileUpload';
 import Modal from '@/components/ui/Modal';
-import dynamic from 'next/dynamic';
 
-const LocationPicker = dynamic(() => import('./LocationPicker'), {
-    ssr: false,
-    loading: () => <div className="h-[300px] w-full bg-gray-100 rounded-lg animate-pulse" />
-});
 
 interface CVFormProps {
     initialData?: any;
@@ -73,8 +68,8 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
                         full_name: profile.full_name || '',
                         phone: profile.phone || '',
                         email: user.email || '',
-                        latitude: profile.service_location_lat || 24.7136,
-                        longitude: profile.service_location_lng || 46.6753
+                        latitude: profile.latitude || 24.7136,
+                        longitude: profile.longitude || 46.6753
                     }));
                 }
             }
@@ -281,54 +276,7 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
 
                 // ... (inside component)
 
-                {/* Location Section */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900">
-                        <MapPin className="w-5 h-5 text-indigo-600" />
-                        {t('location')}
-                    </div>
-                    <p className="text-sm text-gray-500 mb-4">
-                        {t('cvLocationHint')}
-                    </p>
 
-                    <div className="mb-6">
-                        <LocationPicker
-                            latitude={formData.latitude}
-                            longitude={formData.longitude}
-                            onChange={(lat, lng) => {
-                                updateField('latitude', lat);
-                                updateField('longitude', lng);
-                            }}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Latitude
-                            </label>
-                            <input
-                                type="number"
-                                step="any"
-                                value={formData.latitude}
-                                readOnly
-                                className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 focus:outline-none cursor-not-allowed"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Longitude
-                            </label>
-                            <input
-                                type="number"
-                                step="any"
-                                value={formData.longitude}
-                                readOnly
-                                className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 focus:outline-none cursor-not-allowed"
-                            />
-                        </div>
-                    </div>
-                </div>
 
                 {/* File Upload Section */}
                 <CVFileUpload

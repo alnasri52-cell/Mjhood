@@ -18,6 +18,7 @@ import {
     Utensils, Heart, Scissors, Camera, Calendar, Car, Scale, HelpCircle, Briefcase,
     Instagram, Twitter, MessageCircle, Flag,
     ThumbsUp, ThumbsDown, ShoppingCart, Pill, DollarSign, Trees, DoorClosed,
+    Package,
     Moon, School, Stethoscope, Dumbbell, Coffee, Bus, Mail, BookOpen, Users,
     UserPlus, CheckCircle, FileText
 } from 'lucide-react';
@@ -117,10 +118,9 @@ interface CV {
 
 interface Resource {
     id: string;
-    user_id: string;
     title: string;
     category: string;
-    description: string;
+    description?: string;
     latitude: number;
     longitude: number;
     availability_type: 'rent' | 'borrow' | 'both';
@@ -129,8 +129,10 @@ interface Resource {
     price_max?: number;
     price_currency?: string;
     contact_phone?: string;
-    contact_method?: string;
+    contact_method?: 'phone' | 'message' | 'both';
+    user_id: string;
     created_at: string;
+    gallery_urls?: string[];
 }
 
 
@@ -419,7 +421,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
             if (error) {
                 console.error('[TalentMap] Error fetching needs:', error);
-                setNeeds([]);
+                // Do not clear existing needs on error to prevent flashing/disappearing pins
                 return;
             }
 
@@ -427,7 +429,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             setNeeds(data || []);
         } catch (error) {
             console.error('[TalentMap] Unexpected error in fetchNeeds:', error);
-            setNeeds([]);
+            // Do not clear existing needs on error
         }
     };
     const fetchCVs = async () => {
@@ -441,14 +443,14 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
             if (error) {
                 console.warn('[TalentMap] Error fetching CVs:', error);
-                setCvs([]);
+                // Do not clear existing CVs on error
             } else {
                 console.log(`[TalentMap] Successfully fetched ${data?.length || 0} CVs`);
                 setCvs(data || []);
             }
         } catch (err) {
             console.error('[TalentMap] Unexpected error fetching CVs:', err);
-            setCvs([]);
+            // Do not clear existing CVs on error
         }
     };
 
@@ -463,14 +465,14 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
             if (error) {
                 console.warn('[TalentMap] Error fetching resources:', error);
-                setResources([]);
+                // Do not clear existing resources on error
             } else {
                 console.log(`[TalentMap] Successfully fetched ${data?.length || 0} resources`);
                 setResources(data || []);
             }
         } catch (err) {
             console.error('[TalentMap] Unexpected error fetching resources:', err);
-            setResources([]);
+            // Do not clear existing resources on error
         }
     };
 
@@ -532,7 +534,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
                 if (error) {
                     console.error('[TalentMap] Error with fallback:', error);
-                    setServices([]);
+                    // Do not clear existing services on error
                 } else {
                     console.log(`[TalentMap] Fallback: fetched ${data?.length || 0} services`);
                     setServices(data || []);
@@ -578,7 +580,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             }
         } catch (err) {
             console.error('[TalentMap] Unexpected error:', err);
-            setServices([]);
+            // Do not clear existing services on error
         }
     };
 
@@ -1035,10 +1037,10 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
                                 {/* Action Button */}
                                 <Link
-                                    href={`/profile/${service.profiles?.id}`}
+                                    href={`/services/${service.id}`}
                                     className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
                                 >
-                                    {t('viewProfile')}
+                                    {t('view')}
                                 </Link>
                                 <button
                                     onClick={(e) => {
@@ -1072,78 +1074,35 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                         <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
                             <div className="p-4 text-center">
                                 <h3 className="font-bold text-lg text-gray-900 mb-1">{need.title}</h3>
-                                <span className="inline-block px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full mb-3">
-                                    {need.category}
+                                <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full mb-3">
+                                    {t(need.category as any)}
                                 </span>
 
                                 {need.description && (
-                                    <p className="text-sm text-gray-600 mb-4">
+                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                                         {need.description}
                                     </p>
                                 )}
 
-                                {/* Vote Buttons */}
-                                <div className="flex items-center justify-center gap-4 mb-4">
-                                    <button
-                                        onClick={async (e) => {
-                                            e.stopPropagation();
-                                            if (votedNeeds.has(need.id)) return;
-
-                                            const { error } = await supabase
-                                                .from('local_needs')
-                                                .update({ upvotes: (need.upvotes || 0) + 1 })
-                                                .eq('id', need.id);
-
-                                            if (!error) {
-                                                setVotedNeeds(prev => new Set(prev).add(need.id));
-                                                fetchNeeds();
-                                            }
-                                        }}
-                                        disabled={votedNeeds.has(need.id)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${votedNeeds.has(need.id)
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : 'bg-green-50 text-green-600 hover:bg-green-100'
-                                            }`}
-                                    >
+                                {/* Vote Counts */}
+                                <div className="flex justify-center gap-4 mb-4">
+                                    <div className="flex items-center gap-1 text-green-600">
                                         <ThumbsUp className="w-4 h-4" />
-                                        <span className="font-semibold">{need.upvotes || 0}</span>
-                                    </button>
-                                    <button
-                                        onClick={async (e) => {
-                                            e.stopPropagation();
-                                            if (votedNeeds.has(need.id)) return;
-
-                                            const { error } = await supabase
-                                                .from('local_needs')
-                                                .update({ downvotes: (need.downvotes || 0) + 1 })
-                                                .eq('id', need.id);
-
-                                            if (!error) {
-                                                setVotedNeeds(prev => new Set(prev).add(need.id));
-                                                fetchNeeds();
-                                            }
-                                        }}
-                                        disabled={votedNeeds.has(need.id)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${votedNeeds.has(need.id)
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : 'bg-red-50 text-red-600 hover:bg-red-100'
-                                            }`}
-                                    >
+                                        <span className="font-semibold text-sm">{need.upvotes || 0}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 text-red-600">
                                         <ThumbsDown className="w-4 h-4" />
-                                        <span className="font-semibold">{need.downvotes || 0}</span>
-                                    </button>
+                                        <span className="font-semibold text-sm">{need.downvotes || 0}</span>
+                                    </div>
                                 </div>
 
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleReport(need, 'need');
-                                    }}
-                                    className="w-full text-xs text-gray-400 hover:text-red-500 font-medium transition flex items-center justify-center gap-1"
+                                {/* View Button */}
+                                <Link
+                                    href={`/needs/${need.id}`}
+                                    className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
                                 >
-                                    <Flag className="w-3 h-3" />
-                                    Report this need
-                                </button>
+                                    {t('view')}
+                                </Link>
                             </div>
                         </Popup>
                     </Marker>
@@ -1175,41 +1134,40 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                         <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
                             <div className="p-4 text-center">
                                 <h3 className="font-bold text-lg text-gray-900 mb-1">{cv.full_name}</h3>
-                                <span className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full mb-3">
-                                    {cv.job_title || t('cv' as any)}
-                                </span>
+                                <p className="text-sm text-green-600 font-medium mb-3">{cv.job_title}</p>
 
                                 {cv.summary && (
-                                    <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                                         {cv.summary}
                                     </p>
                                 )}
 
-                                {/* Contact buttons */}
-                                <div className="flex justify-center gap-3 mb-4">
-                                    {cv.phone && (
-                                        <a
-                                            href={`https://wa.me/${cv.phone.replace(/\D/g, '')}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600 hover:bg-green-100 transition shadow-sm"
-                                        >
-                                            <MessageCircle className="w-4 h-4" />
-                                        </a>
-                                    )}
-                                </div>
+                                {/* Skills Preview */}
+                                {cv.skills && cv.skills.length > 0 && (
+                                    <div className="flex flex-wrap justify-center gap-1 mb-4">
+                                        {cv.skills.slice(0, 3).map((skill: string, index: number) => (
+                                            <span
+                                                key={index}
+                                                className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
+                                            >
+                                                {skill}
+                                            </span>
+                                        ))}
+                                        {cv.skills.length > 3 && (
+                                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                                +{cv.skills.length - 3}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
 
-                                {/* View Full CV Button */}
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedCV(cv);
-                                        setIsCVModalOpen(true);
-                                    }}
-                                    className="inline-block w-full bg-green-600 text-white text-sm font-bold py-3 rounded-full hover:bg-green-700 transition shadow-sm uppercase tracking-wide"
+                                {/* View Button */}
+                                <Link
+                                    href={`/cvs/${cv.id}`}
+                                    className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
                                 >
-                                    {t('viewFullCV' as any)}
-                                </button>
+                                    {t('view')}
+                                </Link>
                             </div>
                         </Popup>
                     </Marker>
@@ -1238,58 +1196,86 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                     >
                         <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
                             <div className="p-4 text-center">
-                                <h3 className="font-bold text-lg text-gray-900 mb-1">{resource.title}</h3>
-                                <span className="inline-block px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full mb-3">
-                                    {t(resource.category as any)}
-                                </span>
 
-                                {resource.description && (
-                                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-                                        {resource.description}
-                                    </p>
+                                {/* Resource Image Gallery Preview */}
+                                {resource.gallery_urls && resource.gallery_urls.length > 0 && (
+                                    <div className="mb-3 -mx-4 -mt-4">
+                                        <img
+                                            src={resource.gallery_urls[0]}
+                                            alt={resource.title}
+                                            className="w-full h-32 object-cover rounded-t-lg"
+                                        />
+                                    </div>
                                 )}
 
-                                {/* Availability Type */}
+                                {/* Title & Category */}
+                                <h3 className="font-bold text-lg text-gray-900 mb-1">{resource.title}</h3>
+                                <p className="text-xs text-purple-600 font-medium uppercase tracking-wide mb-3">
+                                    {t(resource.category as any)}
+                                </p>
+
+                                {/* Availability Badge */}
                                 <div className="mb-3">
-                                    <span className="text-xs text-gray-500 uppercase tracking-wide">
+                                    <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
                                         {resource.availability_type === 'rent' ? t('forRent' as any) :
                                             resource.availability_type === 'borrow' ? t('forBorrow' as any) :
                                                 t('rentOrBorrow' as any)}
                                     </span>
                                 </div>
 
-                                {/* Pricing */}
+                                {/* Description */}
+                                {resource.description && (
+                                    <p className="text-sm text-gray-600 line-clamp-3 mb-4 leading-relaxed">
+                                        {resource.description}
+                                    </p>
+                                )}
+
+                                {/* Price Display */}
                                 {resource.price_type && resource.price_type !== 'free' && (
-                                    <div className="mb-3 text-sm">
-                                        {resource.price_type === 'fixed' && resource.price_min && (
-                                            <p className="font-semibold text-gray-900">
-                                                {resource.price_min} {resource.price_currency || 'SAR'}
-                                            </p>
-                                        )}
-                                        {resource.price_type === 'range' && resource.price_min && resource.price_max && (
-                                            <p className="font-semibold text-gray-900">
-                                                {resource.price_min} - {resource.price_max} {resource.price_currency || 'SAR'}
-                                            </p>
-                                        )}
-                                        {resource.price_type === 'negotiable' && (
-                                            <p className="font-semibold text-gray-900">{t('negotiable' as any)}</p>
+                                    <div className="mb-4">
+                                        <div className="bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 inline-block">
+                                            <span className="text-purple-700 font-semibold text-sm">
+                                                {resource.price_type === 'fixed' && resource.price_min && `${resource.price_min} ${resource.price_currency || 'SAR'}`}
+                                                {resource.price_type === 'range' && resource.price_min && resource.price_max && `${resource.price_min} - ${resource.price_max} ${resource.price_currency || 'SAR'}`}
+                                                {resource.price_type === 'negotiable' && t('negotiable' as any)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                                {resource.price_type === 'free' && (
+                                    <div className="mb-4">
+                                        <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 inline-block">
+                                            <span className="text-green-700 font-semibold text-sm">{t('free' as any)}</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Additional Images Gallery */}
+                                {resource.gallery_urls && resource.gallery_urls.length > 1 && (
+                                    <div className="flex justify-center gap-1 mb-4">
+                                        {resource.gallery_urls.slice(1, 5).map((url: string, index: number) => (
+                                            <img
+                                                key={index}
+                                                src={url}
+                                                alt={`${resource.title} ${index + 2}`}
+                                                className="w-10 h-10 rounded-md object-cover border border-gray-200"
+                                            />
+                                        ))}
+                                        {resource.gallery_urls.length > 5 && (
+                                            <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center text-xs text-gray-500 font-medium border border-gray-200">
+                                                +{resource.gallery_urls.length - 5}
+                                            </div>
                                         )}
                                     </div>
                                 )}
 
-                                {/* Contact Button */}
-                                <div className="flex justify-center gap-3">
-                                    {resource.contact_phone && (
-                                        <a
-                                            href={`https://wa.me/${resource.contact_phone.replace(/\D/g, '')}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-block bg-purple-600 text-white text-sm font-bold py-3 px-6 rounded-full hover:bg-purple-700 transition shadow-sm uppercase tracking-wide"
-                                        >
-                                            {t('contact' as any)}
-                                        </a>
-                                    )}
-                                </div>
+                                {/* View Button - Matching Service Style */}
+                                <Link
+                                    href={`/resources/${resource.id}`}
+                                    className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
+                                >
+                                    {t('view' as any)}
+                                </Link>
                             </div>
                         </Popup>
                     </Marker>

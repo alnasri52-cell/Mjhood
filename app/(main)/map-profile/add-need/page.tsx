@@ -131,7 +131,7 @@ export default function AddNeedPage() {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Category */}
                         <div>
-                            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="category" className="block text-sm font-bold text-gray-900 mb-2">
                                 {t('needCategory')} <span className="text-red-500">*</span>
                             </label>
                             <select
@@ -139,7 +139,7 @@ export default function AddNeedPage() {
                                 required
                                 value={category}
                                 onChange={(e) => setCategory(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                             >
                                 <option value="">{t('selectNeedCategory')}</option>
                                 {LOCAL_NEEDS_CATEGORIES.map((cat) => (
@@ -150,7 +150,7 @@ export default function AddNeedPage() {
 
                         {/* Title */}
                         <div>
-                            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="title" className="block text-sm font-bold text-gray-900 mb-2">
                                 {t('needTitle')} <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -159,14 +159,14 @@ export default function AddNeedPage() {
                                 required
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                                 placeholder={t('needTitlePlaceholder')}
                             />
                         </div>
 
                         {/* Description */}
                         <div>
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="description" className="block text-sm font-bold text-gray-900 mb-2">
                                 {t('needDescription')}
                             </label>
                             <textarea
@@ -174,14 +174,14 @@ export default function AddNeedPage() {
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 rows={3}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                                 placeholder={t('needDescriptionPlaceholder')}
                             />
                         </div>
 
                         {/* Location Picker */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-bold text-gray-900 mb-2">
                                 {t('selectLocation')} <span className="text-red-500">*</span>
                             </label>
                             <p className="text-xs text-gray-500 mb-3">{t('clickMapToSelectLocation')}</p>
@@ -205,7 +205,7 @@ export default function AddNeedPage() {
                             <button
                                 type="submit"
                                 disabled={saving || !latitude || !longitude}
-                                className="px-6 py-2.5 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {saving ? t('saving') : t('addNeedButton')}
                             </button>

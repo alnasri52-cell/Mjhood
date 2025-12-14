@@ -11,11 +11,7 @@ import Modal from '@/components/ui/Modal';
 import ImageUpload from '@/components/ui/ImageUpload';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
-// Load LocationPicker dynamically to avoid SSR issues with Leaflet
-const LocationPicker = dynamic(() => import('@/components/map/LocationPicker'), {
-    ssr: false,
-    loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center text-gray-400">Loading map...</div>
-});
+
 
 export default function AddResourcePage() {
     const { t, dir } = useLanguage();
@@ -53,6 +49,24 @@ export default function AddResourcePage() {
             }
 
             setUser(authUser);
+
+            // Fetch Resource Location
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('latitude, longitude')
+                .eq('id', authUser.id)
+                .single();
+
+            if (profile?.latitude && profile?.longitude) {
+                setLatitude(profile.latitude);
+                setLongitude(profile.longitude);
+            } else {
+                // If no location set, redirect to resources page (or show error)
+                // We'll let them stay but validation will fail. 
+                // Ideally we should redirect.
+                // router.push('/map-profile/resources');
+            }
+
             setLoading(false);
         };
 
@@ -136,7 +150,7 @@ export default function AddResourcePage() {
                         <div>
                             <h2 className="font-semibold text-purple-900 mb-1">{t('addResource')}</h2>
                             <p className="text-sm text-purple-800">
-                                {t('resourceLocationHint')}
+                                {t('resourceLocationFixedDesc' as any) || "This resource will be available at your designated Resource Location."}
                             </p>
                         </div>
                     </div>
@@ -147,7 +161,7 @@ export default function AddResourcePage() {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Category */}
                         <div>
-                            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="category" className="block text-sm font-bold text-gray-900 mb-2">
                                 {t('category')} <span className="text-red-500">*</span>
                             </label>
                             <select
@@ -155,7 +169,7 @@ export default function AddResourcePage() {
                                 required
                                 value={category}
                                 onChange={(e) => setCategory(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-900"
                             >
                                 <option value="">{t('selectCategory')}</option>
                                 {RESOURCE_CATEGORIES.map((cat) => (
@@ -166,7 +180,7 @@ export default function AddResourcePage() {
 
                         {/* Title */}
                         <div>
-                            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="title" className="block text-sm font-bold text-gray-900 mb-2">
                                 {t('resourceTitle')} <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -175,14 +189,14 @@ export default function AddResourcePage() {
                                 required
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                                 placeholder="e.g. Electric Drill"
                             />
                         </div>
 
                         {/* Description */}
                         <div>
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="description" className="block text-sm font-bold text-gray-900 mb-2">
                                 {t('resourceDescription')}
                             </label>
                             <textarea
@@ -190,7 +204,7 @@ export default function AddResourcePage() {
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 rows={3}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                                 placeholder={t('descriptionPlaceholder')}
                             />
                         </div>
@@ -296,7 +310,7 @@ export default function AddResourcePage() {
                                             min="0"
                                             value={priceMin}
                                             onChange={(e) => setPriceMin(e.target.value)}
-                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 pr-16"
+                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 pr-16 text-gray-900"
                                             placeholder="0.00"
                                         />
                                         <span className="absolute right-4 top-3 text-gray-500 text-sm">SAR</span>
@@ -318,7 +332,7 @@ export default function AddResourcePage() {
                                                 min="0"
                                                 value={priceMin}
                                                 onChange={(e) => setPriceMin(e.target.value)}
-                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 pr-16"
+                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 pr-16 text-gray-900"
                                                 placeholder="0.00"
                                             />
                                             <span className="absolute right-4 top-3 text-gray-500 text-sm">SAR</span>
@@ -336,7 +350,7 @@ export default function AddResourcePage() {
                                                 min={priceMin || "0"}
                                                 value={priceMax}
                                                 onChange={(e) => setPriceMax(e.target.value)}
-                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 pr-16"
+                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 pr-16 text-gray-900"
                                                 placeholder="0.00"
                                             />
                                             <span className="absolute right-4 top-3 text-gray-500 text-sm">SAR</span>
@@ -360,7 +374,7 @@ export default function AddResourcePage() {
                                     type="tel"
                                     value={contactPhone}
                                     onChange={(e) => setContactPhone(e.target.value)}
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                                     placeholder="+966 5X XXX XXXX"
                                 />
                             </div>
@@ -405,20 +419,7 @@ export default function AddResourcePage() {
                             </div>
                         </div>
 
-                        {/* Location Picker */}
-                        <div className="border-t border-gray-200 pt-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                {t('selectLocation')} <span className="text-red-500">*</span>
-                            </label>
-                            <p className="text-xs text-gray-500 mb-3">{t('resourceLocationHint')}</p>
-                            <LocationPicker
-                                value={latitude && longitude ? { lat: latitude, lng: longitude } : null}
-                                onChange={(lat, lng) => {
-                                    setLatitude(lat);
-                                    setLongitude(lng);
-                                }}
-                            />
-                        </div>
+
 
                         {/* Image Upload */}
                         <div className="border-t border-gray-200 pt-6">
@@ -449,7 +450,7 @@ export default function AddResourcePage() {
 
                             {/* Image upload */}
                             <ImageUpload
-                                bucket="resource-images"
+                                bucket="gallery"
                                 onUpload={(url) => setGalleryUrls([...galleryUrls, url])}
                                 label=""
                                 multiple={true}
@@ -467,7 +468,7 @@ export default function AddResourcePage() {
                             <button
                                 type="submit"
                                 disabled={saving || !latitude || !longitude}
-                                className="px-6 py-2.5 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-2.5 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {saving ? t('saving') : t('addResource')}
                             </button>

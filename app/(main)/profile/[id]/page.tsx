@@ -24,6 +24,7 @@ interface Profile {
     avatar_url?: string;
     social_links?: any;
     gallery_urls?: string[];
+    bio?: string;
     service_title?: string;
     service_description?: string;
     base_location?: string;
@@ -121,59 +122,28 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     isOwner={isOwner}
                 />
 
-                {/* Info message for service profile */}
-                {profile.role === 'talent' && isOwner && (
-                    <div className="mt-8 bg-blue-50 p-6 rounded-lg border border-blue-100">
-                        <h3 className="font-semibold text-blue-900 mb-2">{t('serviceProfileAvailable')}</h3>
-                        <p className="text-blue-700 text-sm mb-4">{t('viewServiceProfile')}</p>
-                        <Link
-                            href="/map-profile"
-                            className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-                        >
-                            {t('viewMapProfile')}
-                            <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
-                        </Link>
+                {/* Bio / About */}
+                {profile.bio && (
+                    <div className="mt-6 bg-white rounded-lg border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('about' as any) || 'About'}</h3>
+                        <p className="text-gray-700 whitespace-pre-line leading-relaxed">{profile.bio}</p>
                     </div>
                 )}
 
-                {/* Social Media Links */}
-                {profile.social_links && Object.keys(profile.social_links).length > 0 && (
-                    <div className="mt-8 bg-white rounded-lg border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('socialMedia')}</h3>
-                        <div className="flex flex-wrap gap-3">
-                            {profile.social_links.instagram && (
-                                <a
-                                    href={`https://instagram.com/${profile.social_links.instagram}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
-                                >
-                                    <Instagram className="w-4 h-4" />
-                                    @{profile.social_links.instagram}
-                                </a>
-                            )}
-                            {profile.social_links.twitter && (
-                                <a
-                                    href={`https://twitter.com/${profile.social_links.twitter}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
-                                >
-                                    <Twitter className="w-4 h-4" />
-                                    @{profile.social_links.twitter}
-                                </a>
-                            )}
-                            {profile.social_links.website && (
-                                <a
-                                    href={profile.social_links.website}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
-                                >
-                                    <Globe className="w-4 h-4" />
-                                    {t('website')}
-                                </a>
-                            )}
+                {/* Work Samples */}
+                {profile.gallery_urls && profile.gallery_urls.length > 0 && (
+                    <div className="mt-8">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">{t('workSamples')}</h2>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {profile.gallery_urls.map((url, index) => (
+                                <div key={index} className="aspect-square relative rounded-xl overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition">
+                                    <img
+                                        src={url}
+                                        alt={`Work sample ${index + 1}`}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}
