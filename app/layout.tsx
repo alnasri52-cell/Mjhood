@@ -67,15 +67,12 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{
           __html: `
             if ('serviceWorker' in navigator) {
-              if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(function(registrations) {
                     for(let registration of registrations) {
                         registration.unregister()
                             .then(() => console.log('Service Worker Unregistered'));
                     }
                 });
-            }
-  });
             }
           `
         }} />
