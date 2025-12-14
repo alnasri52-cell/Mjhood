@@ -17,7 +17,7 @@ import {
     Laptop, Code, Palette, Languages, GraduationCap, Baby, PawPrint,
     Utensils, Heart, Scissors, Camera, Calendar, Car, Scale, HelpCircle, Briefcase,
     Instagram, Twitter, MessageCircle, Flag,
-    ThumbsUp, ThumbsDown, ShoppingCart, Pill, DollarSign, Trees, DoorClosed,
+    ThumbsUp, ThumbsDown, ShoppingCart, Pill, DollarSign, Trees, DoorClosed, Archive,
     Moon, School, Stethoscope, Dumbbell, Coffee, Bus, Mail, BookOpen, Users,
     UserPlus, CheckCircle, FileText
 } from 'lucide-react';
@@ -1095,79 +1095,40 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                         icon={getNeedIcon(need.category)}
                     >
                         <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
-                            <div className="p-4 text-center">
-                                <h3 className="font-bold text-lg text-gray-900 mb-1">{need.title}</h3>
-                                <span className="inline-block px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full mb-3">
-                                    {need.category}
-                                </span>
+                            <div className="relative pt-8 pb-4 px-4 text-center">
+                                {/* Name & Title - No Avatar for Needs */}
+                                <div className="mt-4 mb-2">
+                                    <h3 className="font-bold text-lg text-gray-900 leading-tight">
+                                        {need.title}
+                                    </h3>
+                                    <p className="text-xs text-red-500 font-medium uppercase tracking-wide mt-1">
+                                        {need.category}
+                                    </p>
+                                </div>
 
+                                {/* Description */}
                                 {need.description && (
-                                    <p className="text-sm text-gray-600 mb-4">
+                                    <p className="text-sm text-gray-600 line-clamp-3 mb-4 leading-relaxed px-2">
                                         {need.description}
                                     </p>
                                 )}
 
-                                {/* Vote Buttons */}
-                                <div className="flex items-center justify-center gap-4 mb-4">
-                                    <button
-                                        onClick={async (e) => {
-                                            e.stopPropagation();
-                                            if (votedNeeds.has(need.id)) return;
-
-                                            const { error } = await supabase
-                                                .from('local_needs')
-                                                .update({ upvotes: (need.upvotes || 0) + 1 })
-                                                .eq('id', need.id);
-
-                                            if (!error) {
-                                                setVotedNeeds(prev => new Set(prev).add(need.id));
-                                                fetchNeeds();
-                                            }
-                                        }}
-                                        disabled={votedNeeds.has(need.id)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${votedNeeds.has(need.id)
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : 'bg-green-50 text-green-600 hover:bg-green-100'
-                                            }`}
-                                    >
-                                        <ThumbsUp className="w-4 h-4" />
-                                        <span className="font-semibold">{need.upvotes || 0}</span>
-                                    </button>
-                                    <button
-                                        onClick={async (e) => {
-                                            e.stopPropagation();
-                                            if (votedNeeds.has(need.id)) return;
-
-                                            const { error } = await supabase
-                                                .from('local_needs')
-                                                .update({ downvotes: (need.downvotes || 0) + 1 })
-                                                .eq('id', need.id);
-
-                                            if (!error) {
-                                                setVotedNeeds(prev => new Set(prev).add(need.id));
-                                                fetchNeeds();
-                                            }
-                                        }}
-                                        disabled={votedNeeds.has(need.id)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${votedNeeds.has(need.id)
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : 'bg-red-50 text-red-600 hover:bg-red-100'
-                                            }`}
-                                    >
-                                        <ThumbsDown className="w-4 h-4" />
-                                        <span className="font-semibold">{need.downvotes || 0}</span>
-                                    </button>
-                                </div>
-
+                                {/* Action Button */}
+                                <Link
+                                    href={`/need/${need.id}`}
+                                    className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
+                                >
+                                    {t('viewNeed')}
+                                </Link>
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         handleReport(need, 'need');
                                     }}
-                                    className="w-full text-xs text-gray-400 hover:text-red-500 font-medium transition flex items-center justify-center gap-1"
+                                    className="mt-2 w-full text-xs text-gray-400 hover:text-red-500 font-medium transition flex items-center justify-center gap-1"
                                 >
                                     <Flag className="w-3 h-3" />
-                                    Report this need
+                                    {t('report')}
                                 </button>
                             </div>
                         </Popup>
@@ -1182,43 +1143,41 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                         icon={getCVIcon()}
                     >
                         <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
-                            <div className="p-4 text-center">
-                                <h3 className="font-bold text-lg text-gray-900 mb-1">{cv.full_name}</h3>
-                                <span className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full mb-3">
-                                    {cv.job_title || t('cv' as any)}
-                                </span>
+                            <div className="relative pt-8 pb-4 px-4 text-center">
 
+                                {/* Overlapping Avatar (Initials) */}
+                                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+                                    <div className="p-1 bg-white rounded-full shadow-sm mb-1">
+                                        <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-2xl border-4 border-white shadow-md">
+                                            {cv.full_name?.charAt(0) || '?'}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Name & Title */}
+                                <div className="mt-12 mb-2">
+                                    <h3 className="font-bold text-lg text-gray-900 leading-tight">
+                                        {cv.full_name}
+                                    </h3>
+                                    <p className="text-xs text-green-500 font-medium uppercase tracking-wide mt-1">
+                                        {cv.job_title}
+                                    </p>
+                                </div>
+
+                                {/* Description */}
                                 {cv.summary && (
-                                    <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                                    <p className="text-sm text-gray-600 line-clamp-3 mb-4 leading-relaxed px-2">
                                         {cv.summary}
                                     </p>
                                 )}
 
-                                {/* Contact buttons */}
-                                <div className="flex justify-center gap-3 mb-4">
-                                    {cv.phone && (
-                                        <a
-                                            href={`https://wa.me/${cv.phone.replace(/\D/g, '')}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600 hover:bg-green-100 transition shadow-sm"
-                                        >
-                                            <MessageCircle className="w-4 h-4" />
-                                        </a>
-                                    )}
-                                </div>
-
-                                {/* View Full CV Button */}
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedCV(cv);
-                                        setIsCVModalOpen(true);
-                                    }}
-                                    className="inline-block w-full bg-green-600 text-white text-sm font-bold py-3 rounded-full hover:bg-green-700 transition shadow-sm uppercase tracking-wide"
+                                {/* Action Button */}
+                                <Link
+                                    href={`/cv/${cv.id}`}
+                                    className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
                                 >
-                                    {t('viewFullCV' as any)}
-                                </button>
+                                    {t('viewCV')}
+                                </Link>
                             </div>
                         </Popup>
                     </Marker>
@@ -1232,63 +1191,59 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                         icon={getResourceIcon(resource.category)}
                     >
                         <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
-                            <div className="p-4 text-center">
-                                <h3 className="font-bold text-lg text-gray-900 mb-1">{resource.title}</h3>
-                                <span className="inline-block px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full mb-3">
-                                    {t(resource.category as any)}
-                                </span>
+                            <div className="relative pt-8 pb-4 px-4 text-center">
 
+                                {/* Overlapping Avatar (Icon) */}
+                                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+                                    <div className="p-1 bg-white rounded-full shadow-sm mb-1">
+                                        <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-2xl border-4 border-white shadow-md">
+                                            <Archive className="w-8 h-8" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Name & Title */}
+                                <div className="mt-12 mb-2">
+                                    <h3 className="font-bold text-lg text-gray-900 leading-tight">
+                                        {resource.title}
+                                    </h3>
+                                    <p className="text-xs text-purple-500 font-medium uppercase tracking-wide mt-1">
+                                        {t(resource.category as any)}
+                                    </p>
+                                </div>
+
+                                {/* Description */}
                                 {resource.description && (
-                                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+                                    <p className="text-sm text-gray-600 line-clamp-3 mb-4 leading-relaxed px-2">
                                         {resource.description}
                                     </p>
                                 )}
 
-                                {/* Availability Type */}
-                                <div className="mb-3">
-                                    <span className="text-xs text-gray-500 uppercase tracking-wide">
-                                        {resource.availability_type === 'rent' ? t('forRent' as any) :
-                                            resource.availability_type === 'borrow' ? t('forBorrow' as any) :
-                                                t('rentOrBorrow' as any)}
-                                    </span>
-                                </div>
-
-                                {/* Pricing */}
+                                {/* Price Display */}
                                 {resource.price_type && resource.price_type !== 'free' && (
-                                    <div className="mb-3 text-sm">
-                                        {resource.price_type === 'fixed' && resource.price_min && (
-                                            <p className="font-semibold text-gray-900">
-                                                {resource.price_min} {resource.price_currency || 'SAR'}
-                                            </p>
-                                        )}
-                                        {resource.price_type === 'range' && resource.price_min && resource.price_max && (
-                                            <p className="font-semibold text-gray-900">
-                                                {resource.price_min} - {resource.price_max} {resource.price_currency || 'SAR'}
-                                            </p>
-                                        )}
-                                        {resource.price_type === 'negotiable' && (
-                                            <p className="font-semibold text-gray-900">{t('negotiable' as any)}</p>
-                                        )}
+                                    <div className="mb-4 px-2">
+                                        <div className="bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 inline-block">
+                                            <span className="text-purple-700 font-semibold text-sm">
+                                                {resource.price_type === 'fixed' && resource.price_min && `${resource.price_min} ${resource.price_currency || 'SAR'}`}
+                                                {resource.price_type === 'range' && resource.price_min && resource.price_max && `${resource.price_min} - ${resource.price_max} ${resource.price_currency || 'SAR'}`}
+                                                {resource.price_type === 'negotiable' && t('negotiable')}
+                                            </span>
+                                        </div>
                                     </div>
                                 )}
 
-                                {/* Contact Button */}
-                                <div className="flex justify-center gap-3">
-                                    {resource.contact_phone && (
-                                        <a
-                                            href={`https://wa.me/${resource.contact_phone.replace(/\D/g, '')}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-block bg-purple-600 text-white text-sm font-bold py-3 px-6 rounded-full hover:bg-purple-700 transition shadow-sm uppercase tracking-wide"
-                                        >
-                                            {t('contact' as any)}
-                                        </a>
-                                    )}
-                                </div>
+                                {/* Action Button */}
+                                <Link
+                                    href={`/resource/${resource.id}`}
+                                    className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
+                                >
+                                    {t('viewResource')}
+                                </Link>
                             </div>
                         </Popup>
                     </Marker>
                 ))}
+
             </MarkerClusterGroup>
 
             {reportTarget && (

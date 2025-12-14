@@ -15,6 +15,17 @@ export const translations = {
         // Map
         searchPlaceholder: 'Search for services...',
         viewProfile: 'View Profile',
+        viewNeed: 'View Need',
+        viewResource: 'View Resource',
+        viewFullCV: 'View Full CV',
+        report: 'Report',
+        localNeed: 'Local Need',
+        whatsapp: 'WhatsApp',
+        email: 'Email',
+        contactOwner: 'Contact Owner',
+        forRent: 'For Rent',
+        forBorrow: 'For Borrow',
+        rentOrBorrow: 'Rent or Borrow',
 
         // Profile
         reviews: 'Reviews',
@@ -476,7 +487,6 @@ export const translations = {
         clickMapToSelectLocation: 'Click on the map to select location',
         needCreated: 'Need added successfully!',
         resourceCreated: 'Resource added successfully!',
-        contactInfo: 'Contact Information (Optional)',
         descriptionPlaceholder: 'Describe your resource...',
         resourceImages: 'Resource Images (Optional)',
         uploadResourceImages: 'Upload photos of your resource to attract more interest',
@@ -497,6 +507,14 @@ export const translations = {
         // Map
         searchPlaceholder: 'ابحث عن خدمات...',
         viewProfile: 'عرض الملف الشخصي',
+        viewNeed: 'عرض الاحتياج',
+        viewResource: 'عرض المورد',
+        viewFullCV: 'عرض السيرة الذاتية الكاملة',
+        report: 'إبلاغ',
+        localNeed: 'احتياج محلي',
+        whatsapp: 'واتساب',
+        email: 'بريد إلكتروني',
+        contactOwner: 'تواصل مع المالك',
 
         // Profile
         reviews: 'التقييمات',
