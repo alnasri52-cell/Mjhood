@@ -665,6 +665,8 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         const signal = controller.signal;
 
         console.log('--- useEffect [viewMode]: Running ---', viewMode);
+        console.log('--- Env Check: URL present?', !!process.env.NEXT_PUBLIC_SUPABASE_URL, 'Key present?', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
         const fetchAllData = async () => {
             console.log('--- fetchAllData: START ---', viewMode);
             try {
