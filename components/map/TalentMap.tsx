@@ -516,8 +516,13 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 .not('service_location_lng', 'is', null)
                 .is('service_categories.deleted_at', null);
 
-            if (profilesError) {
-                console.error('Error fetching services (profiles):', JSON.stringify(profilesError, null, 2));
+            // Fallback if error OR if no data found in new structure (migration transition)
+            if (profilesError || !profilesData || profilesData.length === 0) {
+                if (profilesError) {
+                    console.error('Error fetching services (profiles):', JSON.stringify(profilesError, null, 2));
+                } else {
+                    console.log('No data in new structure, falling back to legacy services table');
+                }
 
                 // FALLBACK: Try old services table for backward compatibility
                 let { data, error } = await supabase
