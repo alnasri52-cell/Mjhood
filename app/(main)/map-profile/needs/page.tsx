@@ -1,208 +1,215 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/database/supabase';
-import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { ArrowLeft, Plus, Edit, Trash2, Flag, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Plus, HandHeart, ArrowLeft, Trash2 } from 'lucide-react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
+import Modal from '@/components/ui/Modal';
 
-interface Need {
-    id: string;
-    title: string;
-    category: string;
-    description?: string;
-    upvotes: number;
-    downvotes: number;
-    created_at: string;
-}
-
-export default function NeedsManagementPage() {
-    const router = useRouter();
+export default function MyNeedsPage() {
     const { t, dir } = useLanguage();
-    const [needs, setNeeds] = useState<Need[]>([]);
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [userId, setUserId] = useState<string | null>(null);
+    const [user, setUser] = useState<any>(null);
+    const [needs, setNeeds] = useState<any[]>([]);
+
+    // Modal state
+    const [showModal, setShowModal] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
+    const [modalType, setModalType] = useState<'success' | 'error' | 'confirm'>('success');
+    const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
     useEffect(() => {
-        checkAuth();
-    }, []);
+        const fetchNeeds = async () => {
+            const { data: { user: authUser } } = await supabase.auth.getUser();
 
-    const checkAuth = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            router.push('/login');
-            return;
-        }
-        setUserId(user.id);
-        fetchNeeds(user.id);
-    };
+            if (!authUser) {
+                router.push('/auth/login');
+                return;
+            }
+            setUser(authUser);
 
-    const fetchNeeds = async (uid: string) => {
-        try {
             const { data, error } = await supabase
                 .from('local_needs')
                 .select('*')
-                .eq('user_id', uid)
+                .eq('user_id', authUser.id)
+                .is('deleted_at', null)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
-            setNeeds(data || []);
-        } catch (error) {
-            console.error('Error fetching needs:', error);
-        } finally {
+            if (error) {
+                console.error('Error fetching needs:', error);
+            } else {
+                setNeeds(data || []);
+            }
             setLoading(false);
-        }
-    };
+        };
 
-    const handleDelete = async (need: Need) => {
-        const totalVotes = (need.upvotes || 0) + (need.downvotes || 0);
+        fetchNeeds();
+    }, []);
 
-        if (totalVotes > 2) {
-            alert(t('cannotDeleteValuableData' as any));
+    const handleDelete = async (id: string, e: React.MouseEvent) => {
+        e.preventDefault();
+
+        const needToDelete = needs.find(n => n.id === id);
+        if (needToDelete && needToDelete.upvotes > 2) {
+            setModalMessage(t('cannotDeleteNeed' as any));
+            setModalType('error');
+            setShowModal(true);
             return;
         }
 
-        if (!confirm(t('confirmDelete' as any))) return;
+        setModalMessage(t('confirmDeleteNeed' as any));
+        setModalType('confirm');
+        setPendingAction(() => async () => {
+            try {
+                const { error } = await supabase
+                    .from('local_needs')
+                    .update({ deleted_at: new Date().toISOString() })
+                    .eq('id', id);
 
-        try {
-            const { error } = await supabase
-                .from('local_needs')
-                .delete()
-                .eq('id', need.id);
+                if (error) throw error;
 
-            if (error) throw error;
+                setNeeds(needs.filter(n => n.id !== id));
+                setModalMessage(t('success'));
+                setModalType('success');
+            } catch (error: any) {
+                setModalMessage(t('genericError') + error.message);
+                setModalType('error');
+            }
+        });
+        setShowModal(true);
+    };
 
-            setNeeds(needs.filter(n => n.id !== need.id));
-        } catch (error) {
-            console.error('Error deleting need:', error);
-            alert(t('errorDeletingNeed' as any));
-        }
+    const handleGoOffline = async () => {
+        setModalMessage(t('goOfflineText'));
+        setModalType('confirm');
+        setPendingAction(() => async () => {
+            try {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({
+                        role: 'client',
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq('id', user.id);
+
+                if (error) throw error;
+
+                setModalMessage(t('nowOffline'));
+                setModalType('success');
+                setShowModal(true);
+                setTimeout(() => {
+                    router.push('/map');
+                    router.refresh();
+                }, 1500);
+            } catch (error: any) {
+                setModalMessage(t('genericError') + error.message);
+                setModalType('error');
+                setShowModal(true);
+            }
+        });
+        setShowModal(true);
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-            </div>
-        );
+        return <div className="min-h-screen flex items-center justify-center">{t('loading')}</div>;
     }
 
     return (
-        <div className="min-h-screen bg-gray-50" dir={dir}>
+        <div className="min-h-screen bg-gray-50 pb-20">
             {/* Header */}
-            <div className="bg-white border-b sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="p-2 hover:bg-gray-100 rounded-full transition"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                        <h1 className="text-2xl font-bold text-gray-900">{t('myNeeds' as any)}</h1>
-                    </div>
-                    <Link
-                        href="/map-profile/add-need"
-                        className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
-                    >
-                        <Plus className="w-5 h-5" />
-                        <span>{t('addNew' as any)}</span>
+            <div className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-10">
+                <div className="max-w-2xl mx-auto flex items-center">
+                    <Link href="/map" className="inline-flex items-center text-gray-600 hover:text-black transition">
+                        <ArrowLeft className={`w-5 h-5 ${dir === 'rtl' ? 'ml-2 rotate-180' : 'mr-2'}`} />
+                        {t('backToMap')}
                     </Link>
+                    <h1 className={`font-bold text-lg text-black ${dir === 'rtl' ? 'mr-auto' : 'ml-auto'}`}>{t('needsLabel' as any)}</h1>
                 </div>
             </div>
 
-            {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <main className="max-w-2xl mx-auto px-4 py-8">
+
+                {/* Header & Add Button */}
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900">{t('yourNeeds' as any) || 'Your Needs'}</h2>
+                        <p className="text-gray-500 text-sm">{t('manageNeeds' as any) || 'Manage the needs you posted.'}</p>
+                    </div>
+                    <Link
+                        href="/map-profile/add-need"
+                        className="flex items-center bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition"
+                    >
+                        <Plus className={`w-4 h-4 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+                        {t('addNeed' as any)}
+                    </Link>
+                </div>
+
                 {needs.length === 0 ? (
-                    <div className="text-center py-16">
-                        <Flag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('noNeedsYet' as any)}</h3>
-                        <p className="text-gray-600 mb-6">{t('addYourFirstNeed' as any)}</p>
+                    <div className="text-center py-12 bg-white rounded-xl border border-gray-200 border-dashed">
+                        <HandHeart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <h3 className="text-lg font-medium text-gray-900">{t('noNeedsFound' as any)}</h3>
+                        <p className="text-gray-500 mb-6">{t('noNeedsSubtitle' as any)}</p>
                         <Link
                             href="/map-profile/add-need"
-                            className="inline-flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition"
+                            className="inline-flex items-center bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition"
                         >
-                            <Plus className="w-5 h-5" />
-                            <span>{t('addNeed' as any)}</span>
+                            <Plus className={`w-4 h-4 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+                            {t('addNeed' as any) || 'Add Need'}
                         </Link>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {needs.map((need) => {
-                            const totalVotes = (need.upvotes || 0) + (need.downvotes || 0);
-                            const canDelete = totalVotes <= 2;
-
-                            return (
-                                <div key={need.id} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <Flag className="w-8 h-8 text-orange-600" />
-                                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                    <div className="space-y-4">
+                        {needs.map((need) => (
+                            <div key={need.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex flex-col sm:flex-row sm:items-start justify-between hover:border-red-300 transition group">
+                                <div>
+                                    <div className="flex items-center mb-1">
+                                        <span className="bg-red-50 text-red-700 text-xs px-2 py-1 rounded-md font-medium mr-2">
                                             {t(need.category as any)}
                                         </span>
+                                        <h3 className="font-bold text-lg text-gray-900">{need.request_type}</h3>
                                     </div>
-
-                                    <h3 className="font-bold text-lg text-gray-900 mb-2">{need.title}</h3>
-
-                                    {need.description && (
-                                        <p className="text-sm text-gray-600 mb-4 line-clamp-2">{need.description}</p>
-                                    )}
-
-                                    {/* Vote Counts */}
-                                    <div className="flex items-center gap-4 mb-4 pb-4 border-b">
-                                        <div className="flex items-center gap-1 text-green-600">
-                                            <ThumbsUp className="w-4 h-4" />
-                                            <span className="font-semibold text-sm">{need.upvotes || 0}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1 text-red-600">
-                                            <ThumbsDown className="w-4 h-4" />
-                                            <span className="font-semibold text-sm">{need.downvotes || 0}</span>
-                                        </div>
-                                        <div className="text-xs text-gray-500">
-                                            {t('totalVotes' as any)}: {totalVotes}
-                                        </div>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex gap-2">
-                                        <Link
-                                            href={`/map-profile/add-need?id=${need.id}`}
-                                            className="flex-1 flex items-center justify-center gap-2 bg-gray-100 text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-200 transition text-sm font-medium"
-                                        >
-                                            <Edit className="w-4 h-4" />
-                                            {t('edit')}
-                                        </Link>
-                                        {canDelete ? (
-                                            <button
-                                                onClick={() => handleDelete(need)}
-                                                className="flex items-center justify-center gap-2 bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100 transition text-sm font-medium"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                                {t('delete')}
-                                            </button>
-                                        ) : (
-                                            <button
-                                                disabled
-                                                title={t('cannotDeleteValuableData' as any)}
-                                                className="flex items-center justify-center gap-2 bg-gray-100 text-gray-400 px-3 py-2 rounded-lg cursor-not-allowed text-sm font-medium"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                                {t('delete')}
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {!canDelete && (
-                                        <p className="text-xs text-orange-600 mt-2 text-center">
-                                            {t('cannotDeleteValuableData' as any)}
-                                        </p>
-                                    )}
+                                    {need.description && <p className="text-gray-600 text-sm mb-2">{need.description}</p>}
                                 </div>
-                            );
-                        })}
+                                <div className="flex items-center space-x-2 mt-4 sm:mt-0 self-end sm:self-start">
+                                    <button
+                                        onClick={(e) => handleDelete(need.id, e)}
+                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                        title={t('confirmDeleteResource')}
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
-            </div>
+
+
+
+                {/* Modal */}
+                {showModal && (
+                    <Modal
+                        isOpen={showModal}
+                        onClose={() => {
+                            setShowModal(false);
+                            setPendingAction(null);
+                        }}
+                        onConfirm={modalType === 'confirm' && pendingAction ? () => {
+                            setShowModal(false);
+                            pendingAction();
+                            setPendingAction(null);
+                        } : undefined}
+                        title={modalType === 'success' ? t('success') : modalType === 'error' ? t('error') : t('confirm')}
+                        message={modalMessage}
+                        type={modalType}
+                        confirmText={modalType === 'confirm' ? t('yes') : t('ok')}
+                        cancelText={modalType === 'confirm' ? t('cancel') : undefined}
+                    />
+                )}
+            </main>
         </div>
     );
 }

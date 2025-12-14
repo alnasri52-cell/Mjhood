@@ -2,33 +2,58 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, LogIn } from 'lucide-react';
+import { X, LogIn, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/lib/database/supabase';
 import { LOCAL_NEEDS_CATEGORIES } from '@/lib/constants';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useAuthModal } from '@/lib/contexts/AuthContext';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface AddNeedModalProps {
     isOpen: boolean;
     onClose: () => void;
-    latitude: number;
-    longitude: number;
     onSuccess: () => void;
 }
 
-export default function AddNeedModal({ isOpen, onClose, latitude, longitude, onSuccess }: AddNeedModalProps) {
+export default function AddNeedModal({ isOpen, onClose, onSuccess }: AddNeedModalProps) {
     const { t, dir } = useLanguage();
     const { openModal } = useAuthModal();
+    const router = useRouter(); // To redirect if needed
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState('');
     const [description, setDescription] = useState('');
     const [loading, setLoading] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [profileLat, setProfileLat] = useState<number | null>(null);
+    const [profileLng, setProfileLng] = useState<number | null>(null);
+    const [hasLocation, setHasLocation] = useState(false);
 
     useEffect(() => {
         const checkUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             setUser(user);
+
+            if (user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile) {
+                    const lat = profile.service_location_lat || profile.latitude;
+                    const lng = profile.service_location_lng || profile.longitude;
+
+                    if (lat && lng) {
+                        setProfileLat(lat);
+                        setProfileLng(lng);
+                        setHasLocation(true);
+                    } else {
+                        setHasLocation(false);
+                    }
+                }
+            }
         };
         if (isOpen) {
             checkUser();
@@ -45,6 +70,11 @@ export default function AddNeedModal({ isOpen, onClose, latitude, longitude, onS
             return;
         }
 
+        if (!hasLocation || !profileLat || !profileLng) {
+            alert(t('locationRequired'));
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -54,8 +84,8 @@ export default function AddNeedModal({ isOpen, onClose, latitude, longitude, onS
                     title,
                     category,
                     description,
-                    latitude,
-                    longitude,
+                    latitude: profileLat,
+                    longitude: profileLng,
                     user_id: user.id,
                 });
 
@@ -109,8 +139,28 @@ export default function AddNeedModal({ isOpen, onClose, latitude, longitude, onS
                             {t('login')}
                         </button>
                     </div>
+                ) : !hasLocation ? (
+                    <div className="p-6">
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start">
+                            <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+                            <div>
+                                <h3 className="text-sm font-semibold text-yellow-800 mb-1">{t('locationRequired')}</h3>
+                                <p className="text-sm text-yellow-700 mb-2">
+                                    {t('locationRequiredDesc') || "Please update your profile location to add needs."}
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        onClose();
+                                        router.push('/profile/edit');
+                                    }}
+                                    className="text-sm font-bold text-yellow-800 underline"
+                                >
+                                    {t('updateLocation')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 ) : (
-
                     <form onSubmit={handleSubmit} className="p-4 space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">

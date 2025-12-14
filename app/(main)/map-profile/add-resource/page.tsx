@@ -4,14 +4,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Package, Trash2 } from 'lucide-react';
-import dynamic from 'next/dynamic';
+import { ArrowLeft, Package, Trash2, AlertTriangle } from 'lucide-react';
 import { RESOURCE_CATEGORIES } from '@/lib/constants';
 import Modal from '@/components/ui/Modal';
 import ImageUpload from '@/components/ui/ImageUpload';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-
-
 
 export default function AddResourcePage() {
     const { t, dir } = useLanguage();
@@ -19,6 +16,11 @@ export default function AddResourcePage() {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
     const [saving, setSaving] = useState(false);
+
+    // Location State
+    const [profileLat, setProfileLat] = useState<number | null>(null);
+    const [profileLng, setProfileLng] = useState<number | null>(null);
+    const [hasLocation, setHasLocation] = useState(false);
 
     // Form State
     const [title, setTitle] = useState('');
@@ -30,8 +32,6 @@ export default function AddResourcePage() {
     const [priceMax, setPriceMax] = useState('');
     const [contactPhone, setContactPhone] = useState('');
     const [contactMethod, setContactMethod] = useState<'phone' | 'message' | 'both'>('message');
-    const [latitude, setLatitude] = useState<number | null>(null);
-    const [longitude, setLongitude] = useState<number | null>(null);
     const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
 
     // Modal state
@@ -50,21 +50,22 @@ export default function AddResourcePage() {
 
             setUser(authUser);
 
-            // Fetch Resource Location
+            // Fetch profile for location
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('latitude, longitude')
+                .select('*')
                 .eq('id', authUser.id)
                 .single();
 
-            if (profile?.latitude && profile?.longitude) {
-                setLatitude(profile.latitude);
-                setLongitude(profile.longitude);
-            } else {
-                // If no location set, redirect to resources page (or show error)
-                // We'll let them stay but validation will fail. 
-                // Ideally we should redirect.
-                // router.push('/map-profile/resources');
+            if (profile) {
+                const lat = profile.service_location_lat || profile.latitude;
+                const lng = profile.service_location_lng || profile.longitude;
+
+                if (lat && lng) {
+                    setProfileLat(lat);
+                    setProfileLng(lng);
+                    setHasLocation(true);
+                }
             }
 
             setLoading(false);
@@ -76,8 +77,8 @@ export default function AddResourcePage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!latitude || !longitude) {
-            setModalMessage(t('selectLocationError'));
+        if (!hasLocation || !profileLat || !profileLng) {
+            setModalMessage(t('locationRequired'));
             setModalType('error');
             setShowModal(true);
             return;
@@ -92,8 +93,8 @@ export default function AddResourcePage() {
                     title,
                     category,
                     description: description || null,
-                    latitude,
-                    longitude,
+                    latitude: profileLat,
+                    longitude: profileLng,
                     availability_type: availabilityType,
                     price_type: priceType,
                     price_min: priceType === 'fixed' || priceType === 'range' ? parseFloat(priceMin) || null : null,
@@ -150,11 +151,26 @@ export default function AddResourcePage() {
                         <div>
                             <h2 className="font-semibold text-purple-900 mb-1">{t('addResource')}</h2>
                             <p className="text-sm text-purple-800">
-                                {t('resourceLocationFixedDesc' as any) || "This resource will be available at your designated Resource Location."}
+                                {t('needLocationNote') || "This resource will be posted at your profile location."}
                             </p>
                         </div>
                     </div>
                 </div>
+
+                {!hasLocation && (
+                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start">
+                        <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+                        <div>
+                            <h4 className="text-sm font-medium text-yellow-800">{t('locationRequired')}</h4>
+                            <p className="text-sm text-yellow-700 mt-1">
+                                {t('locationRequiredDesc')}
+                            </p>
+                            <Link href="/profile/edit" className="text-sm font-medium text-yellow-800 underline mt-2 inline-block">
+                                {t('updateLocation')}
+                            </Link>
+                        </div>
+                    </div>
+                )}
 
                 {/* Form */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -419,8 +435,6 @@ export default function AddResourcePage() {
                             </div>
                         </div>
 
-
-
                         {/* Image Upload */}
                         <div className="border-t border-gray-200 pt-6">
                             <p className="block text-sm font-medium text-gray-700 mb-1">{t('resourceImages')}</p>
@@ -467,7 +481,7 @@ export default function AddResourcePage() {
                             </Link>
                             <button
                                 type="submit"
-                                disabled={saving || !latitude || !longitude}
+                                disabled={saving || !hasLocation}
                                 className="px-6 py-2.5 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {saving ? t('saving') : t('addResource')}

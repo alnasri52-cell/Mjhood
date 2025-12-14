@@ -24,7 +24,9 @@ import {
     ChevronRight,
     HelpCircle,
     ChevronDown,
-    FileText
+    FileText,
+    Archive,
+    HandHeart
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -159,6 +161,7 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
 
     const navItems = [
         { icon: Home, label: 'home', href: '/' },
+        { icon: Search, label: 'advancedSearch', href: '/search' },
         { icon: MessageSquare, label: 'messages', href: '/messages', authRequired: true },
         { icon: User, label: 'profile', href: `/profile/${user?.id}`, authRequired: true },
         { icon: LayoutDashboard, label: 'Admin Portal', href: '/admin', authRequired: true, role: 'admin' },
@@ -259,23 +262,23 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                                             className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
                                         >
                                             <Briefcase className="w-4 h-4 text-blue-500" />
-                                            <span className="text-sm font-medium text-gray-700">{t('services')}</span>
-                                        </Link>
-                                        <Link
-                                            href="/map-profile/needs"
-                                            onClick={() => setShowMapProfileDropdown(false)}
-                                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                                        >
-                                            <MapPin className="w-4 h-4 text-red-500" />
-                                            <span className="text-sm font-medium text-gray-700">{t('needs')}</span>
+                                            <span className="text-sm font-medium text-gray-700">{t('servicesLabel' as any)}</span>
                                         </Link>
                                         <Link
                                             href="/map-profile/resources"
                                             onClick={() => setShowMapProfileDropdown(false)}
                                             className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
                                         >
-                                            <Briefcase className="w-4 h-4 text-purple-500" />
+                                            <Archive className="w-4 h-4 text-purple-600" />
                                             <span className="text-sm font-medium text-gray-700">{t('resources')}</span>
+                                        </Link>
+                                        <Link
+                                            href="/map-profile/needs"
+                                            onClick={() => setShowMapProfileDropdown(false)}
+                                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                                        >
+                                            <HandHeart className="w-4 h-4 text-red-500" />
+                                            <span className="text-sm font-medium text-gray-700">{t('needsLabel' as any)}</span>
                                         </Link>
                                         <Link
                                             href="/map-profile/cvs"

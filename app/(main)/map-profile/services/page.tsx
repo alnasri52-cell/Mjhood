@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Trash2, MapPin, DollarSign, Briefcase, ArrowLeft, Edit } from 'lucide-react';
+import { Plus, Trash2, MapPin, DollarSign, Briefcase, ArrowLeft, Edit, AlertTriangle } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import ImageUpload from '@/components/ui/ImageUpload';
 import { SERVICE_CATEGORIES } from '@/lib/constants';
@@ -28,10 +28,12 @@ interface Service {
 export default function MyServicesPage() {
     const { t, dir } = useLanguage();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
     const [profile, setProfile] = useState<any>(null);
     const [isProfileComplete, setIsProfileComplete] = useState(false);
+    const [hasLocation, setHasLocation] = useState(false);
     const [services, setServices] = useState<Service[]>([]);
 
     // Form State
@@ -46,15 +48,11 @@ export default function MyServicesPage() {
     const [newGalleryUrls, setNewGalleryUrls] = useState<string[]>([]);
     const [saving, setSaving] = useState(false);
 
-
-
     // Modal state
     const [showModal, setShowModal] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
     const [modalType, setModalType] = useState<'success' | 'error' | 'confirm'>('success');
     const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
-
-
 
     useEffect(() => {
         const getUserAndServices = async () => {
@@ -77,7 +75,10 @@ export default function MyServicesPage() {
             if (profileData) {
                 setProfile(profileData);
 
-                // Service location is now managed via Profile Edit page
+                // Check for valid location in profile (new cols or fallback to old)
+                const hasLat = profileData.service_location_lat || profileData.latitude;
+                const hasLng = profileData.service_location_lng || profileData.longitude;
+                setHasLocation(!!(hasLat && hasLng));
 
                 // Check if profile is complete
                 const isComplete =
@@ -105,17 +106,33 @@ export default function MyServicesPage() {
             }
 
             setLoading(false);
+
+            // Handle deep link
+            if (searchParams.get('new') === 'true') {
+                setIsAdding(true);
+                // Optional: Scroll to form
+                setTimeout(() => {
+                    const formElement = document.getElementById('service-form-section');
+                    if (formElement) {
+                        formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 500);
+            }
         };
 
         getUserAndServices();
-        getUserAndServices();
-    }, []);
-
-    const hasLocation = profile?.latitude && profile?.longitude;
+    }, []); // Remove router from dependencies
 
     const handleSaveService = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
+
+        if (!hasLocation) {
+            setModalMessage(t('locationRequired'));
+            setModalType('error');
+            setShowModal(true);
+            return;
+        }
 
         setSaving(true);
         try {
@@ -150,6 +167,7 @@ export default function MyServicesPage() {
                 setShowModal(true);
             } else {
                 // Create new service
+                // Note: We don't save location here anymore as it comes from profile
                 const { data, error } = await supabase
                     .from('service_categories')
                     .insert({
@@ -241,8 +259,6 @@ export default function MyServicesPage() {
         setShowModal(true);
     };
 
-
-
     const handleGoOffline = async () => {
         setModalMessage(t('goOfflineText'));
         setModalType('confirm');
@@ -287,7 +303,7 @@ export default function MyServicesPage() {
                         <ArrowLeft className={`w-5 h-5 ${dir === 'rtl' ? 'ml-2 rotate-180' : 'mr-2'}`} />
                         {t('backToMap')}
                     </Link>
-                    <h1 className={`font-bold text-lg text-black ${dir === 'rtl' ? 'mr-auto' : 'ml-auto'}`}>{t('myServicesTitle')}</h1>
+                    <h1 className={`font-bold text-lg text-black ${dir === 'rtl' ? 'mr-auto' : 'ml-auto'}`}>{t('servicesLabel' as any)}</h1>
                 </div>
             </div>
 
@@ -317,33 +333,20 @@ export default function MyServicesPage() {
                 {isProfileComplete && (
                     <>
 
-
-
-
                         {/* Header & Add Button */}
                         <div className="flex justify-between items-center mb-6">
                             <div>
                                 <h2 className="text-xl font-bold text-gray-900">{t('yourOfferings')}</h2>
                                 <p className="text-gray-500 text-sm">{t('manageServices')}</p>
                             </div>
-                            {hasLocation ? (
-                                !isAdding && (
-                                    <button
-                                        onClick={() => setIsAdding(true)}
-                                        className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-                                    >
-                                        <Plus className={`w-4 h-4 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
-                                        {t('addService')}
-                                    </button>
-                                )
-                            ) : (
-                                <Link
-                                    href="/profile/edit"
-                                    className="flex items-center bg-gray-100 text-gray-500 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition border border-gray-200"
+                            {!isAdding && hasLocation && (
+                                <button
+                                    onClick={() => setIsAdding(true)}
+                                    className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
                                 >
-                                    <MapPin className={`w-4 h-4 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
-                                    {t('setLocationToAdd' as any) || 'Set Location to Add'}
-                                </Link>
+                                    <Plus className={`w-4 h-4 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+                                    {t('addService')}
+                                </button>
                             )}
                         </div>
 

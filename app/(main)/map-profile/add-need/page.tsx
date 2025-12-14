@@ -5,15 +5,14 @@ import { supabase } from '@/lib/database/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, MapPin } from 'lucide-react';
-import dynamic from 'next/dynamic';
 import { LOCAL_NEEDS_CATEGORIES } from '@/lib/constants';
 import Modal from '@/components/ui/Modal';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import dynamic from 'next/dynamic';
 
-// Load LocationPicker dynamically to avoid SSR issues with Leaflet
 const LocationPicker = dynamic(() => import('@/components/map/LocationPicker'), {
     ssr: false,
-    loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center text-gray-400">Loading map...</div>
+    loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-lg" />
 });
 
 export default function AddNeedPage() {
@@ -23,12 +22,13 @@ export default function AddNeedPage() {
     const [user, setUser] = useState<any>(null);
     const [saving, setSaving] = useState(false);
 
+    // Location state
+    const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+
     // Form State
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState('');
     const [description, setDescription] = useState('');
-    const [latitude, setLatitude] = useState<number | null>(null);
-    const [longitude, setLongitude] = useState<number | null>(null);
 
     // Modal state
     const [showModal, setShowModal] = useState(false);
@@ -54,8 +54,8 @@ export default function AddNeedPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!latitude || !longitude) {
-            setModalMessage(t('selectLocationError'));
+        if (!selectedLocation) {
+            setModalMessage(t('selectLocation'));
             setModalType('error');
             setShowModal(true);
             return;
@@ -70,8 +70,8 @@ export default function AddNeedPage() {
                     title,
                     category,
                     description: description || null,
-                    latitude,
-                    longitude,
+                    latitude: selectedLocation.lat,
+                    longitude: selectedLocation.lng,
                 });
 
             if (error) throw error;
@@ -113,22 +113,22 @@ export default function AddNeedPage() {
             </div>
 
             <main className="max-w-2xl mx-auto px-4 py-8">
-                {/* Info Card */}
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-                    <div className="flex items-start">
-                        <MapPin className="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
-                        <div>
-                            <h2 className="font-semibold text-blue-900 mb-1">{t('addLocalNeed')}</h2>
-                            <p className="text-sm text-blue-800">
-                                {t('clickMapToSelectLocation')}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
                 {/* Form */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <form onSubmit={handleSubmit} className="space-y-6">
+
+                        {/* Location Picker */}
+                        <div>
+                            <label className="block text-sm font-bold text-gray-900 mb-2">
+                                {t('selectLocation')} <span className="text-red-500">*</span>
+                            </label>
+                            <p className="text-sm text-gray-500 mb-3">{t('clickMapToSelectLocation')}</p>
+                            <LocationPicker
+                                value={selectedLocation}
+                                onChange={(lat, lng) => setSelectedLocation({ lat, lng })}
+                            />
+                        </div>
+
                         {/* Category */}
                         <div>
                             <label htmlFor="category" className="block text-sm font-bold text-gray-900 mb-2">
@@ -179,21 +179,6 @@ export default function AddNeedPage() {
                             />
                         </div>
 
-                        {/* Location Picker */}
-                        <div>
-                            <label className="block text-sm font-bold text-gray-900 mb-2">
-                                {t('selectLocation')} <span className="text-red-500">*</span>
-                            </label>
-                            <p className="text-xs text-gray-500 mb-3">{t('clickMapToSelectLocation')}</p>
-                            <LocationPicker
-                                value={latitude && longitude ? { lat: latitude, lng: longitude } : null}
-                                onChange={(lat, lng) => {
-                                    setLatitude(lat);
-                                    setLongitude(lng);
-                                }}
-                            />
-                        </div>
-
                         {/* Submit Button */}
                         <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                             <Link
@@ -204,7 +189,7 @@ export default function AddNeedPage() {
                             </Link>
                             <button
                                 type="submit"
-                                disabled={saving || !latitude || !longitude}
+                                disabled={saving || !selectedLocation}
                                 className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {saving ? t('saving') : t('addNeedButton')}

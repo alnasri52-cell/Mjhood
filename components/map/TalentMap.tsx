@@ -18,7 +18,6 @@ import {
     Utensils, Heart, Scissors, Camera, Calendar, Car, Scale, HelpCircle, Briefcase,
     Instagram, Twitter, MessageCircle, Flag,
     ThumbsUp, ThumbsDown, ShoppingCart, Pill, DollarSign, Trees, DoorClosed,
-    Package,
     Moon, School, Stethoscope, Dumbbell, Coffee, Bus, Mail, BookOpen, Users,
     UserPlus, CheckCircle, FileText
 } from 'lucide-react';
@@ -118,9 +117,10 @@ interface CV {
 
 interface Resource {
     id: string;
+    user_id: string;
     title: string;
     category: string;
-    description?: string;
+    description: string;
     latitude: number;
     longitude: number;
     availability_type: 'rent' | 'borrow' | 'both';
@@ -129,10 +129,8 @@ interface Resource {
     price_max?: number;
     price_currency?: string;
     contact_phone?: string;
-    contact_method?: 'phone' | 'message' | 'both';
-    user_id: string;
+    contact_method?: string;
     created_at: string;
-    gallery_urls?: string[];
 }
 
 
@@ -144,8 +142,8 @@ interface TalentMapProps {
 
 const getCategoryIcon = (category: string) => {
     let IconComponent = HelpCircle;
-    // Uniform color for all icons as requested (Indigo/Blue-ish)
-    const colorClass = "bg-[#6366f1]";
+    // Uniform color for all icons as requested (Blue)
+    const colorClass = "bg-[#3b82f6]";
 
     switch (category) {
         case "Home Improvement": IconComponent = Hammer; break;
@@ -184,75 +182,69 @@ const getCategoryIcon = (category: string) => {
         html: iconHtml,
         className: 'custom-marker-icon', // Use a custom class to avoid default styles interfering
         iconSize: [32, 32],
-        iconAnchor: [16, 32], // Center bottom anchor? Or center center? Standard pin is bottom. Let's do center for round icon.
+        iconAnchor: [16, 32],
         popupAnchor: [0, -32],
+        // @ts-ignore - Adding custom property to options
+        markerType: 'service'
     });
 };
 
 // Map CV job titles to categories
 const getCVCategory = (jobTitle: string): string => {
+    // ... (keep implementation same, skipped for brevity in prompt instruction but must be preserved if inside block)
     const title = jobTitle.toLowerCase();
-
     // Engineering
     if (title.includes('مهندس') || title.includes('engineer') || title.includes('هندسة')) {
         return 'Engineering';
     }
-
     // Healthcare
     if (title.includes('طبيب') || title.includes('doctor') || title.includes('ممرض') || title.includes('nurse') ||
         title.includes('صيدلان') || title.includes('pharmac') || title.includes('معالج') || title.includes('therapist')) {
         return 'Healthcare';
     }
-
     // Education
     if (title.includes('معلم') || title.includes('teacher') || title.includes('مدرس') || title.includes('مدرب') ||
         title.includes('trainer') || title.includes('أستاذ') || title.includes('professor')) {
         return 'Education';
     }
-
     // IT & Development
     if (title.includes('مطور') || title.includes('developer') || title.includes('مبرمج') || title.includes('programmer') ||
         title.includes('برمج') || title.includes('coding') || title.includes('تقني') || title.includes('tech')) {
         return 'IT & Development';
     }
-
     // Design & Creative
     if (title.includes('مصمم') || title.includes('designer') || title.includes('تصميم') || title.includes('design') ||
         title.includes('مصور') || title.includes('photographer') || title.includes('فنان') || title.includes('artist')) {
         return 'Design & Creative';
     }
-
     // Business & Finance
     if (title.includes('محاسب') || title.includes('accountant') || title.includes('مدير') || title.includes('manager') ||
         title.includes('مبيعات') || title.includes('sales') || title.includes('تسويق') || title.includes('marketing') ||
         title.includes('محلل') || title.includes('analyst')) {
         return 'Business & Finance';
     }
-
     // Legal & Admin
     if (title.includes('محامي') || title.includes('lawyer') || title.includes('قانون') || title.includes('legal') ||
         title.includes('موظف') || title.includes('admin') || title.includes('سكرتير') || title.includes('secretary')) {
         return 'Legal & Admin';
     }
-
     // Hospitality & Services
     if (title.includes('طاهي') || title.includes('chef') || title.includes('طبخ') || title.includes('cook') ||
         title.includes('سائق') || title.includes('driver') || title.includes('استقبال') || title.includes('reception')) {
         return 'Hospitality & Services';
     }
-
     // Trades & Crafts
     if (title.includes('كهربائي') || title.includes('electric') || title.includes('سباك') || title.includes('plumb') ||
         title.includes('نجار') || title.includes('carpenter') || title.includes('فني') || title.includes('technician') ||
         title.includes('حداد') || title.includes('welder')) {
         return 'Trades & Crafts';
     }
-
     return 'Other';
 };
 
 
 const getNeedCategoryIcon = (category: LocalNeedCategory) => {
+    // ... (keep implementation same)
     const props = { className: "w-4 h-4 text-white" };
     switch (category) {
         case "Grocery Store": return <ShoppingCart {...props} />;
@@ -275,7 +267,7 @@ const getNeedCategoryIcon = (category: LocalNeedCategory) => {
 
 const getNeedIcon = (category: LocalNeedCategory) => {
     const iconHtml = renderToStaticMarkup(
-        <div className="w-8 h-8 rounded-full bg-[#f97316] flex items-center justify-center shadow-lg border-2 border-white">
+        <div className="w-8 h-8 rounded-full bg-[#ef4444] flex items-center justify-center shadow-lg border-2 border-white">
             {getNeedCategoryIcon(category)}
         </div>
     );
@@ -286,6 +278,8 @@ const getNeedIcon = (category: LocalNeedCategory) => {
         iconSize: [32, 32],
         iconAnchor: [16, 32],
         popupAnchor: [0, -32],
+        // @ts-ignore
+        markerType: 'need'
     });
 };
 
@@ -302,10 +296,13 @@ const getCVIcon = () => {
         iconSize: [32, 32],
         iconAnchor: [16, 32],
         popupAnchor: [0, -32],
+        // @ts-ignore
+        markerType: 'cv'
     });
 };
 
 const getResourceCategoryIcon = (category: string) => {
+    // ...
     const props = { className: "w-4 h-4 text-white" };
     switch (category) {
         case "Tools & Equipment": return <Wrench {...props} />;
@@ -335,6 +332,8 @@ const getResourceIcon = (category: string) => {
         iconSize: [32, 32],
         iconAnchor: [16, 32],
         popupAnchor: [0, -32],
+        // @ts-ignore
+        markerType: 'resource'
     });
 };
 
@@ -411,74 +410,82 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     // ... (rest of component)
 
     const fetchNeeds = async () => {
-        console.log('[TalentMap] Starting to fetch needs...');
         try {
             let { data, error } = await supabase
                 .from('local_needs')
-                .select('*')
+                .select('*, profiles:user_id(service_location_lat, service_location_lng, latitude, longitude)')
                 .is('deleted_at', null)
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.error('[TalentMap] Error fetching needs:', error);
-                // Do not clear existing needs on error to prevent flashing/disappearing pins
+                console.error('Error fetching needs:', JSON.stringify(error, null, 2));
+                setNeeds([]);
                 return;
             }
 
-            console.log(`[TalentMap] Fetched ${data?.length || 0} needs`);
-            setNeeds(data || []);
+            const mappedNeeds = data?.map((need: any) => ({
+                ...need,
+                latitude: need.latitude || need.profiles?.service_location_lat || need.profiles?.latitude,
+                longitude: need.longitude || need.profiles?.service_location_lng || need.profiles?.longitude
+            })) || [];
+
+            setNeeds(mappedNeeds);
         } catch (error) {
-            console.error('[TalentMap] Unexpected error in fetchNeeds:', error);
-            // Do not clear existing needs on error
+            console.error('Error fetching needs:', error);
+            setNeeds([]);
         }
     };
     const fetchCVs = async () => {
-        console.log('[TalentMap] Starting to fetch CVs...');
         try {
             let { data, error } = await supabase
                 .from('cvs')
-                .select('*')
+                .select('*, profiles:user_id(service_location_lat, service_location_lng, latitude, longitude)')
                 .is('deleted_at', null)
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.warn('[TalentMap] Error fetching CVs:', error);
-                // Do not clear existing CVs on error
+                console.error('Error fetching CVs:', JSON.stringify(error, null, 2));
+                setCvs([]);
             } else {
-                console.log(`[TalentMap] Successfully fetched ${data?.length || 0} CVs`);
-                setCvs(data || []);
+                const mappedCvs = data?.map((cv: any) => ({
+                    ...cv,
+                    latitude: cv.latitude || cv.profiles?.service_location_lat || cv.profiles?.latitude,
+                    longitude: cv.longitude || cv.profiles?.service_location_lng || cv.profiles?.longitude
+                })) || [];
+                setCvs(mappedCvs);
             }
         } catch (err) {
-            console.error('[TalentMap] Unexpected error fetching CVs:', err);
-            // Do not clear existing CVs on error
+            console.error('Error fetching CVs:', err);
+            setCvs([]);
         }
     };
 
     const fetchResources = async () => {
-        console.log('[TalentMap] Starting to fetch resources...');
         try {
             let { data, error } = await supabase
                 .from('resources')
-                .select('*')
+                .select('*, profiles:user_id(service_location_lat, service_location_lng, latitude, longitude)')
                 .is('deleted_at', null)
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.warn('[TalentMap] Error fetching resources:', error);
-                // Do not clear existing resources on error
+                console.error('Error fetching resources:', JSON.stringify(error, null, 2));
+                setResources([]);
             } else {
-                console.log(`[TalentMap] Successfully fetched ${data?.length || 0} resources`);
-                setResources(data || []);
+                const mappedResources = data?.map((res: any) => ({
+                    ...res,
+                    latitude: res.latitude || res.profiles?.service_location_lat || res.profiles?.latitude,
+                    longitude: res.longitude || res.profiles?.service_location_lng || res.profiles?.longitude
+                })) || [];
+                setResources(mappedResources);
             }
         } catch (err) {
-            console.error('[TalentMap] Unexpected error fetching resources:', err);
-            // Do not clear existing resources on error
+            console.error('Error fetching resources:', err);
+            setResources([]);
         }
     };
 
     const fetchServices = async () => {
-        console.log('[TalentMap] Starting to fetch services...');
-
         try {
             // NEW: Fetch from profiles with service_categories
             // This groups all services by user location
@@ -510,10 +517,9 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 .is('service_categories.deleted_at', null);
 
             if (profilesError) {
-                console.error('[TalentMap] Error fetching from service_categories:', profilesError);
+                console.error('Error fetching services (profiles):', JSON.stringify(profilesError, null, 2));
 
                 // FALLBACK: Try old services table for backward compatibility
-                console.log('[TalentMap] Falling back to old services table...');
                 let { data, error } = await supabase
                     .from('services')
                     .select(`
@@ -533,10 +539,9 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                     .is('deleted_at', null);
 
                 if (error) {
-                    console.error('[TalentMap] Error with fallback:', error);
-                    // Do not clear existing services on error
+                    console.error('Error fetching services (fallback):', JSON.stringify(error, null, 2));
+                    setServices([]);
                 } else {
-                    console.log(`[TalentMap] Fallback: fetched ${data?.length || 0} services`);
                     setServices(data || []);
                 }
             } else {
@@ -574,20 +579,16 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                     });
                 });
 
-                console.log(`[TalentMap] Successfully fetched ${transformedServices.length} services from ${profilesData?.length || 0} providers`);
-                console.log(`[TalentMap] Final service count: ${transformedServices.length}`);
                 setServices(transformedServices);
             }
         } catch (err) {
-            console.error('[TalentMap] Unexpected error:', err);
-            // Do not clear existing services on error
+            console.error('Error fetching services:', err);
+            setServices([]);
         }
     };
 
     useEffect(() => {
         const fetchAllData = async () => {
-            console.log('[TalentMap] Fetching all data in parallel. ViewMode:', viewMode);
-
             try {
                 const promises = [];
 
@@ -606,19 +607,10 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 }
 
                 // Fetch all data in parallel (much faster than sequential)
-                const results = await Promise.allSettled(promises);
-
-                // Log any failures for debugging
-                results.forEach((result, index) => {
-                    if (result.status === 'rejected') {
-                        console.error(`[TalentMap] Fetch ${index} failed:`, result.reason);
-                    }
-                });
-
-                console.log('[TalentMap] All data fetched successfully');
+                await Promise.allSettled(promises);
 
             } catch (error) {
-                console.error('[TalentMap] Unexpected error fetching data:', error);
+                console.error('Error fetching data:', error);
             } finally {
                 // Always set loading to false, even if some fetches failed
                 setLoading(false);
@@ -867,58 +859,76 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         };
     }, [map, filteredServices]);
 
-    // Custom Cluster Icon for Services (Blue) - Shifted Left
-    const createServiceClusterIcon = function (cluster: any) {
+
+    // Custom Cluster Icons with Pie Chart (Segmented) Logic
+    const createSegmentedClusterIcon = (cluster: any) => {
+        const markers = cluster.getAllChildMarkers();
+        const counts = { service: 0, need: 0, cv: 0, resource: 0 };
+
+        markers.forEach((m: any) => {
+            const type = m.options.icon?.options?.markerType;
+            if (type && (counts as any)[type] !== undefined) {
+                (counts as any)[type]++;
+            }
+        });
+
+        const total = markers.length;
+
+        // Define colors
+        const colors: Record<string, string> = {
+            service: '#3b82f6', // Blue
+            need: '#ef4444',    // Red
+            cv: '#10b981',      // Green (Emerald)
+            resource: '#9333ea' // Purple
+        };
+
+        // Build Gradient
+        let gradientSegments = [];
+        let currentDeg = 0;
+        const types = ['service', 'need', 'cv', 'resource'];
+
+        for (const type of types) {
+            const count = (counts as any)[type];
+            if (count > 0) {
+                const deg = (count / total) * 360;
+                gradientSegments.push(`${colors[type]} ${currentDeg}deg ${currentDeg + deg}deg`);
+                currentDeg += deg;
+            }
+        }
+
+        const backgroundStyle = `conic-gradient(${gradientSegments.join(', ')})`;
+
         return L.divIcon({
-            html: `<div class="flex items-center justify-center w-full h-full bg-[#6366f1] text-white font-bold rounded-full border-2 border-white shadow-lg text-sm">
-                ${cluster.getChildCount()}
-            </div>`,
-            className: 'custom-cluster-icon',
+            html: `
+                <div style="background: ${backgroundStyle};" class="flex items-center justify-center w-full h-full rounded-full shadow-lg border-2 border-white box-border">
+                    <div class="w-[24px] h-[24px] bg-white/90 rounded-full flex items-center justify-center backdrop-blur-sm">
+                        <span class="text-xs font-bold text-gray-800">${total}</span>
+                    </div>
+                </div>
+            `,
+            className: 'custom-cluster-icon', // Ensure CSS doesn't override width/height weirdly
             iconSize: L.point(40, 40, true),
-            iconAnchor: [45, 20], // Shift left (Anchor is at right edge)
+            iconAnchor: [20, 20],
         });
     };
-
-    // Custom Cluster Icon for Needs (Orange) - Shifted Right
-    const createNeedClusterIcon = function (cluster: any) {
-        return L.divIcon({
-            html: `<div class="flex items-center justify-center w-full h-full bg-[#f97316] text-white font-bold rounded-full border-2 border-white shadow-lg text-sm">
-                ${cluster.getChildCount()}
-            </div>`,
-            className: 'custom-cluster-icon',
-            iconSize: L.point(40, 40, true),
-            iconAnchor: [-5, 20], // Shift right (Anchor is at left edge)
-        });
-    };
-
-    // Custom Cluster Icon for Resources (Purple)
-    const createResourceClusterIcon = function (cluster: any) {
-        return L.divIcon({
-            html: `<div class="flex items-center justify-center w-full h-full bg-[#9333ea] text-white font-bold rounded-full border-2 border-white shadow-lg text-sm">
-                ${cluster.getChildCount()}
-            </div>`,
-            className: 'custom-cluster-icon',
-            iconSize: L.point(40, 40, true),
-            iconAnchor: [20, 20], // Center
-        });
-    };
-
-
 
     return (
         <>
             <MapController />
 
-            {/* Services Cluster Group */}
+            {/* Unified Marker Cluster Group with Segmented Icons */}
             <MarkerClusterGroup
+                key={`unified-${filteredServices.length}-${filteredNeeds.length}-${filteredCVs.length}-${filteredResources.length}`}
                 chunkedLoading
-                iconCreateFunction={createServiceClusterIcon}
+                iconCreateFunction={createSegmentedClusterIcon}
                 maxClusterRadius={60}
                 spiderfyOnMaxZoom={true}
+                showCoverageOnHover={false}
             >
+                {/* Services Markers */}
                 {filteredServices.map((service) => (
                     <Marker
-                        key={service.id}
+                        key={`service-${service.id}`}
                         position={[service.latitude, service.longitude]}
                         icon={getCategoryIcon(service.category)}
                     >
@@ -1037,10 +1047,10 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
                                 {/* Action Button */}
                                 <Link
-                                    href={`/services/${service.id}`}
+                                    href={`/profile/${service.profiles?.id}`}
                                     className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
                                 >
-                                    {t('view')}
+                                    {t('viewProfile')}
                                 </Link>
                                 <button
                                     onClick={(e) => {
@@ -1056,233 +1066,210 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                         </Popup>
                     </Marker>
                 ))}
-            </MarkerClusterGroup>
 
-            {/* Needs Cluster Group */}
-            <MarkerClusterGroup
-                chunkedLoading
-                iconCreateFunction={createNeedClusterIcon}
-                maxClusterRadius={60}
-                spiderfyOnMaxZoom={true}
-            >
+                {/* Needs Markers */}
                 {filteredNeeds.map((need) => (
                     <Marker
-                        key={need.id}
+                        key={`need-${need.id}`}
                         position={[need.latitude, need.longitude]}
                         icon={getNeedIcon(need.category)}
                     >
                         <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
                             <div className="p-4 text-center">
                                 <h3 className="font-bold text-lg text-gray-900 mb-1">{need.title}</h3>
-                                <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full mb-3">
-                                    {t(need.category as any)}
+                                <span className="inline-block px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full mb-3">
+                                    {need.category}
                                 </span>
 
                                 {need.description && (
-                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                    <p className="text-sm text-gray-600 mb-4">
                                         {need.description}
                                     </p>
                                 )}
 
-                                {/* Vote Counts */}
-                                <div className="flex justify-center gap-4 mb-4">
-                                    <div className="flex items-center gap-1 text-green-600">
+                                {/* Vote Buttons */}
+                                <div className="flex items-center justify-center gap-4 mb-4">
+                                    <button
+                                        onClick={async (e) => {
+                                            e.stopPropagation();
+                                            if (votedNeeds.has(need.id)) return;
+
+                                            const { error } = await supabase
+                                                .from('local_needs')
+                                                .update({ upvotes: (need.upvotes || 0) + 1 })
+                                                .eq('id', need.id);
+
+                                            if (!error) {
+                                                setVotedNeeds(prev => new Set(prev).add(need.id));
+                                                fetchNeeds();
+                                            }
+                                        }}
+                                        disabled={votedNeeds.has(need.id)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${votedNeeds.has(need.id)
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                            : 'bg-green-50 text-green-600 hover:bg-green-100'
+                                            }`}
+                                    >
                                         <ThumbsUp className="w-4 h-4" />
-                                        <span className="font-semibold text-sm">{need.upvotes || 0}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1 text-red-600">
+                                        <span className="font-semibold">{need.upvotes || 0}</span>
+                                    </button>
+                                    <button
+                                        onClick={async (e) => {
+                                            e.stopPropagation();
+                                            if (votedNeeds.has(need.id)) return;
+
+                                            const { error } = await supabase
+                                                .from('local_needs')
+                                                .update({ downvotes: (need.downvotes || 0) + 1 })
+                                                .eq('id', need.id);
+
+                                            if (!error) {
+                                                setVotedNeeds(prev => new Set(prev).add(need.id));
+                                                fetchNeeds();
+                                            }
+                                        }}
+                                        disabled={votedNeeds.has(need.id)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${votedNeeds.has(need.id)
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                            : 'bg-red-50 text-red-600 hover:bg-red-100'
+                                            }`}
+                                    >
                                         <ThumbsDown className="w-4 h-4" />
-                                        <span className="font-semibold text-sm">{need.downvotes || 0}</span>
-                                    </div>
+                                        <span className="font-semibold">{need.downvotes || 0}</span>
+                                    </button>
                                 </div>
 
-                                {/* View Button */}
-                                <Link
-                                    href={`/needs/${need.id}`}
-                                    className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleReport(need, 'need');
+                                    }}
+                                    className="w-full text-xs text-gray-400 hover:text-red-500 font-medium transition flex items-center justify-center gap-1"
                                 >
-                                    {t('view')}
-                                </Link>
+                                    <Flag className="w-3 h-3" />
+                                    Report this need
+                                </button>
                             </div>
                         </Popup>
                     </Marker>
                 ))}
-            </MarkerClusterGroup>
 
-            {/* CVs Cluster Group */}
-            <MarkerClusterGroup
-                chunkedLoading
-                iconCreateFunction={(cluster: any) => {
-                    return L.divIcon({
-                        html: `<div class="flex items-center justify-center w-full h-full bg-[#10b981] text-white font-bold rounded-full border-2 border-white shadow-lg text-sm">
-                            ${cluster.getChildCount()}
-                        </div>`,
-                        className: 'custom-cluster-icon',
-                        iconSize: L.point(40, 40, true),
-                        iconAnchor: [20, 20],
-                    });
-                }}
-                maxClusterRadius={60}
-                spiderfyOnMaxZoom={true}
-            >
+                {/* CV Markers */}
                 {filteredCVs.map((cv) => (
                     <Marker
-                        key={cv.id}
+                        key={`cv-${cv.id}`}
                         position={[cv.latitude, cv.longitude]}
                         icon={getCVIcon()}
                     >
                         <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
                             <div className="p-4 text-center">
                                 <h3 className="font-bold text-lg text-gray-900 mb-1">{cv.full_name}</h3>
-                                <p className="text-sm text-green-600 font-medium mb-3">{cv.job_title}</p>
+                                <span className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full mb-3">
+                                    {cv.job_title || t('cv' as any)}
+                                </span>
 
                                 {cv.summary && (
-                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                    <p className="text-sm text-gray-600 mb-4 line-clamp-3">
                                         {cv.summary}
                                     </p>
                                 )}
 
-                                {/* Skills Preview */}
-                                {cv.skills && cv.skills.length > 0 && (
-                                    <div className="flex flex-wrap justify-center gap-1 mb-4">
-                                        {cv.skills.slice(0, 3).map((skill: string, index: number) => (
-                                            <span
-                                                key={index}
-                                                className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
-                                            >
-                                                {skill}
-                                            </span>
-                                        ))}
-                                        {cv.skills.length > 3 && (
-                                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                                +{cv.skills.length - 3}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
+                                {/* Contact buttons */}
+                                <div className="flex justify-center gap-3 mb-4">
+                                    {cv.phone && (
+                                        <a
+                                            href={`https://wa.me/${cv.phone.replace(/\D/g, '')}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600 hover:bg-green-100 transition shadow-sm"
+                                        >
+                                            <MessageCircle className="w-4 h-4" />
+                                        </a>
+                                    )}
+                                </div>
 
-                                {/* View Button */}
-                                <Link
-                                    href={`/cvs/${cv.id}`}
-                                    className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
+                                {/* View Full CV Button */}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedCV(cv);
+                                        setIsCVModalOpen(true);
+                                    }}
+                                    className="inline-block w-full bg-green-600 text-white text-sm font-bold py-3 rounded-full hover:bg-green-700 transition shadow-sm uppercase tracking-wide"
                                 >
-                                    {t('view')}
-                                </Link>
+                                    {t('viewFullCV' as any)}
+                                </button>
                             </div>
                         </Popup>
                     </Marker>
                 ))}
-            </MarkerClusterGroup>
 
-            {/* CV Detail Modal */}
-            <CVDetailModal
-                isOpen={isCVModalOpen}
-                onClose={() => setIsCVModalOpen(false)}
-                cv={selectedCV}
-            />
-
-            {/* Resources Cluster Group */}
-            <MarkerClusterGroup
-                chunkedLoading
-                iconCreateFunction={createResourceClusterIcon}
-                maxClusterRadius={60}
-                spiderfyOnMaxZoom={true}
-            >
+                {/* Resources Markers */}
                 {filteredResources.map((resource) => (
                     <Marker
-                        key={resource.id}
+                        key={`resource-${resource.id}`}
                         position={[resource.latitude, resource.longitude]}
                         icon={getResourceIcon(resource.category)}
                     >
                         <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
                             <div className="p-4 text-center">
+                                <h3 className="font-bold text-lg text-gray-900 mb-1">{resource.title}</h3>
+                                <span className="inline-block px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full mb-3">
+                                    {t(resource.category as any)}
+                                </span>
 
-                                {/* Resource Image Gallery Preview */}
-                                {resource.gallery_urls && resource.gallery_urls.length > 0 && (
-                                    <div className="mb-3 -mx-4 -mt-4">
-                                        <img
-                                            src={resource.gallery_urls[0]}
-                                            alt={resource.title}
-                                            className="w-full h-32 object-cover rounded-t-lg"
-                                        />
-                                    </div>
+                                {resource.description && (
+                                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+                                        {resource.description}
+                                    </p>
                                 )}
 
-                                {/* Title & Category */}
-                                <h3 className="font-bold text-lg text-gray-900 mb-1">{resource.title}</h3>
-                                <p className="text-xs text-purple-600 font-medium uppercase tracking-wide mb-3">
-                                    {t(resource.category as any)}
-                                </p>
-
-                                {/* Availability Badge */}
+                                {/* Availability Type */}
                                 <div className="mb-3">
-                                    <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+                                    <span className="text-xs text-gray-500 uppercase tracking-wide">
                                         {resource.availability_type === 'rent' ? t('forRent' as any) :
                                             resource.availability_type === 'borrow' ? t('forBorrow' as any) :
                                                 t('rentOrBorrow' as any)}
                                     </span>
                                 </div>
 
-                                {/* Description */}
-                                {resource.description && (
-                                    <p className="text-sm text-gray-600 line-clamp-3 mb-4 leading-relaxed">
-                                        {resource.description}
-                                    </p>
-                                )}
-
-                                {/* Price Display */}
+                                {/* Pricing */}
                                 {resource.price_type && resource.price_type !== 'free' && (
-                                    <div className="mb-4">
-                                        <div className="bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 inline-block">
-                                            <span className="text-purple-700 font-semibold text-sm">
-                                                {resource.price_type === 'fixed' && resource.price_min && `${resource.price_min} ${resource.price_currency || 'SAR'}`}
-                                                {resource.price_type === 'range' && resource.price_min && resource.price_max && `${resource.price_min} - ${resource.price_max} ${resource.price_currency || 'SAR'}`}
-                                                {resource.price_type === 'negotiable' && t('negotiable' as any)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-                                {resource.price_type === 'free' && (
-                                    <div className="mb-4">
-                                        <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 inline-block">
-                                            <span className="text-green-700 font-semibold text-sm">{t('free' as any)}</span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Additional Images Gallery */}
-                                {resource.gallery_urls && resource.gallery_urls.length > 1 && (
-                                    <div className="flex justify-center gap-1 mb-4">
-                                        {resource.gallery_urls.slice(1, 5).map((url: string, index: number) => (
-                                            <img
-                                                key={index}
-                                                src={url}
-                                                alt={`${resource.title} ${index + 2}`}
-                                                className="w-10 h-10 rounded-md object-cover border border-gray-200"
-                                            />
-                                        ))}
-                                        {resource.gallery_urls.length > 5 && (
-                                            <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center text-xs text-gray-500 font-medium border border-gray-200">
-                                                +{resource.gallery_urls.length - 5}
-                                            </div>
+                                    <div className="mb-3 text-sm">
+                                        {resource.price_type === 'fixed' && resource.price_min && (
+                                            <p className="font-semibold text-gray-900">
+                                                {resource.price_min} {resource.price_currency || 'SAR'}
+                                            </p>
+                                        )}
+                                        {resource.price_type === 'range' && resource.price_min && resource.price_max && (
+                                            <p className="font-semibold text-gray-900">
+                                                {resource.price_min} - {resource.price_max} {resource.price_currency || 'SAR'}
+                                            </p>
+                                        )}
+                                        {resource.price_type === 'negotiable' && (
+                                            <p className="font-semibold text-gray-900">{t('negotiable' as any)}</p>
                                         )}
                                     </div>
                                 )}
 
-                                {/* View Button - Matching Service Style */}
-                                <Link
-                                    href={`/resources/${resource.id}`}
-                                    className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
-                                >
-                                    {t('view' as any)}
-                                </Link>
+                                {/* Contact Button */}
+                                <div className="flex justify-center gap-3">
+                                    {resource.contact_phone && (
+                                        <a
+                                            href={`https://wa.me/${resource.contact_phone.replace(/\D/g, '')}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-block bg-purple-600 text-white text-sm font-bold py-3 px-6 rounded-full hover:bg-purple-700 transition shadow-sm uppercase tracking-wide"
+                                        >
+                                            {t('contact' as any)}
+                                        </a>
+                                    )}
+                                </div>
                             </div>
                         </Popup>
                     </Marker>
                 ))}
             </MarkerClusterGroup>
-
-
 
             {reportTarget && (
                 <ReportModal
@@ -1294,14 +1281,10 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 />
             )}
 
-
-
             {newNeedLocation && (
                 <AddNeedModal
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
-                    latitude={newNeedLocation.lat}
-                    longitude={newNeedLocation.lng}
                     onSuccess={() => {
                         fetchNeeds();
                         setShowSuccessPopup(true);
@@ -1353,6 +1336,7 @@ export default function TalentMap({ searchTerm, selectedCategory, viewMode = 'se
                 // For existing users, fetch from profile
                 const { data: { user } } = await supabase.auth.getUser();
 
+
                 if (user?.id) {
                     const { data: profile, error } = await supabase
                         .from('profiles')
@@ -1360,14 +1344,12 @@ export default function TalentMap({ searchTerm, selectedCategory, viewMode = 'se
                         .eq('id', user.id)
                         .single();
 
-                    if (error) {
-                        console.error('[TalentMap] Error fetching user country:', error);
-                    } else if (profile?.country) {
+                    if (!error && profile?.country) {
                         setUserCountry(profile.country);
                     }
                 }
             } catch (error) {
-                console.error('[TalentMap] Unexpected error fetching user country:', error);
+                // Silently fail - will use default country
             } finally {
                 // Always set loading to false, even if there's an error
                 setCountryLoading(false);
@@ -1376,7 +1358,6 @@ export default function TalentMap({ searchTerm, selectedCategory, viewMode = 'se
 
         // Set a timeout to prevent infinite loading (max 5 seconds)
         const timeoutId = setTimeout(() => {
-            console.warn('[TalentMap] Country fetch timeout - proceeding with default');
             setCountryLoading(false);
         }, 5000);
 

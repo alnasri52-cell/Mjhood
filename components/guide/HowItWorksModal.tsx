@@ -23,29 +23,19 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
             color: 'bg-blue-50'
         },
         {
-            title: t('guideProfileLocationTitle' as any),
-            text: t('guideProfileLocationText' as any),
-            icon: <MapPin className="w-16 h-16 text-emerald-600" />,
-            color: 'bg-emerald-50'
-        },
-        {
             title: t('guideNeedsVsServicesTitle'),
             text: t('guideNeedsVsServicesText'),
             icon: (
-                <div className="flex gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <MapPin className="w-12 h-12 text-blue-500" />
-                    <MapPin className="w-12 h-12 text-purple-500" />
                     <MapPin className="w-12 h-12 text-red-500" />
+                    <MapPin className="w-12 h-12 text-green-500" />
+                    <MapPin className="w-12 h-12 text-purple-600" />
                 </div>
             ),
             color: 'bg-purple-50'
         },
-        {
-            title: t('guideCVsTitle'),
-            text: t('guideCVsText'),
-            icon: <FileText className="w-16 h-16 text-green-500" />,
-            color: 'bg-green-50'
-        },
+
         {
             title: t('guideMapFiltersTitle'),
             text: t('guideMapFiltersText'),

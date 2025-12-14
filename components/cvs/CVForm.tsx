@@ -6,7 +6,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { supabase } from '@/lib/database/supabase';
 import {
     User, Briefcase, GraduationCap, Languages, Award,
-    FileText, MapPin, Plus, Trash2, Save, Loader2, ArrowLeft
+    FileText, MapPin, Plus, Trash2, Save, Loader2, ArrowLeft, AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 import WorkExperienceSection from './WorkExperienceSection';
@@ -15,7 +15,6 @@ import SkillsSection from './SkillsSection';
 import LanguagesSection from './LanguagesSection';
 import CVFileUpload from './CVFileUpload';
 import Modal from '@/components/ui/Modal';
-
 
 interface CVFormProps {
     initialData?: any;
@@ -29,6 +28,7 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [hasLocation, setHasLocation] = useState(true);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -37,7 +37,7 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
         email: '',
         job_title: '',
         summary: '',
-        latitude: 24.7136, // Default to Riyadh
+        latitude: 24.7136, // Default fallback
         longitude: 46.6753,
         work_experience: [] as any[],
         education: [] as any[],
@@ -54,8 +54,8 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
             const { data: { user } } = await supabase.auth.getUser();
             setUser(user);
 
-            if (!initialData && user) {
-                // Pre-fill from profile if creating new
+            if (user) {
+                // Check profile for location
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('*')
@@ -63,14 +63,31 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
                     .single();
 
                 if (profile) {
-                    setFormData(prev => ({
-                        ...prev,
-                        full_name: profile.full_name || '',
-                        phone: profile.phone || '',
-                        email: user.email || '',
-                        latitude: profile.latitude || 24.7136,
-                        longitude: profile.longitude || 46.6753
-                    }));
+                    const lat = profile.service_location_lat || profile.latitude;
+                    const lng = profile.service_location_lng || profile.longitude;
+
+                    if (lat && lng) {
+                        setHasLocation(true);
+                        // Update form data with profile location to satisfy current schema if needed
+                        setFormData(prev => ({
+                            ...prev,
+                            latitude: lat,
+                            longitude: lng
+                        }));
+                    } else {
+                        setHasLocation(false);
+                    }
+
+                    if (!initialData) {
+                        setFormData(prev => ({
+                            ...prev,
+                            full_name: profile.full_name || '',
+                            phone: profile.phone || '',
+                            email: user.email || '',
+                            latitude: lat || 24.7136,
+                            longitude: lng || 46.6753
+                        }));
+                    }
                 }
             }
         };
@@ -92,6 +109,13 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!hasLocation) {
+            setError(t('locationRequired'));
+            window.scrollTo(0, 0);
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -179,6 +203,21 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
                     {error}
+                </div>
+            )}
+
+            {!hasLocation && (
+                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start">
+                    <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                        <h4 className="text-sm font-medium text-yellow-800">{t('locationRequired')}</h4>
+                        <p className="text-sm text-yellow-700 mt-1">
+                            {t('locationRequiredDesc') || "You must set your location in your profile before you can create a CV."}
+                        </p>
+                        <Link href="/profile/edit" className="text-sm font-medium text-yellow-800 underline mt-2 inline-block">
+                            {t('updateLocation')}
+                        </Link>
+                    </div>
                 </div>
             )}
 
@@ -272,12 +311,6 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
                     onChange={(langs) => updateField('languages', langs)}
                 />
 
-
-
-                // ... (inside component)
-
-
-
                 {/* File Upload Section */}
                 <CVFileUpload
                     fileUrl={formData.cv_file_url}
@@ -299,7 +332,7 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
 
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={loading || !hasLocation}
                         className={`flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-full font-bold hover:bg-indigo-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${!isEditing ? 'ml-auto' : ''}`}
                     >
                         {loading ? (
