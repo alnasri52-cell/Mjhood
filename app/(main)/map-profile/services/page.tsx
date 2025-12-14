@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -25,7 +25,7 @@ interface Service {
     price_currency?: string;
 }
 
-export default function MyServicesPage() {
+function MyServicesContent() {
     const { t, dir } = useLanguage();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -649,5 +649,13 @@ export default function MyServicesPage() {
                 )}
             </main>
         </div>
+    );
+}
+
+export default function MyServicesPage() {
+    return (
+        <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
+            <MyServicesContent />
+        </Suspense>
     );
 }
