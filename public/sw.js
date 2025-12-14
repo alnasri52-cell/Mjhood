@@ -1,5 +1,5 @@
 // Service Worker for Mjhood PWA
-const CACHE_NAME = 'mjhood-v2'; // Increment version to force update
+const CACHE_NAME = 'mjhood-v3'; // Increment version to force update
 const urlsToCache = [
     '/manifest.json',
     '/icons/icon-192x192.png',
@@ -22,6 +22,11 @@ self.addEventListener('install', (event) => {
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
+
+    // Ignore external requests (Supabase, Maps, etc.) - let network handle them directly
+    if (url.origin !== self.location.origin) {
+        return;
+    }
 
     // Network-first strategy for HTML pages
     if (request.headers.get('accept').includes('text/html')) {
