@@ -409,14 +409,18 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
     // ... (rest of component)
 
-    const fetchNeeds = async () => {
+    const fetchNeeds = async (signal?: AbortSignal) => {
         console.log('--- fetchNeeds: START ---');
         try {
-            let { data, error } = await supabase
+            let query = supabase
                 .from('local_needs')
                 .select('*, profiles:user_id(service_location_lat, service_location_lng, latitude, longitude)')
                 .is('deleted_at', null)
                 .order('created_at', { ascending: false });
+
+            if (signal) query = query.abortSignal(signal);
+
+            let { data, error } = await query;
 
             if (error) {
                 console.error('Error fetching needs:', JSON.stringify(error, null, 2));
@@ -432,19 +436,27 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
             console.log('--- fetchNeeds: Mapped Count ---', mappedNeeds.length);
             setNeeds(mappedNeeds);
-        } catch (error) {
-            console.error('Error fetching needs:', error);
-            setNeeds([]);
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                console.log('--- fetchNeeds: Aborted ---');
+            } else {
+                console.error('Error fetching needs:', error);
+                setNeeds([]);
+            }
         }
     };
-    const fetchCVs = async () => {
+    const fetchCVs = async (signal?: AbortSignal) => {
         console.log('--- fetchCVs: START ---');
         try {
-            let { data, error } = await supabase
+            let query = supabase
                 .from('cvs')
                 .select('*, profiles:user_id(service_location_lat, service_location_lng, latitude, longitude)')
                 .is('deleted_at', null)
                 .order('created_at', { ascending: false });
+
+            if (signal) query = query.abortSignal(signal);
+
+            let { data, error } = await query;
 
             if (error) {
                 console.error('Error fetching CVs:', JSON.stringify(error, null, 2));
@@ -458,20 +470,28 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 console.log('--- fetchCVs: Mapped Count ---', mappedCvs.length);
                 setCvs(mappedCvs);
             }
-        } catch (err) {
-            console.error('Error fetching CVs:', err);
-            setCvs([]);
+        } catch (err: any) {
+            if (err.name === 'AbortError') {
+                console.log('--- fetchCVs: Aborted ---');
+            } else {
+                console.error('Error fetching CVs:', err);
+                setCvs([]);
+            }
         }
     };
 
-    const fetchResources = async () => {
+    const fetchResources = async (signal?: AbortSignal) => {
         console.log('--- fetchResources: START ---');
         try {
-            let { data, error } = await supabase
+            let query = supabase
                 .from('resources')
                 .select('*, profiles:user_id(service_location_lat, service_location_lng, latitude, longitude)')
                 .is('deleted_at', null)
                 .order('created_at', { ascending: false });
+
+            if (signal) query = query.abortSignal(signal);
+
+            let { data, error } = await query;
 
             if (error) {
                 console.error('Error fetching resources:', JSON.stringify(error, null, 2));
@@ -485,18 +505,22 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 console.log('--- fetchResources: Mapped Count ---', mappedResources.length);
                 setResources(mappedResources);
             }
-        } catch (err) {
-            console.error('Error fetching resources:', err);
-            setResources([]);
+        } catch (err: any) {
+            if (err.name === 'AbortError') {
+                console.log('--- fetchResources: Aborted ---');
+            } else {
+                console.error('Error fetching resources:', err);
+                setResources([]);
+            }
         }
     };
 
-    const fetchServices = async () => {
+    const fetchServices = async (signal?: AbortSignal) => {
         console.log('--- fetchServices: START ---');
         try {
             // NEW: Fetch from profiles with service_categories
             // This groups all services by user location
-            const { data: profilesData, error: profilesError } = await supabase
+            let queryPoints = supabase
                 .from('profiles')
                 .select(`
                     id,
@@ -523,6 +547,10 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 .not('service_location_lng', 'is', null)
                 .is('service_categories.deleted_at', null);
 
+            if (signal) queryPoints = queryPoints.abortSignal(signal);
+
+            const { data: profilesData, error: profilesError } = await queryPoints;
+
             if (profilesError) {
                 console.error('--- fetchServices: Profile Fetch Error ---', profilesError);
             }
@@ -538,7 +566,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 }
 
                 // FALLBACK: Try old services table for backward compatibility
-                let { data, error } = await supabase
+                let legacyQuery = supabase
                     .from('services')
                     .select(`
                     *,
@@ -555,6 +583,10 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                     .not('latitude', 'is', null)
                     .not('longitude', 'is', null)
                     .is('deleted_at', null);
+
+                if (signal) legacyQuery = legacyQuery.abortSignal(signal);
+
+                let { data, error } = await legacyQuery;
 
                 console.log('--- fetchServices: Legacy Data Found ---', data?.length || 0);
 
@@ -602,9 +634,13 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 console.log('--- fetchServices: Transformed Services Count ---', transformedServices.length);
                 setServices(transformedServices);
             }
-        } catch (err) {
-            console.error('Error fetching services:', err);
-            setServices([]);
+        } catch (err: any) {
+            if (err.name === 'AbortError') {
+                console.log('--- fetchServices: Aborted ---');
+            } else {
+                console.error('Error fetching services:', err);
+                setServices([]);
+            }
         }
     };
 
@@ -625,6 +661,9 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     }, [viewMode]);
 
     useEffect(() => {
+        const controller = new AbortController();
+        const signal = controller.signal;
+
         console.log('--- useEffect [viewMode]: Running ---', viewMode);
         const fetchAllData = async () => {
             console.log('--- fetchAllData: START ---', viewMode);
@@ -633,16 +672,16 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
                 // Build array of fetch promises based on view mode
                 if (viewMode === 'services' || viewMode === 'both') {
-                    promises.push(fetchServices());
+                    promises.push(fetchServices(signal));
                 }
                 if (viewMode === 'needs' || viewMode === 'both') {
-                    promises.push(fetchNeeds());
+                    promises.push(fetchNeeds(signal));
                 }
                 if (viewMode === 'cvs' || viewMode === 'both') {
-                    promises.push(fetchCVs());
+                    promises.push(fetchCVs(signal));
                 }
                 if (viewMode === 'resources' || viewMode === 'both') {
-                    promises.push(fetchResources());
+                    promises.push(fetchResources(signal));
                 }
 
                 // Fetch all data in parallel (much faster than sequential)
@@ -652,7 +691,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 console.error('Error fetching data:', error);
             } finally {
                 // Always set loading to false, even if some fetches failed
-                setLoading(false);
+                if (!signal.aborted) setLoading(false);
             }
         };
 
@@ -751,6 +790,8 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         }, 30000);
 
         return () => {
+            console.log('--- useEffect Cleanup: Aborting Fetch ---');
+            controller.abort();
             servicesChannel.unsubscribe();
             needsChannel.unsubscribe();
             cvsChannel.unsubscribe();
