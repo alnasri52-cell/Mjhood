@@ -2,18 +2,23 @@
 
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Icon } from 'leaflet';
+import L from 'leaflet';
 import { useEffect, useState } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { MapPin } from 'lucide-react';
 
-// Fix for default marker icon
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+const iconHtml = renderToStaticMarkup(
+    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg border-2 border-white">
+        <MapPin className="w-4 h-4 text-white" />
+    </div>
+);
 
-const DefaultIcon = new Icon({
-    iconUrl: icon.src,
-    shadowUrl: iconShadow.src,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
+const CustomIcon = L.divIcon({
+    html: iconHtml,
+    className: 'custom-location-icon',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
 });
 
 interface LocationMapProps {
@@ -43,7 +48,7 @@ export default function LocationMap({ lat, lng, title }: LocationMapProps) {
                 attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
                 url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             />
-            <Marker position={[lat, lng]} icon={DefaultIcon}>
+            <Marker position={[lat, lng]} icon={CustomIcon}>
                 {title && <Popup>{title}</Popup>}
             </Marker>
         </MapContainer>
