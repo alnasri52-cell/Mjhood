@@ -1128,10 +1128,10 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
                                 {/* Action Button */}
                                 <Link
-                                    href={`/profile/${service.profiles?.id}`}
+                                    href={`/service/${service.id}`}
                                     className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
                                 >
-                                    {t('viewProfile')}
+                                    {t('view')}
                                 </Link>
                                 <button
                                     onClick={(e) => {
