@@ -145,7 +145,7 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
 
             if (result.error) throw result.error;
 
-            router.push('/map?view=cvs');
+            router.push('/map-profile/cvs');
             router.refresh();
         } catch (err: any) {
             console.error('Error saving CV:', err);
@@ -167,7 +167,7 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
 
             if (error) throw error;
 
-            router.push('/map?view=cvs');
+            router.push('/map-profile/cvs');
             router.refresh();
         } catch (err: any) {
             console.error('Error deleting CV:', err);
