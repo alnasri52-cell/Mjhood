@@ -31,11 +31,11 @@ export default function NeedMapPreview({ lat, lng }: NeedMapPreviewProps) {
                 center={[lat, lng]}
                 zoom={14}
                 style={{ height: '100%', width: '100%' }}
-                dragging={false}
-                zoomControl={false}
+                dragging={true}
+                zoomControl={true}
                 scrollWheelZoom={false}
-                doubleClickZoom={false}
-                touchZoom={false}
+                doubleClickZoom={true}
+                touchZoom={true}
                 attributionControl={false}
             >
                 <TileLayer
