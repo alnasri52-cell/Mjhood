@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Instagram, Twitter, Globe } from 'lucide-react';
+import { ArrowLeft, Instagram, Twitter, Globe, FileText } from 'lucide-react';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ServiceDetailModal from '@/components/services/ServiceDetailModal';
 import dynamic from 'next/dynamic';
@@ -44,11 +44,25 @@ interface Service {
     category: string;
 }
 
+interface Resource {
+    id: string;
+    title: string;
+    description: string;
+    type: string;
+}
+
+interface CV {
+    id: string;
+    job_title: string; /* Minimally needed */
+}
+
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const { t, dir } = useLanguage();
     const { id } = React.use(params);
     const [profile, setProfile] = useState<Profile | null>(null);
     const [services, setServices] = useState<Service[]>([]);
+    const [resources, setResources] = useState<Resource[]>([]);
+    const [cv, setCv] = useState<CV | null>(null);
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -82,6 +96,27 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
             if (servicesData) {
                 setServices(servicesData);
+            }
+
+            // Fetch resources
+            const { data: resourcesData } = await supabase
+                .from('resources')
+                .select('*')
+                .eq('user_id', id);
+
+            if (resourcesData) {
+                setResources(resourcesData);
+            }
+
+            // Fetch CV
+            const { data: cvData } = await supabase
+                .from('cvs')
+                .select('id, job_title')
+                .eq('user_id', id)
+                .single();
+
+            if (cvData) {
+                setCv(cvData);
             }
 
             setLoading(false);
@@ -127,6 +162,19 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     isOwner={isOwner}
                 />
 
+                {/* CV Button */}
+                {cv && (
+                    <div className="mt-8 flex justify-center">
+                        <Link
+                            href={`/cv/${cv.id}`}
+                            className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-full font-bold hover:bg-green-700 transition shadow-lg transform hover:-translate-y-1"
+                        >
+                            <FileText className="w-5 h-5" />
+                            {t('viewFullCV')}
+                        </Link>
+                    </div>
+                )}
+
 
 
 
@@ -151,6 +199,32 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                                             </span>
                                         </div>
                                     </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Resources */}
+                {resources.length > 0 && (
+                    <div className="mt-8">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">{t('yourResources')}</h2>
+                        <div className="grid gap-4">
+                            {resources.map((resource) => (
+                                <div
+                                    key={resource.id}
+                                    className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition"
+                                >
+                                    <h3 className="font-semibold text-gray-900 mb-1">{resource.title}</h3>
+                                    <p className="text-sm text-gray-600 mb-2">{resource.description}</p>
+                                    <span className={`inline-block px-2 py-1 text-xs font-medium rounded ${resource.type === 'rent' ? 'bg-orange-50 text-orange-700' :
+                                        resource.type === 'borrow' ? 'bg-purple-50 text-purple-700' :
+                                            'bg-gray-100 text-gray-700'
+                                        }`}>
+                                        {resource.type === 'rent' ? t('forRent') :
+                                            resource.type === 'borrow' ? t('forBorrow') :
+                                                resource.type}
+                                    </span>
                                 </div>
                             ))}
                         </div>
