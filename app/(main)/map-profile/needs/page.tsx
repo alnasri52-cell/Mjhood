@@ -166,7 +166,7 @@ export default function MyNeedsPage() {
                                     <NeedMapPreview lat={need.latitude} lng={need.longitude} />
 
                                     {/* Category Badge */}
-                                    <div className="absolute top-4 left-4 z-[500]">
+                                    <div className="absolute top-4 right-4 z-[500]">
                                         <span className="bg-white/95 backdrop-blur-md text-red-600 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1">
                                             <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
                                             {t(need.category as any)}
