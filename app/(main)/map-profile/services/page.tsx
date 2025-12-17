@@ -381,7 +381,7 @@ function MyServicesContent() {
                                                 required
                                                 value={newTitle}
                                                 onChange={(e) => setNewTitle(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 text-black"
                                                 placeholder="e.g. Weekend Gardening"
                                             />
                                         </div>
@@ -394,7 +394,7 @@ function MyServicesContent() {
                                                 value={newDescription}
                                                 onChange={(e) => setNewDescription(e.target.value)}
                                                 rows={3}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 text-black"
                                                 placeholder="Describe your service..."
                                             />
                                         </div>
@@ -460,7 +460,7 @@ function MyServicesContent() {
                                                             min="0"
                                                             value={newPriceMin}
                                                             onChange={(e) => setNewPriceMin(e.target.value)}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pr-16 placeholder-gray-400"
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pr-16 placeholder-gray-400 text-black"
                                                             placeholder="0.00"
                                                         />
                                                         <span className="absolute right-3 top-2.5 text-gray-500 text-sm">SAR</span>
@@ -481,7 +481,7 @@ function MyServicesContent() {
                                                                 min="0"
                                                                 value={newPriceMin}
                                                                 onChange={(e) => setNewPriceMin(e.target.value)}
-                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pr-16 placeholder-gray-400"
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pr-16 placeholder-gray-400 text-black"
                                                                 placeholder="0.00"
                                                             />
                                                             <span className="absolute right-3 top-2.5 text-gray-500 text-sm">SAR</span>
@@ -498,7 +498,7 @@ function MyServicesContent() {
                                                                 min={newPriceMin || "0"}
                                                                 value={newPriceMax}
                                                                 onChange={(e) => setNewPriceMax(e.target.value)}
-                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pr-16 placeholder-gray-400"
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 pr-16 placeholder-gray-400 text-black"
                                                                 placeholder="0.00"
                                                             />
                                                             <span className="absolute right-3 top-2.5 text-gray-500 text-sm">SAR</span>
@@ -537,7 +537,7 @@ function MyServicesContent() {
 
                                             {/* Image upload */}
                                             <ImageUpload
-                                                bucket="service_gallery"
+                                                bucket="avatars"
                                                 onUpload={(url) => setNewGalleryUrls([...newGalleryUrls, url])}
                                                 label=""
                                                 multiple={true}
