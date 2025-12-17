@@ -4,9 +4,15 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, HandHeart, ArrowLeft, Trash2, MapPin, ThumbsUp, ThumbsDown, AlertTriangle } from 'lucide-react';
+import { Plus, HandHeart, ArrowLeft, ThumbsUp, ThumbsDown, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import Modal from '@/components/ui/Modal';
+import dynamic from 'next/dynamic';
+
+const NeedMapPreview = dynamic(() => import('@/components/map/NeedMapPreview'), {
+    ssr: false,
+    loading: () => <div className="h-full w-full bg-gray-100 flex items-center justify-center text-gray-400">Loading Map...</div>
+});
 
 export default function MyNeedsPage() {
     const { t, dir } = useLanguage();
@@ -156,29 +162,11 @@ export default function MyNeedsPage() {
                         {needs.map((need) => (
                             <div key={need.id} className="bg-white rounded-3xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 group">
                                 {/* Map Header */}
-                                <div className="h-56 w-full bg-blue-50 relative overflow-hidden flex items-center justify-center">
-                                    {/* Try to show static map if key exists, otherwise placeholder */}
-                                    <img
-                                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${need.latitude},${need.longitude}&zoom=15&size=600x300&markers=color:red%7C${need.latitude},${need.longitude}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
-                                        alt="Request Location"
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            // Fallback if map fails
-                                            e.currentTarget.style.display = 'none';
-                                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                                            e.currentTarget.nextElementSibling?.classList.add('flex');
-                                        }}
-                                    />
-                                    {/* Fallback Placeholder (Hidden by default unless error) */}
-                                    <div className="hidden absolute inset-0 bg-blue-50 w-full h-full flex-col items-center justify-center text-blue-300">
-                                        <div className="bg-blue-100 p-4 rounded-full mb-3 animate-pulse">
-                                            <MapPin className="w-8 h-8 text-blue-500" />
-                                        </div>
-                                        <span className="text-sm font-medium text-blue-400">Location Map</span>
-                                    </div>
+                                <div className="h-56 w-full bg-blue-50 relative overflow-hidden text-gray-500">
+                                    <NeedMapPreview lat={need.latitude} lng={need.longitude} />
 
                                     {/* Category Badge */}
-                                    <div className="absolute top-4 left-4">
+                                    <div className="absolute top-4 left-4 z-[500]">
                                         <span className="bg-white/95 backdrop-blur-md text-red-600 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1">
                                             <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
                                             {t(need.category as any)}
