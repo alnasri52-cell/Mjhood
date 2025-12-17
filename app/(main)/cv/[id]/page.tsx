@@ -73,10 +73,12 @@ export default function CVDetailPage({ params }: { params: Promise<{ id: string 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden p-6 md:p-8">
 
                     <div className="text-center mb-8">
-                        <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600 text-3xl font-bold">
-                            {cv.full_name?.charAt(0)}
-                        </div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{cv.full_name}</h1>
+                        <Link href={`/profile/${cv.user_id}`} className="group inline-block">
+                            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600 text-3xl font-bold group-hover:bg-green-200 transition">
+                                {cv.full_name?.charAt(0)}
+                            </div>
+                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 group-hover:text-green-700 transition underline-offset-4 group-hover:underline">{cv.full_name}</h1>
+                        </Link>
                         <div className="flex flex-wrap items-center justify-center gap-2">
                             <div className="inline-block px-4 py-1.5 bg-green-50 text-green-700 font-medium rounded-full">
                                 {cv.job_title}

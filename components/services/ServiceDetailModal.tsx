@@ -141,18 +141,20 @@ export default function ServiceDetailModal({ isOpen, onClose, service, provider 
                         <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('serviceProvider')}</h3>
 
                         <div className="flex items-center mb-4">
-                            <img
-                                src={provider.avatar_url || '/default-avatar.png'}
-                                alt={provider.full_name}
-                                className="w-12 h-12 rounded-full object-cover mr-3"
-                            />
-                            <div>
-                                <p className="font-semibold text-gray-900">{provider.full_name}</p>
-                                <div className="flex items-center">
-                                    <span className="text-yellow-500 mr-1">★</span>
-                                    <span className="text-sm text-gray-600">{provider.rating.toFixed(1)}</span>
+                            <Link href={`/profile/${provider.id}`} className="flex items-center group">
+                                <img
+                                    src={provider.avatar_url || '/default-avatar.png'}
+                                    alt={provider.full_name}
+                                    className="w-12 h-12 rounded-full object-cover mr-3 border border-gray-200 group-hover:border-blue-500 transition"
+                                />
+                                <div>
+                                    <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition">{provider.full_name}</p>
+                                    <div className="flex items-center">
+                                        <span className="text-yellow-500 mr-1">★</span>
+                                        <span className="text-sm text-gray-600">{provider.rating.toFixed(1)}</span>
+                                    </div>
                                 </div>
-                            </div>
+                            </Link>
                         </div>
 
                         {/* Social Media Links */}
