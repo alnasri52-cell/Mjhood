@@ -161,6 +161,7 @@ export default function MyResourcesPage() {
                                             src={resource.gallery_urls[0]}
                                             alt={resource.title}
                                             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                            style={{ objectFit: 'cover' }}
                                         />
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 bg-gray-50">
@@ -208,10 +209,10 @@ export default function MyResourcesPage() {
                                         {resource.description}
                                     </p>
 
-                                    <div className="flex gap-3 pt-4 border-t border-gray-50 justify-end">
+                                    <div className="pt-4 border-t border-gray-50">
                                         <button
                                             onClick={(e) => handleDelete(resource.id, e)}
-                                            className="px-6 py-3 rounded-xl border-2 border-red-50 text-red-500 hover:border-red-100 hover:bg-red-50 transition flex items-center gap-2 font-medium"
+                                            className="w-full bg-red-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-red-600 transition flex items-center justify-center gap-2 shadow-sm"
                                             title={t('confirmDeleteResource')}
                                         >
                                             <Trash2 className="w-5 h-5" />
