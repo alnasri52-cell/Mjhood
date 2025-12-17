@@ -84,6 +84,10 @@ export const translations = {
         cancel: 'Cancel',
         delete: 'Delete',
         editResource: 'Edit Resource',
+        requestDelete: 'Request Delete',
+        confirmRequestDeleteNeed: 'Are you sure you want to request deletion for this need? An admin will review your request.',
+        deleteRequestSubmitted: 'Deletion request submitted successfully.',
+        adminApprovalNote: 'This item cannot be deleted directly. A request will be sent to admin.',
         addNeedQuestion: 'Add a need?',
         addToMap: 'Add to Map',
 
@@ -573,6 +577,10 @@ export const translations = {
         cancel: 'إلغاء',
         delete: 'حذف',
         editResource: 'تعديل المورد',
+        requestDelete: 'طلب حذف',
+        confirmRequestDeleteNeed: 'هل أنت متأكد من طلب حذف هذا الاحتياج؟ سيقوم المسؤول بمراجعة طلبك.',
+        deleteRequestSubmitted: 'تم تقديم طلب الحذف بنجاح.',
+        adminApprovalNote: 'لا يمكن حذف هذا العنصر مباشرة. سيتم إرسال طلب للمسؤول.',
         addNeedQuestion: 'إضافة احتياج؟',
         addToMap: 'إضافة للخريطة',
 

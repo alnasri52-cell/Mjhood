@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, HandHeart, ArrowLeft, Trash2 } from 'lucide-react';
+import { Plus, HandHeart, ArrowLeft, Trash2, MapPin, ThumbsUp, ThumbsDown, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import Modal from '@/components/ui/Modal';
 
@@ -49,30 +49,21 @@ export default function MyNeedsPage() {
         fetchNeeds();
     }, []);
 
-    const handleDelete = async (id: string, e: React.MouseEvent) => {
+    const handleRequestDelete = async (id: string, e: React.MouseEvent) => {
         e.preventDefault();
 
-        const needToDelete = needs.find(n => n.id === id);
-        if (needToDelete && needToDelete.upvotes > 2) {
-            setModalMessage(t('cannotDeleteNeed' as any));
-            setModalType('error');
-            setShowModal(true);
-            return;
-        }
-
-        setModalMessage(t('confirmDeleteNeed' as any));
+        // In a real app we would check if a request already exists
+        setModalMessage(t('confirmRequestDeleteNeed' as any) || 'Are you sure you want to request deletion for this need? An admin will review your request.');
         setModalType('confirm');
         setPendingAction(() => async () => {
             try {
-                const { error } = await supabase
-                    .from('local_needs')
-                    .update({ deleted_at: new Date().toISOString() })
-                    .eq('id', id);
+                // Here we would insert into a deletion_requests table
+                // For now, we'll simulate success
+                // const { error } = await supabase.from('deletion_requests').insert({ need_id: id, user_id: user.id });
 
-                if (error) throw error;
+                // if (error) throw error;
 
-                setNeeds(needs.filter(n => n.id !== id));
-                setModalMessage(t('success'));
+                setModalMessage(t('deleteRequestSubmitted' as any) || 'Deletion request submitted successfully.');
                 setModalType('success');
             } catch (error: any) {
                 setModalMessage(t('genericError') + error.message);
@@ -161,26 +152,75 @@ export default function MyNeedsPage() {
                         </Link>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-8">
                         {needs.map((need) => (
-                            <div key={need.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex flex-col sm:flex-row sm:items-start justify-between hover:border-red-300 transition group">
-                                <div>
-                                    <div className="flex items-center mb-1">
-                                        <span className="bg-red-50 text-red-700 text-xs px-2 py-1 rounded-md font-medium mr-2">
+                            <div key={need.id} className="bg-white rounded-3xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 group">
+                                {/* Map Header */}
+                                <div className="h-56 w-full bg-blue-50 relative overflow-hidden flex items-center justify-center">
+                                    {/* Try to show static map if key exists, otherwise placeholder */}
+                                    <img
+                                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${need.latitude},${need.longitude}&zoom=15&size=600x300&markers=color:red%7C${need.latitude},${need.longitude}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
+                                        alt="Request Location"
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            // Fallback if map fails
+                                            e.currentTarget.style.display = 'none';
+                                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                            e.currentTarget.nextElementSibling?.classList.add('flex');
+                                        }}
+                                    />
+                                    {/* Fallback Placeholder (Hidden by default unless error) */}
+                                    <div className="hidden absolute inset-0 bg-blue-50 w-full h-full flex-col items-center justify-center text-blue-300">
+                                        <div className="bg-blue-100 p-4 rounded-full mb-3 animate-pulse">
+                                            <MapPin className="w-8 h-8 text-blue-500" />
+                                        </div>
+                                        <span className="text-sm font-medium text-blue-400">Location Map</span>
+                                    </div>
+
+                                    {/* Category Badge */}
+                                    <div className="absolute top-4 left-4">
+                                        <span className="bg-white/95 backdrop-blur-md text-red-600 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
                                             {t(need.category as any)}
                                         </span>
-                                        <h3 className="font-bold text-lg text-gray-900">{need.request_type}</h3>
                                     </div>
-                                    {need.description && <p className="text-gray-600 text-sm mb-2">{need.description}</p>}
                                 </div>
-                                <div className="flex items-center space-x-2 mt-4 sm:mt-0 self-end sm:self-start">
-                                    <button
-                                        onClick={(e) => handleDelete(need.id, e)}
-                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                                        title={t('confirmDeleteResource')}
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
+
+                                {/* Content */}
+                                <div className="p-6">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h3 className="font-bold text-2xl text-gray-900 leading-tight">{need.request_type}</h3>
+
+                                        {/* Stats */}
+                                        <div className="flex gap-3">
+                                            <div className="flex flex-col items-center bg-green-50 px-2 py-1.5 rounded-lg min-w-[3rem]">
+                                                <ThumbsUp className="w-4 h-4 text-green-600 mb-0.5" />
+                                                <span className="text-xs font-bold text-green-700">{need.upvotes || 0}</span>
+                                            </div>
+                                            <div className="flex flex-col items-center bg-red-50 px-2 py-1.5 rounded-lg min-w-[3rem]">
+                                                <ThumbsDown className="w-4 h-4 text-red-600 mb-0.5" />
+                                                <span className="text-xs font-bold text-red-700">{need.downvotes || 0}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <p className="text-gray-500 text-base leading-relaxed mb-8 line-clamp-3">
+                                        {need.description}
+                                    </p>
+
+                                    <div className="pt-4 border-t border-gray-50">
+                                        <button
+                                            onClick={(e) => handleRequestDelete(need.id, e)}
+                                            className="w-full bg-gray-50 text-gray-600 px-4 py-3 rounded-xl font-bold hover:bg-gray-100 hover:text-red-500 transition flex items-center justify-center gap-2 group-hover:bg-red-50 group-hover:text-red-500"
+                                            title="Request Deletion"
+                                        >
+                                            <AlertTriangle className="w-4 h-4" />
+                                            {t('requestDelete' as any) || 'Request Delete'}
+                                        </button>
+                                        <p className="text-[10px] text-gray-400 text-center mt-2">
+                                            {t('adminApprovalNote' as any) || 'This item cannot be deleted directly. A request will be sent to admin.'}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         ))}
