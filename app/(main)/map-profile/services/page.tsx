@@ -623,7 +623,7 @@ function MyServicesContent() {
                                             <div className="flex gap-3 pt-4 border-t border-gray-50">
                                                 <button
                                                     onClick={() => handleEditClick(service)}
-                                                    className="flex-1 bg-black text-white px-4 py-3 rounded-xl font-bold hover:bg-gray-800 transition flex items-center justify-center gap-2"
+                                                    className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-xl font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                     {t('editService')}
