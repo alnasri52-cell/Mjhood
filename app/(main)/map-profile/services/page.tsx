@@ -364,7 +364,7 @@ function MyServicesContent() {
                                                 required
                                                 value={newCategory}
                                                 onChange={(e) => setNewCategory(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
                                             >
                                                 <option value="">{t('selectCategory')}</option>
                                                 {SERVICE_CATEGORIES.map((cat) => (
@@ -538,7 +538,7 @@ function MyServicesContent() {
                                             {/* Image upload */}
                                             <ImageUpload
                                                 bucket="avatars"
-                                                onUpload={(url) => setNewGalleryUrls([...newGalleryUrls, url])}
+                                                onUpload={(url) => setNewGalleryUrls(prev => [...prev, url])}
                                                 label=""
                                                 multiple={true}
                                             />
