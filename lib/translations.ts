@@ -34,7 +34,6 @@ export const translations = {
         languages: 'Languages',
         certifications: 'Certifications',
         professionalSummary: 'Professional Summary',
-        category: 'Category',
         Engineering: 'Engineering',
         Healthcare: 'Healthcare',
         "IT & Development": 'IT & Development',
@@ -403,18 +402,18 @@ export const translations = {
         viewCV: 'View CV',
         createCV: 'Create CV',
         uploadCV: 'Upload CV',
-        downloadCV: 'Download CV',
+
 
         confirmDeleteCV: 'Are you sure you want to delete your CV? This will remove it from the map.',
 
         jobTitle: 'Job Title',
-        professionalSummary: 'Professional Summary',
+
         workExperience: 'Work Experience',
         education: 'Education',
         skills: 'Skills',
-        languages: 'Languages',
+
         clickMapToSetLocation: 'Click on the map to set your location',
-        certifications: 'Certifications',
+
         portfolio: 'Portfolio',
         addExperience: 'Add Experience',
         addEducation: 'Add Education',
@@ -428,9 +427,9 @@ export const translations = {
         year: 'Year',
         proficiency: 'Proficiency',
         issuer: 'Issuer',
-        cvCreated: 'CV created successfully!',
-        cvUpdated: 'CV updated successfully!',
-        cvDeleted: 'CV deleted successfully!',
+        cvCreated: 'CV created successfully.',
+        cvUpdated: 'CV updated successfully.',
+        cvDeleted: 'CV deleted successfully.',
         cvFileUploaded: 'CV file uploaded successfully!',
         uploadFile: 'Upload File',
         dragDropFile: 'Drag and drop your CV file here, or click to browse',
@@ -540,7 +539,6 @@ export const translations = {
         resource: 'مورد',
         cv: 'سيرة ذاتية',
         downloadCV: 'تحميل السيرة الذاتية',
-        category: 'الفئة',
         Engineering: 'هندسة',
         Healthcare: 'رعاية صحية',
         "IT & Development": 'تقنية المعلومات والتطوير',
@@ -908,17 +906,17 @@ export const translations = {
         viewCV: 'عرض السيرة الذاتية',
         createCV: 'إنشاء سيرة ذاتية',
         uploadCV: 'رفع السيرة الذاتية',
-        downloadCV: 'تحميل السيرة الذاتية',
+
         deleteCV: 'حذف السيرة الذاتية',
         confirmDeleteCV: 'هل أنت متأكد أنك تريد حذف سيرتك الذاتية؟ سيؤدي هذا إلى إزالتها من الخريطة.',
 
         jobTitle: 'المسمى الوظيفي',
-        professionalSummary: 'الملخص المهني',
+
         workExperience: 'الخبرات العملية',
         education: 'التعليم',
         skills: 'المهارات',
-        languages: 'اللغات',
-        certifications: 'الشهادات',
+
+
         portfolio: 'معرض الأعمال',
         addExperience: 'إضافة خبرة',
         addEducation: 'إضافة تعليم',
@@ -932,9 +930,9 @@ export const translations = {
         year: 'السنة',
         proficiency: 'مستوى الإتقان',
         issuer: 'الجهة المصدرة',
-        cvCreated: 'تم إنشاء السيرة الذاتية بنجاح!',
-        cvUpdated: 'تم تحديث السيرة الذاتية بنجاح!',
-        cvDeleted: 'تم حذف السيرة الذاتية بنجاح!',
+        cvCreated: 'تم إنشاء السيرة الذاتية بنجاح.',
+        cvUpdated: 'تم تحديث السيرة الذاتية بنجاح.',
+        cvDeleted: 'تم حذف السيرة الذاتية بنجاح.',
         cvFileUploaded: 'تم رفع ملف السيرة الذاتية بنجاح!',
         uploadFile: 'رفع ملف',
         dragDropFile: 'اسحب وأفلت ملف السيرة الذاتية هنا، أو انقر للتصفح',

@@ -145,7 +145,8 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
 
             if (result.error) throw result.error;
 
-            router.push('/map-profile/cvs');
+            const action = isEditing ? 'updated' : 'created';
+            router.push(`/map-profile/cvs?action=${action}`);
             router.refresh();
         } catch (err: any) {
             console.error('Error saving CV:', err);

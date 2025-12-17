@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, FileText, ArrowLeft, Trash2, Edit, MapPin, Briefcase, MessageCircle, Mail, Download, Globe, Award, Languages, GraduationCap } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
@@ -17,6 +17,7 @@ const LocationMap = dynamic(() => import('@/components/ui/LocationMap'), {
 export default function MyCVsPage() {
     const { t, dir } = useLanguage();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
     const [cv, setCv] = useState<any>(null);
@@ -26,6 +27,16 @@ export default function MyCVsPage() {
     const [modalMessage, setModalMessage] = useState('');
     const [modalType, setModalType] = useState<'success' | 'error' | 'confirm'>('success');
     const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
+    useEffect(() => {
+        const action = searchParams.get('action');
+        if (action === 'created' || action === 'updated') {
+            setModalMessage(action === 'created' ? t('cvCreated') : t('cvUpdated'));
+            setModalType('success');
+            setShowModal(true);
+            router.replace('/map-profile/cvs');
+        }
+    }, [searchParams, t, router]);
 
     useEffect(() => {
         const fetchCV = async () => {
