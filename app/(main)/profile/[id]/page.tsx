@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Instagram, Twitter, Globe, FileText, Image as ImageIcon } from 'lucide-react';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ServiceDetailModal from '@/components/services/ServiceDetailModal';
+import ResourceDetailModal from '@/components/resources/ResourceDetailModal';
 import dynamic from 'next/dynamic';
 
 import { supabase } from '@/lib/database/supabase';
@@ -53,6 +54,13 @@ interface Resource {
     title: string;
     description: string;
     type: string;
+    category: string;
+    availability_type?: string;
+    gallery_urls?: string[];
+    price_type?: 'fixed' | 'range' | 'negotiable' | 'free' | null;
+    price_min?: number | null;
+    price_max?: number | null;
+    price_currency?: string;
 }
 
 interface CV {
@@ -70,6 +78,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
+    const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
 
     useEffect(() => {
         const getProfile = async () => {
@@ -231,25 +240,45 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                             {resources.map((resource) => (
                                 <div
                                     key={resource.id}
-                                    className="bg-white rounded-3xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 group"
+                                    onClick={() => setSelectedResource(resource)}
+                                    className="bg-white rounded-3xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 group cursor-pointer"
                                 >
-                                    <div className="h-40 w-full bg-gray-50 relative overflow-hidden flex items-center justify-center">
-                                        <div className="text-gray-300">
-                                            <ImageIcon className="w-10 h-10 opacity-40" />
-                                        </div>
+                                    <div className="h-48 w-full bg-gray-50 relative overflow-hidden flex items-center justify-center">
+                                        {resource.gallery_urls && resource.gallery_urls.length > 0 ? (
+                                            <img
+                                                src={resource.gallery_urls[0]}
+                                                alt={resource.title}
+                                                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                            />
+                                        ) : (
+                                            <div className="text-gray-300 flex flex-col items-center">
+                                                <ImageIcon className="w-10 h-10 opacity-40 mb-2" />
+                                                <span className="text-xs">No Image</span>
+                                            </div>
+                                        )}
                                         <div className="absolute top-4 left-4">
-                                            <span className={`inline-block px-3 py-1.5 text-xs font-bold rounded-full shadow-sm ${resource.type === 'rent' ? 'bg-orange-100 text-orange-700' :
-                                                resource.type === 'borrow' ? 'bg-purple-100 text-purple-700' :
-                                                    'bg-gray-100 text-gray-700'
+                                            <span className={`inline-block px-3 py-1.5 text-xs font-bold rounded-full shadow-sm backdrop-blur-md ${resource.availability_type === 'rent' || resource.type === 'rent' ? 'bg-orange-100/90 text-orange-800' :
+                                                resource.availability_type === 'borrow' || resource.type === 'borrow' ? 'bg-purple-100/90 text-purple-800' :
+                                                    'bg-gray-100/90 text-gray-800'
                                                 }`}>
-                                                {resource.type === 'rent' ? t('forRent') :
-                                                    resource.type === 'borrow' ? t('forBorrow') :
+                                                {resource.availability_type === 'rent' || resource.type === 'rent' ? t('forRent') :
+                                                    resource.availability_type === 'borrow' || resource.type === 'borrow' ? t('forBorrow') :
                                                         resource.type}
                                             </span>
                                         </div>
                                     </div>
                                     <div className="p-5">
-                                        <h3 className="font-bold text-lg text-gray-900 mb-2">{resource.title}</h3>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="font-bold text-lg text-gray-900 leading-tight line-clamp-1">{resource.title}</h3>
+                                            {resource.price_type && (
+                                                <span className="bg-green-50 text-green-700 text-xs font-bold px-2 py-1 rounded-md border border-green-100 ml-2 whitespace-nowrap">
+                                                    {resource.price_type === 'fixed' && resource.price_min && `${resource.price_min} SAR`}
+                                                    {resource.price_type === 'range' && `${resource.price_min}-${resource.price_max}`}
+                                                    {resource.price_type === 'negotiable' && t('negotiable')}
+                                                    {resource.price_type === 'free' && t('free')}
+                                                </span>
+                                            )}
+                                        </div>
                                         <p className="text-sm text-gray-500 line-clamp-2">{resource.description}</p>
                                     </div>
                                 </div>
@@ -293,6 +322,27 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                         avatar_url: profile.avatar_url || '',
                         rating: profile.rating || 0,
                         gallery_urls: profile.gallery_urls,
+                        social_links: profile.social_links
+                    }}
+                />
+            )}
+
+            {/* Resource Detail Modal */}
+            {selectedResource && profile && (
+                <ResourceDetailModal
+                    isOpen={!!selectedResource}
+                    onClose={() => setSelectedResource(null)}
+                    resource={{
+                        ...selectedResource,
+                        category: selectedResource.category || 'Other',
+                        availability_type: selectedResource.availability_type || selectedResource.type || 'borrow'
+                    }}
+                    provider={{
+                        id: profile.id,
+                        full_name: profile.full_name,
+                        avatar_url: profile.avatar_url || '',
+                        rating: profile.rating || 5.0,
+                        gallery_urls: [],
                         social_links: profile.social_links
                     }}
                 />
