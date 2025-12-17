@@ -25,6 +25,7 @@ interface CV {
     longitude: number;
     created_at: string;
     user_id?: string;
+    category?: string;
 }
 
 export default function CVDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -76,8 +77,15 @@ export default function CVDetailPage({ params }: { params: Promise<{ id: string 
                             {cv.full_name?.charAt(0)}
                         </div>
                         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{cv.full_name}</h1>
-                        <div className="inline-block px-4 py-1.5 bg-green-50 text-green-700 font-medium rounded-full">
-                            {cv.job_title}
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                            <div className="inline-block px-4 py-1.5 bg-green-50 text-green-700 font-medium rounded-full">
+                                {cv.job_title}
+                            </div>
+                            {cv.category && (
+                                <div className="inline-block px-4 py-1.5 bg-blue-50 text-blue-700 font-medium rounded-full">
+                                    {t(cv.category as any) || cv.category}
+                                </div>
+                            )}
                         </div>
                     </div>
 

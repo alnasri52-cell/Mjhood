@@ -9,6 +9,7 @@ import {
     FileText, MapPin, Plus, Trash2, Save, Loader2, ArrowLeft, AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
+import { CV_CATEGORIES } from '@/lib/constants';
 import WorkExperienceSection from './WorkExperienceSection';
 import EducationSection from './EducationSection';
 import SkillsSection from './SkillsSection';
@@ -35,6 +36,7 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
         full_name: '',
         phone: '',
         email: '',
+        category: '',
         job_title: '',
         summary: '',
         latitude: 24.7136, // Default fallback
@@ -97,6 +99,7 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
         if (initialData) {
             setFormData({
                 ...initialData,
+                category: initialData.category || '',
                 work_experience: initialData.work_experience || [],
                 education: initialData.education || [],
                 skills: initialData.skills || [],
@@ -241,6 +244,24 @@ export default function CVForm({ initialData, isEditing = false }: CVFormProps) 
                                 onChange={(e) => updateField('full_name', e.target.value)}
                                 className="w-full px-4 py-2 rounded-lg border border-gray-300 text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                             />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                {t('category')}
+                            </label>
+                            <select
+                                required
+                                value={formData.category}
+                                onChange={(e) => updateField('category', e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                            >
+                                <option value="">{t('selectCategory') || t('category')}</option>
+                                {CV_CATEGORIES.map((cat) => (
+                                    <option key={cat} value={cat}>
+                                        {t(cat as any) || cat}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">

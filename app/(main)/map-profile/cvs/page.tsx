@@ -187,10 +187,15 @@ export default function MyCVsPage() {
                                     {cv.full_name?.charAt(0) || user.email?.charAt(0)}
                                 </div>
                                 <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">{cv.full_name || 'Your Name'}</h1>
-                                <div className="flex items-center justify-center gap-2">
+                                <div className="flex flex-wrap items-center justify-center gap-2">
                                     <span className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-700 font-medium rounded-full border border-indigo-100">
                                         {cv.job_title}
                                     </span>
+                                    {cv.category && (
+                                        <span className="inline-block px-4 py-1.5 bg-purple-50 text-purple-700 font-medium rounded-full border border-purple-100">
+                                            {t(cv.category as any) || cv.category}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
