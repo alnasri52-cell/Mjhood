@@ -209,14 +209,20 @@ export default function MyResourcesPage() {
                                         {resource.description}
                                     </p>
 
-                                    <div className="pt-4 border-t border-gray-50">
+                                    <div className="flex gap-3 pt-4 border-t border-gray-50">
+                                        <Link
+                                            href={`/map-profile/add-resource?id=${resource.id}`}
+                                            className="flex-1 bg-purple-600 text-white px-4 py-3 rounded-xl font-medium hover:bg-purple-700 transition flex items-center justify-center gap-2"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                            {t('editResource')}
+                                        </Link>
                                         <button
                                             onClick={(e) => handleDelete(resource.id, e)}
-                                            className="w-full bg-red-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-red-600 transition flex items-center justify-center gap-2 shadow-sm"
+                                            className="px-4 py-3 rounded-xl border-2 border-gray-100 text-gray-400 hover:border-red-100 hover:text-red-500 hover:bg-red-50 transition"
                                             title={t('confirmDeleteResource')}
                                         >
                                             <Trash2 className="w-5 h-5" />
-                                            {t('delete')}
                                         </button>
                                     </div>
                                 </div>
