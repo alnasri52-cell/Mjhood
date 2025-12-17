@@ -4,7 +4,126 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, FileText, ArrowLeft, Trash2, Edit } from 'lucide-react';
+import { Plus, FileText, ArrowLeft, Trash2, Edit, Briefcase, GraduationCap, Award } from 'lucide-react';
+
+// ... (existing imports)
+
+// Inside component ...
+<div className="space-y-8">
+    {/* CV Detail View */}
+    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        {/* Header Section */}
+        <div className="p-8 sm:p-10 bg-gradient-to-b from-gray-50/50 to-white border-b border-gray-100 relative group">
+            <div className="absolute top-6 right-6 flex space-x-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <Link
+                    href={`/cv/edit?id=${cv.id}`}
+                    className="p-2.5 bg-white text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl shadow-sm border border-gray-200 transition"
+                    title={t('editCV')}
+                >
+                    <Edit className="w-5 h-5" />
+                </Link>
+                <button
+                    onClick={handleDelete}
+                    className="p-2.5 bg-white text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl shadow-sm border border-gray-200 transition"
+                    title={t('confirmDeleteCV')}
+                >
+                    <Trash2 className="w-5 h-5" />
+                </button>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">{cv.job_title}</h1>
+            {user && (
+                <div className="text-sm font-medium text-gray-400 mb-6 uppercase tracking-widest">{user.email}</div>
+            )}
+            <p className="text-lg text-gray-600 leading-relaxed max-w-3xl border-l-4 border-blue-500 pl-4 bg-gray-50 py-2 pr-2 rounded-r-lg">
+                {cv.professional_summary || cv.summary}
+            </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:divide-x divide-gray-100">
+            {/* Left Sidebar: Skills & Contact */}
+            <div className="p-8 bg-gray-50/30">
+                {/* Skills */}
+                {cv.skills && cv.skills.length > 0 && (
+                    <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-4 text-gray-900 font-bold uppercase tracking-wider text-sm">
+                            <Award className="w-4 h-4 text-blue-500" />
+                            {t('skills')}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {cv.skills.map((skill: string, idx: number) => (
+                                <span key={idx} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm">
+                                    {skill}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Right Content: Experience & Education */}
+            <div className="lg:col-span-2 p-8 sm:p-10">
+                {/* Work Experience */}
+                {cv.work_experience && cv.work_experience.length > 0 && (
+                    <div className="mb-10">
+                        <div className="flex items-center gap-2 mb-6 text-gray-900 font-bold uppercase tracking-wider text-sm border-b border-gray-100 pb-2">
+                            <Briefcase className="w-4 h-4 text-blue-500" />
+                            {t('workExperience')}
+                        </div>
+                        <div className="space-y-0">
+                            {cv.work_experience.map((exp: any, idx: number) => (
+                                <div key={idx} className="relative pl-8 pb-8 border-l-2 border-gray-100 last:border-0 last:pb-0 group">
+                                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-2 border-gray-300 group-hover:border-blue-500 group-hover:bg-blue-50 transition-colors"></div>
+                                    <h4 className="font-bold text-lg text-gray-900 leading-none mb-1">{exp.position}</h4>
+                                    <div className="text-sm font-medium text-blue-600 mb-2">{exp.company} • {exp.duration}</div>
+                                    {exp.description && (
+                                        <p className="text-gray-600 text-sm leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                            {exp.description}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Education */}
+                {cv.education && cv.education.length > 0 && (
+                    <div>
+                        <div className="flex items-center gap-2 mb-6 text-gray-900 font-bold uppercase tracking-wider text-sm border-b border-gray-100 pb-2">
+                            <GraduationCap className="w-4 h-4 text-blue-500" />
+                            {t('education')}
+                        </div>
+                        <div className="space-y-0">
+                            {cv.education.map((edu: any, idx: number) => (
+                                <div key={idx} className="relative pl-8 pb-8 border-l-2 border-gray-100 last:border-0 last:pb-0 group">
+                                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-2 border-gray-300 group-hover:border-blue-500 group-hover:bg-blue-50 transition-colors"></div>
+                                    <h4 className="font-bold text-lg text-gray-900 leading-none mb-1">{edu.institution}</h4>
+                                    <div className="text-sm font-medium text-blue-600 mb-2">{edu.degree}</div>
+                                    <div className="text-sm text-gray-500">{edu.year}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    </div>
+
+    {/* Account Status */}
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col sm:flex-row items-center justify-between opacity-80 hover:opacity-100 transition-opacity">
+        <div className="mb-4 sm:mb-0">
+            <h3 className="text-base font-bold text-gray-900 mb-1">{t('accountStatus')}</h3>
+            <p className="text-sm text-gray-500">{t('goOfflineText')}</p>
+        </div>
+        <button
+            onClick={handleGoOffline}
+            className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition"
+        >
+            {t('goOffline')}
+        </button>
+    </div>
+</div>
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import Modal from '@/components/ui/Modal';
 
