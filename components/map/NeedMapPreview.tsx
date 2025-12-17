@@ -3,14 +3,20 @@
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { MapPin } from 'lucide-react';
 
-// Fix for default marker icon (same as LocationPicker)
-const icon = L.icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
+const iconHtml = renderToStaticMarkup(
+    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg border-2 border-white">
+        <MapPin className="w-4 h-4 text-white" />
+    </div>
+);
+
+const CustomIcon = L.divIcon({
+    html: iconHtml,
+    className: 'custom-location-icon',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
 });
 
 interface NeedMapPreviewProps {
@@ -33,9 +39,10 @@ export default function NeedMapPreview({ lat, lng }: NeedMapPreviewProps) {
                 attributionControl={false}
             >
                 <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                 />
-                <Marker position={[lat, lng]} icon={icon} />
+                <Marker position={[lat, lng]} icon={CustomIcon} />
             </MapContainer>
         </div>
     );
