@@ -136,6 +136,10 @@ function MyServicesContent() {
 
         setSaving(true);
         try {
+            // Validate numbers
+            const pMin = newPriceMin && !isNaN(parseFloat(newPriceMin)) ? parseFloat(newPriceMin) : null;
+            const pMax = newPriceMax && !isNaN(parseFloat(newPriceMax)) ? parseFloat(newPriceMax) : null;
+
             if (editingId) {
                 // Update existing service
                 const { data, error } = await supabase
@@ -146,8 +150,8 @@ function MyServicesContent() {
                         category: newCategory,
                         gallery_urls: newGalleryUrls.length > 0 ? newGalleryUrls : null,
                         price_type: newPriceType || null,
-                        price_min: newPriceMin ? parseFloat(newPriceMin) : null,
-                        price_max: newPriceMax ? parseFloat(newPriceMax) : null,
+                        price_min: pMin,
+                        price_max: pMax,
                         price_currency: 'SAR',
                         updated_at: new Date().toISOString(),
                     })
@@ -157,17 +161,14 @@ function MyServicesContent() {
 
                 if (error) throw error;
 
-                setServices(services.map(s =>
-                    s.id === editingId
-                        ? { ...s, title: newTitle, description: newDescription, category: newCategory }
-                        : s
-                ));
+                // Update local state with returned data
+                setServices(services.map(s => s.id === editingId ? data : s));
+
                 setModalMessage(t('serviceUpdated'));
                 setModalType('success');
                 setShowModal(true);
             } else {
                 // Create new service
-                // Note: We don't save location here anymore as it comes from profile
                 const { data, error } = await supabase
                     .from('service_categories')
                     .insert({
@@ -177,8 +178,8 @@ function MyServicesContent() {
                         category: newCategory,
                         gallery_urls: newGalleryUrls.length > 0 ? newGalleryUrls : null,
                         price_type: newPriceType || null,
-                        price_min: newPriceMin ? parseFloat(newPriceMin) : null,
-                        price_max: newPriceMax ? parseFloat(newPriceMax) : null,
+                        price_min: pMin,
+                        price_max: pMax,
                         price_currency: 'SAR',
                     })
                     .select()
@@ -194,7 +195,8 @@ function MyServicesContent() {
 
             resetForm();
         } catch (error: any) {
-            setModalMessage(t('errorSaving') + error.message);
+            console.error('Save service error:', error);
+            setModalMessage(t('errorSaving') + (error.message || error.details || ''));
             setModalType('error');
             setShowModal(true);
         } finally {
