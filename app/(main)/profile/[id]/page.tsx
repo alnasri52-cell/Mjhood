@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Instagram, Twitter, Globe, FileText } from 'lucide-react';
+import { ArrowLeft, Instagram, Twitter, Globe, FileText, Image as ImageIcon } from 'lucide-react';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ServiceDetailModal from '@/components/services/ServiceDetailModal';
 import dynamic from 'next/dynamic';
@@ -42,6 +42,10 @@ interface Service {
     title: string;
     description: string;
     category: string;
+    gallery_urls?: string[];
+    price_type?: 'fixed' | 'range' | 'negotiable' | null;
+    price_min?: number | null;
+    price_max?: number | null;
 }
 
 interface Resource {
@@ -90,7 +94,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
             // Fetch services
             const { data: servicesData } = await supabase
-                .from('services')
+                .from('service_categories')
                 .select('*')
                 .eq('user_id', id);
 
@@ -160,20 +164,8 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     contactEmail={isOwner ? profile.contact_email : undefined}
                     socialLinks={profile.social_links}
                     isOwner={isOwner}
+                    cvId={cv?.id}
                 />
-
-                {/* CV Button */}
-                {cv && (
-                    <div className="mt-8 flex justify-center">
-                        <Link
-                            href={`/cv/${cv.id}`}
-                            className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-full font-bold hover:bg-green-700 transition shadow-lg transform hover:-translate-y-1"
-                        >
-                            <FileText className="w-5 h-5" />
-                            {t('viewFullCV')}
-                        </Link>
-                    </div>
-                )}
 
 
 
@@ -183,21 +175,47 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 {services.length > 0 && (
                     <div className="mt-8">
                         <h2 className="text-xl font-bold text-gray-900 mb-4">{t('servicesOffered')}</h2>
-                        <div className="grid gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             {services.map((service) => (
                                 <div
                                     key={service.id}
                                     onClick={() => setSelectedService(service)}
-                                    className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition cursor-pointer"
+                                    className="bg-white rounded-3xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 group cursor-pointer"
                                 >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <h3 className="font-semibold text-gray-900 mb-1">{service.title}</h3>
-                                            <p className="text-sm text-gray-600 mb-2">{service.description}</p>
-                                            <span className="inline-block px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded">
+                                    {/* Image Header */}
+                                    <div className="h-48 w-full bg-gray-50 relative overflow-hidden">
+                                        {service.gallery_urls && service.gallery_urls.length > 0 ? (
+                                            <img
+                                                src={service.gallery_urls[0]}
+                                                alt={service.title}
+                                                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 bg-gray-50">
+                                                <ImageIcon className="w-12 h-12 mb-2 opacity-40" />
+                                                <span className="text-xs font-medium text-gray-400">No images</span>
+                                            </div>
+                                        )}
+
+                                        <div className="absolute top-4 left-4">
+                                            <span className="bg-white/95 backdrop-blur-md text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
                                                 {t(service.category as any)}
                                             </span>
                                         </div>
+                                    </div>
+
+                                    <div className="p-5">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <h3 className="font-bold text-lg text-gray-900 leading-tight line-clamp-1">{service.title}</h3>
+                                            {service.price_type && (
+                                                <span className="bg-green-50 text-green-700 text-xs font-bold px-2 py-1 rounded-md border border-green-100 ml-2 whitespace-nowrap">
+                                                    {service.price_type === 'fixed' && service.price_min && `${service.price_min} SAR`}
+                                                    {service.price_type === 'range' && `${service.price_min || 0}-${service.price_max || 0}`}
+                                                    {service.price_type === 'negotiable' && t('negotiable')}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-2">{service.description}</p>
                                     </div>
                                 </div>
                             ))}
@@ -209,22 +227,31 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 {resources.length > 0 && (
                     <div className="mt-8">
                         <h2 className="text-xl font-bold text-gray-900 mb-4">{t('yourResources')}</h2>
-                        <div className="grid gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             {resources.map((resource) => (
                                 <div
                                     key={resource.id}
-                                    className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition"
+                                    className="bg-white rounded-3xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 group"
                                 >
-                                    <h3 className="font-semibold text-gray-900 mb-1">{resource.title}</h3>
-                                    <p className="text-sm text-gray-600 mb-2">{resource.description}</p>
-                                    <span className={`inline-block px-2 py-1 text-xs font-medium rounded ${resource.type === 'rent' ? 'bg-orange-50 text-orange-700' :
-                                        resource.type === 'borrow' ? 'bg-purple-50 text-purple-700' :
-                                            'bg-gray-100 text-gray-700'
-                                        }`}>
-                                        {resource.type === 'rent' ? t('forRent') :
-                                            resource.type === 'borrow' ? t('forBorrow') :
-                                                resource.type}
-                                    </span>
+                                    <div className="h-40 w-full bg-gray-50 relative overflow-hidden flex items-center justify-center">
+                                        <div className="text-gray-300">
+                                            <ImageIcon className="w-10 h-10 opacity-40" />
+                                        </div>
+                                        <div className="absolute top-4 left-4">
+                                            <span className={`inline-block px-3 py-1.5 text-xs font-bold rounded-full shadow-sm ${resource.type === 'rent' ? 'bg-orange-100 text-orange-700' :
+                                                resource.type === 'borrow' ? 'bg-purple-100 text-purple-700' :
+                                                    'bg-gray-100 text-gray-700'
+                                                }`}>
+                                                {resource.type === 'rent' ? t('forRent') :
+                                                    resource.type === 'borrow' ? t('forBorrow') :
+                                                        resource.type}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="p-5">
+                                        <h3 className="font-bold text-lg text-gray-900 mb-2">{resource.title}</h3>
+                                        <p className="text-sm text-gray-500 line-clamp-2">{resource.description}</p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
