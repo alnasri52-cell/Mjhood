@@ -167,7 +167,7 @@ export default function MyCVsPage() {
                             <div className="absolute top-6 right-6 flex space-x-2">
                                 <Link
                                     href={`/cv/edit?id=${cv.id}`}
-                                    className="p-2 bg-gray-50 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition border border-gray-100"
+                                    className="p-2 bg-gray-50 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition border border-gray-100"
                                     title={t('editCV')}
                                 >
                                     <Edit className="w-5 h-5" />
@@ -183,16 +183,16 @@ export default function MyCVsPage() {
 
                             {/* Header: Avatar & Name */}
                             <div className="text-center mb-10 pb-8 border-b border-gray-100">
-                                <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-700 text-3xl font-bold uppercase shadow-sm border-4 border-white">
+                                <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-700 text-3xl font-bold uppercase shadow-sm border-4 border-white">
                                     {cv.full_name?.charAt(0) || user.email?.charAt(0)}
                                 </div>
                                 <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">{cv.full_name || 'Your Name'}</h1>
                                 <div className="flex flex-wrap items-center justify-center gap-2">
-                                    <span className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-700 font-medium rounded-full border border-indigo-100">
+                                    <span className="inline-block px-4 py-1.5 bg-green-50 text-green-700 font-medium rounded-full border border-green-100">
                                         {cv.job_title}
                                     </span>
                                     {cv.category && (
-                                        <span className="inline-block px-4 py-1.5 bg-purple-50 text-purple-700 font-medium rounded-full border border-purple-100">
+                                        <span className="inline-block px-4 py-1.5 bg-blue-50 text-blue-700 font-medium rounded-full border border-blue-100">
                                             {t(cv.category as any) || cv.category}
                                         </span>
                                     )}
@@ -207,7 +207,7 @@ export default function MyCVsPage() {
                                     {cv.summary && (
                                         <div>
                                             <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 uppercase tracking-wider text-sm">
-                                                <FileText className="w-4 h-4 text-indigo-500" />
+                                                <FileText className="w-4 h-4 text-green-500" />
                                                 {t('professionalSummary')}
                                             </h2>
                                             <p className="text-gray-600 leading-relaxed whitespace-pre-wrap bg-gray-50 p-6 rounded-xl border border-gray-100">
@@ -220,15 +220,15 @@ export default function MyCVsPage() {
                                     {cv.work_experience && cv.work_experience.length > 0 && (
                                         <div>
                                             <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2 uppercase tracking-wider text-sm">
-                                                <Briefcase className="w-4 h-4 text-indigo-500" />
+                                                <Briefcase className="w-4 h-4 text-green-500" />
                                                 {t('workExperience')}
                                             </h2>
                                             <div className="relative border-l-2 border-gray-100 space-y-8 pl-8 ml-2">
                                                 {cv.work_experience.map((exp: any, idx: number) => (
                                                     <div key={idx} className="relative group">
-                                                        <div className="absolute -left-[41px] top-1 w-5 h-5 rounded-full bg-white border-4 border-indigo-100 group-hover:border-indigo-500 transition-colors"></div>
+                                                        <div className="absolute -left-[41px] top-1 w-5 h-5 rounded-full bg-white border-4 border-green-100 group-hover:border-green-500 transition-colors"></div>
                                                         <h3 className="text-lg font-bold text-gray-900">{exp.position}</h3>
-                                                        <div className="text-indigo-600 font-medium mb-2">{exp.company} • <span className="text-gray-500 text-sm font-normal">{exp.startDate || exp.duration}</span></div>
+                                                        <div className="text-green-600 font-medium mb-2">{exp.company} • <span className="text-gray-500 text-sm font-normal">{exp.startDate || exp.duration}</span></div>
                                                         <p className="text-gray-600 text-sm leading-relaxed">{exp.description}</p>
                                                     </div>
                                                 ))}
@@ -240,15 +240,15 @@ export default function MyCVsPage() {
                                     {cv.education && cv.education.length > 0 && (
                                         <div>
                                             <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2 uppercase tracking-wider text-sm">
-                                                <GraduationCap className="w-4 h-4 text-indigo-500" />
+                                                <GraduationCap className="w-4 h-4 text-green-500" />
                                                 {t('education')}
                                             </h2>
                                             <div className="relative border-l-2 border-gray-100 space-y-8 pl-8 ml-2">
                                                 {cv.education.map((edu: any, idx: number) => (
                                                     <div key={idx} className="relative group">
-                                                        <div className="absolute -left-[41px] top-1 w-5 h-5 rounded-full bg-white border-4 border-indigo-100 group-hover:border-indigo-500 transition-colors"></div>
+                                                        <div className="absolute -left-[41px] top-1 w-5 h-5 rounded-full bg-white border-4 border-green-100 group-hover:border-green-500 transition-colors"></div>
                                                         <h3 className="text-lg font-bold text-gray-900">{edu.institution}</h3>
-                                                        <div className="text-indigo-600 font-medium mb-1">{edu.degree}</div>
+                                                        <div className="text-green-600 font-medium mb-1">{edu.degree}</div>
                                                         <div className="text-gray-500 text-sm">{edu.year || edu.graduationDate}</div>
                                                     </div>
                                                 ))}
@@ -260,7 +260,7 @@ export default function MyCVsPage() {
                                     {cv.certifications && cv.certifications.length > 0 && (
                                         <div>
                                             <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 uppercase tracking-wider text-sm">
-                                                <Award className="w-4 h-4 text-indigo-500" />
+                                                <Award className="w-4 h-4 text-green-500" />
                                                 {t('certifications')}
                                             </h2>
                                             <div className="grid sm:grid-cols-2 gap-4">
@@ -312,7 +312,7 @@ export default function MyCVsPage() {
                                             )}
                                             {/* Download CV */}
                                             {cv.cv_file_url && (
-                                                <a href={cv.cv_file_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full mt-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition shadow-sm">
+                                                <a href={cv.cv_file_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full mt-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700 transition shadow-sm">
                                                     <Download className="w-4 h-4" />
                                                     {t('downloadCV')}
                                                 </a>
@@ -355,7 +355,7 @@ export default function MyCVsPage() {
                             {cv.latitude && cv.longitude && (
                                 <div className="mt-12 pt-8 border-t border-gray-100">
                                     <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 uppercase tracking-wider text-sm">
-                                        <MapPin className="w-4 h-4 text-indigo-500" />
+                                        <MapPin className="w-4 h-4 text-green-500" />
                                         {t('location')}
                                     </h2>
                                     <div className="h-64 w-full rounded-2xl overflow-hidden border border-gray-200">
@@ -370,7 +370,7 @@ export default function MyCVsPage() {
                                             href={`https://www.google.com/maps/search/?api=1&query=${cv.latitude},${cv.longitude}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-indigo-600 text-sm hover:underline font-medium inline-flex items-center gap-1"
+                                            className="text-green-600 text-sm hover:underline font-medium inline-flex items-center gap-1"
                                         >
                                             <MapPin className="w-3 h-3" />
                                             Open in Google Maps
