@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Archive, ArrowLeft, Trash2, Edit } from 'lucide-react';
+import { Plus, Archive, ArrowLeft, Trash2, Edit, Image as ImageIcon } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import Modal from '@/components/ui/Modal';
 
@@ -151,30 +151,73 @@ export default function MyResourcesPage() {
                         </Link>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-8">
                         {resources.map((resource) => (
-                            <div key={resource.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex flex-col sm:flex-row sm:items-start justify-between hover:border-purple-300 transition group">
-                                <div>
-                                    <div className="flex items-center mb-1">
-                                        <span className={`text-xs px-2 py-1 rounded-md font-medium mr-2 ${resource.availability_type === 'rent' ? 'bg-blue-50 text-blue-700' :
-                                            resource.availability_type === 'borrow' ? 'bg-green-50 text-green-700' : 'bg-purple-50 text-purple-700'
+                            <div key={resource.id} className="bg-white rounded-3xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 group">
+                                {/* Image Header */}
+                                <div className="h-56 w-full bg-gray-50 relative overflow-hidden">
+                                    {resource.gallery_urls && resource.gallery_urls.length > 0 ? (
+                                        <img
+                                            src={resource.gallery_urls[0]}
+                                            alt={resource.title}
+                                            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 bg-gray-50">
+                                            <ImageIcon className="w-16 h-16 mb-2 opacity-40" />
+                                            <span className="text-sm font-medium text-gray-400">No images</span>
+                                        </div>
+                                    )}
+
+                                    {/* Top Badges */}
+                                    <div className="absolute top-4 left-4 flex flex-col gap-2 items-start">
+                                        <span className={`text-xs px-3 py-1.5 rounded-full font-bold shadow-sm backdrop-blur-md ${resource.availability_type === 'rent' ? 'bg-blue-500/90 text-white' :
+                                            resource.availability_type === 'borrow' ? 'bg-green-500/90 text-white' : 'bg-purple-500/90 text-white'
                                             }`}>
                                             {resource.availability_type === 'rent' ? t('forRent') :
                                                 resource.availability_type === 'borrow' ? t('forBorrow') : t('rentOrBorrow')}
                                         </span>
-                                        <h3 className="font-bold text-lg text-gray-900">{resource.title}</h3>
+                                        <span className="bg-white/95 backdrop-blur-md text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+                                            {t(resource.category as any)}
+                                        </span>
                                     </div>
-                                    <p className="text-gray-600 text-sm mb-2">{resource.description}</p>
-                                    <span className="text-xs text-gray-400">{t(resource.category as any)}</span>
                                 </div>
-                                <div className="flex items-center space-x-2 mt-4 sm:mt-0 self-end sm:self-start">
-                                    <button
-                                        onClick={(e) => handleDelete(resource.id, e)}
-                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                                        title={t('confirmDeleteResource')}
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
+
+                                {/* Content */}
+                                <div className="p-6">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h3 className="font-bold text-2xl text-gray-900 leading-tight">{resource.title}</h3>
+                                        {resource.price_type && resource.price_type !== 'free' && (
+                                            <div className="bg-purple-50 px-3 py-1 rounded-lg border border-purple-100 flex-shrink-0 ml-4">
+                                                <span className="text-purple-700 font-bold block text-center">
+                                                    {resource.price_type === 'fixed' && resource.price_min && `${resource.price_min} SAR`}
+                                                    {resource.price_type === 'range' && resource.price_min && resource.price_max && `${resource.price_min}-${resource.price_max} SAR`}
+                                                    {resource.price_type === 'negotiable' && t('negotiable')}
+                                                </span>
+                                                <span className="text-[10px] text-purple-600 font-medium uppercase tracking-wider block text-center mt-1">Price</span>
+                                            </div>
+                                        )}
+                                        {resource.price_type === 'free' && (
+                                            <div className="bg-green-50 px-3 py-1 rounded-lg border border-green-100 flex-shrink-0 ml-4">
+                                                <span className="text-green-700 font-bold block text-center">{t('free')}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <p className="text-gray-500 text-base leading-relaxed mb-8 line-clamp-3">
+                                        {resource.description}
+                                    </p>
+
+                                    <div className="flex gap-3 pt-4 border-t border-gray-50 justify-end">
+                                        <button
+                                            onClick={(e) => handleDelete(resource.id, e)}
+                                            className="px-6 py-3 rounded-xl border-2 border-red-50 text-red-500 hover:border-red-100 hover:bg-red-50 transition flex items-center gap-2 font-medium"
+                                            title={t('confirmDeleteResource')}
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                            {t('delete')}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}

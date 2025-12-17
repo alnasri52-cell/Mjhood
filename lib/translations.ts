@@ -82,6 +82,7 @@ export const translations = {
         back: 'Back',
         save: 'Save',
         cancel: 'Cancel',
+        delete: 'Delete',
         addNeedQuestion: 'Add a need?',
         addToMap: 'Add to Map',
 
@@ -569,6 +570,7 @@ export const translations = {
         back: 'رجوع',
         save: 'حفظ',
         cancel: 'إلغاء',
+        delete: 'حذف',
         addNeedQuestion: 'إضافة احتياج؟',
         addToMap: 'إضافة للخريطة',
 
