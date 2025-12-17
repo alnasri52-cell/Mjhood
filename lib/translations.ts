@@ -30,6 +30,10 @@ export const translations = {
         rentOrBorrow: 'Rent or Borrow',
         resource: 'Resource',
         cv: 'CV',
+        downloadCV: 'Download CV',
+        languages: 'Languages',
+        certifications: 'Certifications',
+        professionalSummary: 'Professional Summary',
 
         // Profile
         reviews: 'Reviews',
@@ -527,6 +531,10 @@ export const translations = {
         contactOwner: 'تواصل مع المالك',
         resource: 'مورد',
         cv: 'سيرة ذاتية',
+        downloadCV: 'تحميل السيرة الذاتية',
+        languages: 'اللغات',
+        certifications: 'الشهادات',
+        professionalSummary: 'الملخص المهني',
 
         // Profile
         reviews: 'التقييمات',
