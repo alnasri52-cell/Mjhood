@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Trash2, MapPin, DollarSign, Briefcase, ArrowLeft, Edit, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, MapPin, DollarSign, Briefcase, ArrowLeft, Edit, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import ImageUpload from '@/components/ui/ImageUpload';
 import { SERVICE_CATEGORIES } from '@/lib/constants';
@@ -565,7 +565,7 @@ function MyServicesContent() {
                         </div>
 
                         {/* Services List */}
-                        <div className="space-y-4">
+                        <div className="space-y-8">
                             {services.length === 0 && !isAdding ? (
                                 <div className="text-center py-12 bg-white rounded-xl border border-gray-200 border-dashed">
                                     <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -574,31 +574,66 @@ function MyServicesContent() {
                                 </div>
                             ) : (
                                 services.map((service) => (
-                                    <div key={service.id} className={`bg-white rounded-xl shadow-sm border p-5 flex flex-col sm:flex-row sm:items-start justify-between group transition ${editingId === service.id ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-200 hover:border-blue-300'}`}>
-                                        <div className="mb-4 sm:mb-0">
-                                            <div className="flex items-center mb-1">
-                                                <span className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-md font-medium mr-2">
+                                    <div key={service.id} className="bg-white rounded-3xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 group">
+                                        {/* Image Header */}
+                                        <div className="h-56 w-full bg-gray-50 relative overflow-hidden">
+                                            {service.gallery_urls && service.gallery_urls.length > 0 ? (
+                                                <img
+                                                    src={service.gallery_urls[0]}
+                                                    alt={service.title}
+                                                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 bg-gray-50">
+                                                    <ImageIcon className="w-16 h-16 mb-2 opacity-40" />
+                                                    <span className="text-sm font-medium text-gray-400">No images</span>
+                                                </div>
+                                            )}
+
+                                            {/* Top Badges */}
+                                            <div className="absolute top-4 left-4 flex flex-col gap-2 items-start">
+                                                <span className="bg-white/95 backdrop-blur-md text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
                                                     {t(service.category as any)}
                                                 </span>
-                                                <h3 className="font-bold text-lg text-gray-900">{service.title}</h3>
                                             </div>
-                                            <p className="text-gray-600 text-sm">{service.description}</p>
                                         </div>
-                                        <div className="flex items-center space-x-2 self-end sm:self-start">
-                                            <button
-                                                onClick={() => handleEditClick(service)}
-                                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                                                title={t('editService')}
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteService(service.id)}
-                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                                                title="Delete Service"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
+
+                                        {/* Content */}
+                                        <div className="p-6">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <h3 className="font-bold text-2xl text-gray-900 leading-tight">{service.title}</h3>
+                                                {service.price_type && (
+                                                    <div className="bg-green-50 px-3 py-1 rounded-lg border border-green-100 flex-shrink-0 ml-4">
+                                                        <span className="text-green-700 font-bold block text-center">
+                                                            {service.price_type === 'fixed' && service.price_min && `${service.price_min} SAR`}
+                                                            {service.price_type === 'range' && service.price_min && service.price_max && `${service.price_min}-${service.price_max} SAR`}
+                                                            {service.price_type === 'negotiable' && t('negotiable')}
+                                                        </span>
+                                                        {service.price_type !== 'negotiable' && <span className="text-[10px] text-green-600 font-medium uppercase tracking-wider block text-center mt-1">Price</span>}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <p className="text-gray-500 text-base leading-relaxed mb-8 line-clamp-3">
+                                                {service.description}
+                                            </p>
+
+                                            <div className="flex gap-3 pt-4 border-t border-gray-50">
+                                                <button
+                                                    onClick={() => handleEditClick(service)}
+                                                    className="flex-1 bg-black text-white px-4 py-3 rounded-xl font-bold hover:bg-gray-800 transition flex items-center justify-center gap-2"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                    {t('editService')}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteService(service.id)}
+                                                    className="px-4 py-3 rounded-xl border-2 border-gray-100 text-gray-400 hover:border-red-100 hover:text-red-500 hover:bg-red-50 transition"
+                                                    title="Delete Service"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))
