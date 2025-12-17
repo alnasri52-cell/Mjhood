@@ -354,7 +354,7 @@ function MyServicesContent() {
                         <div id="service-form-section">
                             {isAdding && (
                                 <div className="bg-white rounded-xl shadow-sm border border-blue-200 p-6 mb-6 animate-in fade-in slide-in-from-top-4">
-                                    <h3 className="font-semibold text-lg mb-4">{editingId ? t('editService') : t('newService')}</h3>
+                                    <h3 className="font-semibold text-lg mb-4 text-black">{editingId ? t('editService') : t('newService')}</h3>
                                     <form onSubmit={handleSaveService} className="space-y-4">
                                         <div>
                                             <label htmlFor="service-category" className="block text-sm font-medium text-gray-700 mb-1">{t('category')}</label>
