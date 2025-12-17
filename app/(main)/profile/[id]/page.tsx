@@ -74,16 +74,14 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
             setProfile(profileData);
 
-            // Fetch services for non-owners
-            if (authUser?.id !== id) {
-                const { data: servicesData } = await supabase
-                    .from('services')
-                    .select('*')
-                    .eq('user_id', id);
+            // Fetch services
+            const { data: servicesData } = await supabase
+                .from('services')
+                .select('*')
+                .eq('user_id', id);
 
-                if (servicesData) {
-                    setServices(servicesData);
-                }
+            if (servicesData) {
+                setServices(servicesData);
             }
 
             setLoading(false);
@@ -129,65 +127,12 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     isOwner={isOwner}
                 />
 
-                {/* Info message for service profile */}
-                {profile.role === 'talent' && isOwner && (
-                    <div className="mt-8 bg-blue-50 p-6 rounded-lg border border-blue-100">
-                        <h3 className="font-semibold text-blue-900 mb-2">{t('serviceProfileAvailable')}</h3>
-                        <p className="text-blue-700 text-sm mb-4">{t('viewServiceProfile')}</p>
-                        <Link
-                            href="/map-profile"
-                            className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-                        >
-                            {t('viewMapProfile')}
-                            <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
-                        </Link>
-                    </div>
-                )}
 
-                {/* Social Media Links */}
-                {profile.social_links && Object.keys(profile.social_links).length > 0 && (
-                    <div className="mt-8 bg-white rounded-lg border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('socialMedia')}</h3>
-                        <div className="flex flex-wrap gap-3">
-                            {profile.social_links.instagram && (
-                                <a
-                                    href={`https://instagram.com/${profile.social_links.instagram}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
-                                >
-                                    <Instagram className="w-4 h-4" />
-                                    @{profile.social_links.instagram}
-                                </a>
-                            )}
-                            {profile.social_links.twitter && (
-                                <a
-                                    href={`https://twitter.com/${profile.social_links.twitter}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
-                                >
-                                    <Twitter className="w-4 h-4" />
-                                    @{profile.social_links.twitter}
-                                </a>
-                            )}
-                            {profile.social_links.website && (
-                                <a
-                                    href={profile.social_links.website}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
-                                >
-                                    <Globe className="w-4 h-4" />
-                                    {t('website')}
-                                </a>
-                            )}
-                        </div>
-                    </div>
-                )}
 
-                {/* Services offered by this user (for non-owners) */}
-                {!isOwner && services.length > 0 && (
+
+
+                {/* Services offered */}
+                {services.length > 0 && (
                     <div className="mt-8">
                         <h2 className="text-xl font-bold text-gray-900 mb-4">{t('servicesOffered')}</h2>
                         <div className="grid gap-4">
