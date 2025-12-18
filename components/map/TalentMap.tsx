@@ -400,6 +400,46 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     const [selectedCV, setSelectedCV] = useState<CV | null>(null);
     const [isCVModalOpen, setIsCVModalOpen] = useState(false);
 
+    const handleVote = async (needId: string, type: 'up' | 'down') => {
+        if (votedNeeds.has(needId)) return;
+
+        // Optimistic update
+        setNeeds(prev => prev.map(n => {
+            if (n.id === needId) {
+                return {
+                    ...n,
+                    upvotes: type === 'up' ? (n.upvotes || 0) + 1 : n.upvotes,
+                    downvotes: type === 'down' ? (n.downvotes || 0) + 1 : n.downvotes
+                };
+            }
+            return n;
+        }));
+
+        setVotedNeeds(prev => new Set(prev).add(needId));
+
+        try {
+            const need = needs.find(n => n.id === needId);
+            if (!need) return;
+
+            const updates = {
+                upvotes: type === 'up' ? (need.upvotes || 0) + 1 : need.upvotes,
+                downvotes: type === 'down' ? (need.downvotes || 0) + 1 : need.downvotes
+            };
+
+            const { error } = await supabase
+                .from('local_needs')
+                .update(updates)
+                .eq('id', needId);
+
+            if (error) {
+                console.error('Error updating vote:', error);
+                // Revert optimistic update if needed, but keeping it simple for now
+            }
+        } catch (err) {
+            console.error('Error in handleVote:', err);
+        }
+    };
+
     const handleReport = (item: Service | Need, type: 'service' | 'need') => {
         setReportTarget({
             id: item.id,
@@ -1179,6 +1219,36 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                                 )}
 
                                 {/* Action Button */}
+                                {/* Voting Buttons - Restored */}
+                                <div className="flex items-center justify-center gap-6 mb-4">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleVote(need.id, 'up');
+                                        }}
+                                        disabled={votedNeeds.has(need.id)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition ${votedNeeds.has(need.id) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-50'}`}
+                                    >
+                                        <ThumbsUp className={`w-4 h-4 ${votedNeeds.has(need.id) ? 'text-gray-400' : 'text-green-600'}`} />
+                                        <span className={`text-sm font-bold ${votedNeeds.has(need.id) ? 'text-gray-500' : 'text-green-700'}`}>
+                                            {need.upvotes || 0}
+                                        </span>
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleVote(need.id, 'down');
+                                        }}
+                                        disabled={votedNeeds.has(need.id)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition ${votedNeeds.has(need.id) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-50'}`}
+                                    >
+                                        <ThumbsDown className={`w-4 h-4 ${votedNeeds.has(need.id) ? 'text-gray-400' : 'text-red-600'}`} />
+                                        <span className={`text-sm font-bold ${votedNeeds.has(need.id) ? 'text-gray-500' : 'text-red-700'}`}>
+                                            {need.downvotes || 0}
+                                        </span>
+                                    </button>
+                                </div>
+
                                 <Link
                                     href={`/need/${need.id}`}
                                     className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
