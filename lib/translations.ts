@@ -343,6 +343,7 @@ export const translations = {
         serviceLocation: 'Service Location',
         clickMapLocation: 'Click on the map to update your base location.',
         showcaseWork: 'Showcase your best work.',
+        photos: 'Photos',
         addPhotos: 'Add Photos',
         uploadWorkImages: 'Upload images of your previous work to build trust.',
         contactDetails: 'Contact Details',
@@ -798,6 +799,7 @@ export const translations = {
 
         // Pricing
         priceType: 'نوع السعر',
+        photos: 'الصور',
         fixedPrice: 'سعر ثابت',
         priceRange: 'نطاق سعري',
         negotiable: 'قابل للتفاوض',

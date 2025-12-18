@@ -67,6 +67,7 @@ interface Service {
     price_min?: number | null;
     price_max?: number | null;
     price_currency?: string;
+    gallery_urls?: string[]; // Added this
     profiles: {
         id: string;
         full_name: string;
@@ -131,6 +132,7 @@ interface Resource {
     contact_phone?: string;
     contact_method?: string;
     created_at: string;
+    gallery_urls?: string[]; // Added this
 }
 
 
@@ -540,7 +542,8 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                         price_type,
                         price_min,
                         price_max,
-                        price_currency
+                        price_currency,
+                        gallery_urls
                     )
                 `)
                 .not('service_location_lat', 'is', null)
@@ -618,6 +621,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                             price_min: cat.price_min,
                             price_max: cat.price_max,
                             price_currency: cat.price_currency,
+                            gallery_urls: cat.gallery_urls, // Added this map
                             profiles: {
                                 id: profile.id,
                                 full_name: profile.full_name,
@@ -1073,20 +1077,20 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                                     </div>
                                 )}
 
-                                {/* Work Samples (Small Gallery) */}
-                                {service.profiles?.gallery_urls && service.profiles.gallery_urls.length > 0 && (
+                                {/* Service Images (Specific to Service) */}
+                                {service.gallery_urls && service.gallery_urls.length > 0 && (
                                     <div className="flex justify-center gap-1 mb-4 px-2">
-                                        {service.profiles.gallery_urls.slice(0, 4).map((url, index) => (
+                                        {service.gallery_urls.slice(0, 4).map((url, index) => (
                                             <img
                                                 key={index}
                                                 src={url}
-                                                alt="Work sample"
+                                                alt={`${service.title} - ${index + 1}`}
                                                 className="w-10 h-10 rounded-md object-cover border border-gray-200"
                                             />
                                         ))}
-                                        {service.profiles.gallery_urls.length > 4 && (
+                                        {service.gallery_urls.length > 4 && (
                                             <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center text-xs text-gray-500 font-medium border border-gray-200">
-                                                +{service.profiles.gallery_urls.length - 4}
+                                                +{service.gallery_urls.length - 4}
                                             </div>
                                         )}
                                     </div>
@@ -1290,6 +1294,25 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                                                 {resource.price_type === 'negotiable' && t('negotiable')}
                                             </span>
                                         </div>
+                                    </div>
+                                )}
+
+                                {/* Resource Images */}
+                                {resource.gallery_urls && resource.gallery_urls.length > 0 && (
+                                    <div className="flex justify-center gap-1 mb-4 px-2">
+                                        {resource.gallery_urls.slice(0, 4).map((url, index) => (
+                                            <img
+                                                key={index}
+                                                src={url}
+                                                alt={`${resource.title} - ${index + 1}`}
+                                                className="w-10 h-10 rounded-md object-cover border border-gray-200"
+                                            />
+                                        ))}
+                                        {resource.gallery_urls.length > 4 && (
+                                            <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center text-xs text-gray-500 font-medium border border-gray-200">
+                                                +{resource.gallery_urls.length - 4}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 

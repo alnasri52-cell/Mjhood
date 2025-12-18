@@ -18,6 +18,7 @@ interface ServiceCategory {
     category: string;
     title: string;
     description: string;
+    gallery_urls?: string[];
     price_type: string;
     price_min?: number;
     price_max?: number;
@@ -107,33 +108,39 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
             <main className="max-w-3xl mx-auto px-4 py-8">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                     {/* Provider Header */}
-                    <div className="p-6 md:p-8 border-b border-gray-100">
-                        <div className="flex items-start gap-4">
-                            {service.profiles?.avatar_url ? (
-                                <img
-                                    src={service.profiles.avatar_url}
-                                    alt={service.profiles.full_name}
-                                    className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
-                                />
-                            ) : (
-                                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-2xl border-4 border-white shadow-md">
-                                    {service.profiles?.full_name?.charAt(0) || '?'}
-                                </div>
-                            )}
-                            <div className="flex-1">
-                                <h2 className="text-xl font-bold text-gray-900">{service.profiles?.full_name}</h2>
-                                {service.profiles?.rating && (
-                                    <div className="flex items-center gap-1 mt-1">
-                                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                                        <span className="text-sm font-semibold text-gray-700">{service.profiles.rating.toFixed(1)}</span>
+                    {/* Provider Header */}
+                    <Link href={`/profile/${service.user_id}`} className="block hover:bg-gray-50 transition">
+                        <div className="p-6 md:p-8 border-b border-gray-100">
+                            <div className="flex items-start gap-4">
+                                {service.profiles?.avatar_url ? (
+                                    <img
+                                        src={service.profiles.avatar_url}
+                                        alt={service.profiles.full_name}
+                                        className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+                                    />
+                                ) : (
+                                    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-2xl border-4 border-white shadow-md">
+                                        {service.profiles?.full_name?.charAt(0) || '?'}
                                     </div>
                                 )}
-                                {service.profiles?.bio && (
-                                    <p className="text-sm text-gray-600 mt-2 line-clamp-2">{service.profiles.bio}</p>
-                                )}
+                                <div className="flex-1">
+                                    <h2 className="text-xl font-bold text-gray-900 hover:text-blue-600 transition flex items-center gap-2">
+                                        {service.profiles?.full_name}
+                                        <ArrowLeft className={`w-4 h-4 text-gray-400 ${dir === 'rtl' ? '' : 'rotate-180'}`} />
+                                    </h2>
+                                    {service.profiles?.rating && (
+                                        <div className="flex items-center gap-1 mt-1">
+                                            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                            <span className="text-sm font-semibold text-gray-700">{service.profiles.rating.toFixed(1)}</span>
+                                        </div>
+                                    )}
+                                    {service.profiles?.bio && (
+                                        <p className="text-sm text-gray-600 mt-2 line-clamp-2">{service.profiles.bio}</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </Link>
 
                     {/* Service Details */}
                     <div className="p-6 md:p-8">
@@ -172,16 +179,16 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ id: st
                             {service.description}
                         </p>
 
-                        {/* Gallery */}
-                        {service.profiles?.gallery_urls && service.profiles.gallery_urls.length > 0 && (
+                        {/* Service Images */}
+                        {service.gallery_urls && service.gallery_urls.length > 0 && (
                             <div className="mb-8">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('workSamples')}</h2>
+                                <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('photos')}</h2>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                    {service.profiles.gallery_urls.map((url, index) => (
+                                    {service.gallery_urls.map((url, index) => (
                                         <img
                                             key={index}
                                             src={url}
-                                            alt={`Work sample ${index + 1}`}
+                                            alt={`${service.title} - ${index + 1}`}
                                             className="w-full h-40 rounded-lg object-cover border border-gray-200"
                                         />
                                     ))}
