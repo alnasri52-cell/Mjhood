@@ -48,11 +48,11 @@ export const translations = {
         contact: 'Contact',
         about: 'About',
         workSamples: 'Work Samples',
-        services: 'Efforts & Talents',
+        services: 'Services',
         servicesLabel: 'Services',
         needsLabel: 'Needs',
         addNeed: 'Add a Need',
-        yourNeeds: 'Your Needs and Opportunities',
+        yourNeeds: 'Your Needs',
         manageNeeds: 'Manage your needs and requests.',
         cannotDeleteNeed: 'Cannot delete this need because it has received community support (>2 upvotes).',
         noServices: 'No services listed yet.',
@@ -235,8 +235,8 @@ export const translations = {
 
         // Local Needs
         appName: 'Mjhood',
-        localTalent: 'Efforts & Talents',
-        localNeeds: 'Needs & Opportunities',
+        localTalent: 'Services',
+        localNeeds: 'Needs',
         addLocalNeed: 'Add Local Need',
         whatIsNeeded: 'What is needed?',
         whatIsNeededPlaceholder: 'e.g. Grocery Store, Park, ATM',
@@ -393,7 +393,7 @@ export const translations = {
         gotIt: 'Got it!',
 
         // Map View Modes
-        needs: 'Needs & Opportunities',
+        needs: 'Needs',
         both: 'All',
 
         // CV Feature
@@ -557,11 +557,11 @@ export const translations = {
         contact: 'تواصل',
         about: 'عنّي',
         workSamples: 'نماذج الأعمال',
-        services: 'جهود و مواهب',
+        services: 'خدمات',
         servicesLabel: 'خدمات',
         needsLabel: 'احتياجات',
         addNeed: 'أضف احتياج',
-        yourNeeds: 'احتياجاتك والفرص',
+        yourNeeds: 'احتياجاتك',
         manageNeeds: 'أدر الاحتياجات التي نشرتها.',
         cannotDeleteNeed: 'لا يمكن حذف هذا الاحتياج لأنه حصل على دعم مجتمعي (> 2 إعجاب).',
         noServices: 'لا توجد خدمات مدرجة بعد.',
@@ -740,8 +740,8 @@ export const translations = {
 
         // Local Needs
         appName: 'مجهود',
-        localTalent: 'جهود و مواهب',
-        localNeeds: 'احتياجات و فرص',
+        localTalent: 'خدمات',
+        localNeeds: 'احتياجات',
         addLocalNeed: 'أضف احتياج محلي',
         whatIsNeeded: 'ما هو الاحتياج؟',
         whatIsNeededPlaceholder: 'مثال: بقالة، حديقة، صراف آلي',
@@ -898,7 +898,7 @@ export const translations = {
         gotIt: 'فهمت!',
 
         // Map View Modes
-        needs: 'احتياجات و فرص',
+        needs: 'احتياجات',
         both: 'الكل',
 
         // CV Feature

@@ -212,14 +212,14 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                             className="h-24 w-auto object-contain"
                         />
                         {/* Slogan */}
-                        <div className="text-lg mt-2 transition-opacity duration-300 text-center leading-tight">
+                        <div className="mt-2 text-base font-bold text-gray-700 text-center transition-opacity duration-300 leading-tight">
                             {language === 'en' ? (
                                 <span>
-                                    <span className="text-black">Efforts</span> <span className="text-black">meet</span> <span className="text-black">Opportunities!</span>
+                                    Efforts meet <span className="text-[#00AEEF] font-bold">Opportunities!</span>
                                 </span>
                             ) : (
                                 <span>
-                                    <span className="text-black">إلتقاء</span> <span className="text-black">الجهود</span> <span className="text-black">بالفرص!</span>
+                                    إلتقاء الجهود <span className="text-[#00AEEF] font-bold">بالفرص!</span>
                                 </span>
                             )}
                         </div>
