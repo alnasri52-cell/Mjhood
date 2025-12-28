@@ -26,10 +26,9 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
             title: t('guideNeedsVsServicesTitle'),
             text: t('guideNeedsVsServicesText'),
             icon: (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="flex justify-center gap-4">
                     <MapPin className="w-12 h-12 text-blue-500" />
                     <MapPin className="w-12 h-12 text-red-500" />
-                    <MapPin className="w-12 h-12 text-green-500" />
                     <MapPin className="w-12 h-12 text-purple-600" />
                 </div>
             ),
