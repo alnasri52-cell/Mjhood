@@ -62,6 +62,7 @@ export default function AdvancedSearchPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<SearchResult[]>([]);
+    const [hasSearched, setHasSearched] = useState(false);
     const [viewMode, setViewMode] = useState<'services' | 'needs' | 'resources'>('services');
 
     // Filters
@@ -70,6 +71,7 @@ export default function AdvancedSearchPage() {
 
     const handleSearch = async () => {
         setLoading(true);
+        setHasSearched(true);
         setResults([]);
         try {
             if (viewMode === 'services') {
@@ -215,8 +217,9 @@ export default function AdvancedSearchPage() {
     };
 
     useEffect(() => {
-        handleSearch();
-        // Reset filters when switching tabs
+        // Reset state when switching tabs, do NOT auto search
+        setResults([]);
+        setHasSearched(false);
         setSearchTerm('');
         setSelectedCategory('');
     }, [viewMode]);
@@ -241,7 +244,7 @@ export default function AdvancedSearchPage() {
                         <ArrowLeft className={`w-5 h-5 ${dir === 'rtl' ? 'ml-2 rotate-180' : 'mr-2'}`} />
                         {t('backToMap')}
                     </Link>
-                    <h1 className={`font-bold text-lg ${dir === 'rtl' ? 'mr-auto' : 'ml-auto'}`}>{t('advancedSearchPageTitle')}</h1>
+                    <h1 className={`font-bold text-lg text-gray-900 ${dir === 'rtl' ? 'mr-auto' : 'ml-auto'}`}>{t('advancedSearchPageTitle')}</h1>
                 </div>
             </div>
 
@@ -305,11 +308,11 @@ export default function AdvancedSearchPage() {
                             <select
                                 value={selectedCategory}
                                 onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                             >
-                                <option value="">{t('allCategories')}</option>
+                                <option value="" className="text-gray-500">{t('allCategories')}</option>
                                 {getCategoriesList().map((cat) => (
-                                    <option key={cat} value={cat}>{t(cat as any)}</option>
+                                    <option key={cat} value={cat} className="text-gray-900">{t(cat as any)}</option>
                                 ))}
                             </select>
                         </div>
@@ -330,9 +333,11 @@ export default function AdvancedSearchPage() {
 
                 {/* Results Grid */}
                 <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                        {loading ? t('searching') : `${t('resultsFound')} ${results.length}`}
-                    </h2>
+                    {!hasSearched ? null : (
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                            {loading ? t('searching') : `${t('resultsFound')} ${results.length}`}
+                        </h2>
+                    )}
 
                     {loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -401,7 +406,7 @@ export default function AdvancedSearchPage() {
                         </div>
                     )}
 
-                    {!loading && results.length === 0 && (
+                    {!loading && hasSearched && results.length === 0 && (
                         <div className="text-center py-16">
                             <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                                 <Search className="w-8 h-8 text-gray-400" />
