@@ -234,7 +234,7 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
 
                     // Special handling for Map Profile - render as dropdown
                     if (item.label === 'mapProfile' && user) {
-                        const isDropdownActive = pathname === '/map-profile' || pathname === '/cv/create' || pathname === '/cv/edit';
+                        const isDropdownActive = pathname === '/map-profile';
                         return (
                             <div key="mapProfile" className="relative" ref={dropdownRef}>
                                 <button
@@ -280,14 +280,7 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                                             <HandHeart className="w-4 h-4 text-red-500" />
                                             <span className="text-sm font-medium text-gray-700">{t('needsLabel' as any)}</span>
                                         </Link>
-                                        <Link
-                                            href="/map-profile/cvs"
-                                            onClick={() => setShowMapProfileDropdown(false)}
-                                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                                        >
-                                            <FileText className="w-4 h-4 text-green-500" />
-                                            <span className="text-sm font-medium text-gray-700">{t('cv')}</span>
-                                        </Link>
+
                                     </div>
                                 )}
 

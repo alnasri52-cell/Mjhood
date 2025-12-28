@@ -5,7 +5,7 @@ import { supabase } from '@/lib/database/supabase';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Search, Star, MapPin, Briefcase, Archive, FileText, AlertCircle } from 'lucide-react';
-import { SERVICE_CATEGORIES, LOCAL_NEEDS_CATEGORIES, CV_CATEGORIES, RESOURCE_CATEGORIES } from '@/lib/constants';
+import { SERVICE_CATEGORIES, LOCAL_NEEDS_CATEGORIES, RESOURCE_CATEGORIES } from '@/lib/constants';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 // --- Types ---
@@ -40,18 +40,7 @@ interface NeedResult {
     };
 }
 
-interface CVResult {
-    type: 'cv';
-    cv: {
-        id: string;
-        full_name: string;
-        job_title: string;
-        summary?: string;
-        latitude: number;
-        longitude: number;
-        skills?: string[];
-    };
-}
+
 
 interface ResourceResult {
     type: 'resource';
@@ -66,14 +55,14 @@ interface ResourceResult {
     };
 }
 
-type SearchResult = ServiceResult | NeedResult | CVResult | ResourceResult;
+type SearchResult = ServiceResult | NeedResult | ResourceResult;
 
 export default function AdvancedSearchPage() {
     const { t, dir } = useLanguage();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<SearchResult[]>([]);
-    const [viewMode, setViewMode] = useState<'services' | 'needs' | 'cvs' | 'resources'>('services');
+    const [viewMode, setViewMode] = useState<'services' | 'needs' | 'resources'>('services');
 
     // Filters
     const [searchTerm, setSearchTerm] = useState('');
@@ -196,35 +185,6 @@ export default function AdvancedSearchPage() {
                     need: item
                 })));
 
-            } else if (viewMode === 'cvs') {
-                let query = supabase.from('cvs').select('*').is('deleted_at', null);
-
-                // CV Categories filtering might need specific column if 'category' isn't on root, 
-                // but assuming 'skills' or 'job_title' logic or new category column.
-                // If CVs table doesn't have 'category', we skip strict category filter or check metadata.
-                // Assuming basic fetch for now.
-
-                const { data, error } = await query;
-                if (error) throw error;
-
-                let filtered = data || [];
-                // Client side category filter if needed (requires analyzing mapping)
-                // For now, simple text search
-                if (searchTerm) {
-                    const lowerQ = searchTerm.toLowerCase();
-                    filtered = filtered.filter((cv: any) =>
-                        cv.full_name?.toLowerCase().includes(lowerQ) ||
-                        cv.job_title?.toLowerCase().includes(lowerQ) ||
-                        cv.summary?.toLowerCase().includes(lowerQ) ||
-                        (Array.isArray(cv.skills) && cv.skills.some((skill: string) => skill.toLowerCase().includes(lowerQ)))
-                    );
-                }
-
-                setResults(filtered.map((item: any) => ({
-                    type: 'cv',
-                    cv: item
-                })));
-
             } else if (viewMode === 'resources') {
                 let query = supabase.from('resources').select('*').is('deleted_at', null);
                 if (selectedCategory) query = query.eq('category', selectedCategory);
@@ -266,7 +226,7 @@ export default function AdvancedSearchPage() {
         switch (viewMode) {
             case 'services': return SERVICE_CATEGORIES;
             case 'needs': return LOCAL_NEEDS_CATEGORIES;
-            case 'cvs': return CV_CATEGORIES;
+
             case 'resources': return RESOURCE_CATEGORIES;
             default: return SERVICE_CATEGORIES;
         }
@@ -319,16 +279,7 @@ export default function AdvancedSearchPage() {
                             <Archive className="w-4 h-4" />
                             {t('resources')}
                         </button>
-                        <button
-                            onClick={() => setViewMode('cvs')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${viewMode === 'cvs'
-                                ? 'bg-green-500 text-white shadow-md'
-                                : 'text-gray-500 hover:bg-gray-50'
-                                }`}
-                        >
-                            <FileText className="w-4 h-4" />
-                            {t('cvs')}
-                        </button>
+
                     </div>
                 </div>
 
@@ -442,25 +393,11 @@ export default function AdvancedSearchPage() {
                                             </div>
                                         </div>
                                     );
-                                } else if (item.type === 'cv') {
-                                    return (
-                                        <div key={index} className="bg-white p-5 rounded-xl border border-green-100 hover:border-green-500 transition-all hover:shadow-lg h-full cursor-pointer"
-                                            onClick={() => router.push(`/map?lat=${item.cv.latitude}&lng=${item.cv.longitude}&zoom=16`)}>
-                                            <h3 className="font-bold text-lg text-gray-900 mb-1">{item.cv.full_name}</h3>
-                                            <p className="text-green-700 font-medium text-sm mb-2">{item.cv.job_title}</p>
-                                            {item.cv.summary && (
-                                                <p className="text-gray-500 text-sm line-clamp-2 mb-3">
-                                                    {item.cv.summary}
-                                                </p>
-                                            )}
-                                            <div className="flex items-center text-gray-400 text-xs mt-auto">
-                                                <MapPin className="w-3 h-3 mr-1" />
-                                                {t('viewOnMap')}
-                                            </div>
-                                        </div>
-                                    );
+
                                 }
                             })}
+
+
                         </div>
                     )}
 

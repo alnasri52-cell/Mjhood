@@ -20,7 +20,7 @@ export default function MainLayout({
                 <Sidebar onOpenGuide={() => setShowGuide(true)} />
                 <main className={`flex-1 flex flex-col transition-all duration-300 ${dir === 'rtl' ? 'mr-16 md:mr-64' : 'ml-16 md:ml-64'
                     }`}>
-                    <div className="flex-1">
+                    <div className="flex-1 w-full">
                         {children}
                     </div>
                     <Footer />

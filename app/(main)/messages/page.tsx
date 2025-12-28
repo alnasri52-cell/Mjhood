@@ -1,122 +1,231 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/database/supabase';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, MessageCircle } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
+import ChatSidebar from '@/components/messages/ChatSidebar';
+import ChatWindow from '@/components/messages/ChatWindow';
 
 interface Conversation {
     userId: string;
     fullName: string;
     lastMessage: string;
     lastMessageDate: string;
+    avatarUrl?: string;
 }
 
-import { useLanguage } from '@/lib/contexts/LanguageContext';
+interface Message {
+    id: string;
+    content: string;
+    sender_id: string;
+    created_at: string;
+}
 
-export default function InboxPage() {
-    const { t, dir } = useLanguage();
+function MessagesContent() {
+    const { t } = useLanguage();
     const router = useRouter();
-    const [conversations, setConversations] = useState<Conversation[]>([]);
-    const [loading, setLoading] = useState(true);
+    const searchParams = useSearchParams();
+    const activeId = searchParams.get('id');
 
+    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeConversation, setActiveConversation] = useState<any>(null); // Details of user
+    const [messages, setMessages] = useState<Message[]>([]);
+
+    // Loading states
+    const [loadingList, setLoadingList] = useState(true);
+    const [loadingChat, setLoadingChat] = useState(false);
+
+    // 1. Initialize User & Conversations
     useEffect(() => {
-        const getConversations = async () => {
+        const init = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 router.push('/auth/login');
                 return;
             }
+            setCurrentUser(user);
+            await fetchConversations(user.id);
+        };
+        init();
+    }, [router]);
 
-            // Fetch all messages involving me
-            const { data: messages, error } = await supabase
+    // 2. Fetch Conversations Logic
+    const fetchConversations = async (userId: string) => {
+        try {
+            const { data: msgs, error } = await supabase
                 .from('messages')
                 .select(`
                     *,
-                    sender:sender_id(full_name),
-                    receiver:receiver_id(full_name)
+                    sender:sender_id(id, full_name, avatar_url),
+                    receiver:receiver_id(id, full_name, avatar_url)
                 `)
-                .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+                .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
                 .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('Error fetching messages:', error);
-                setLoading(false);
-                return;
-            }
+            if (error) throw error;
 
-            // Process messages to find unique conversations
-            const conversationMap = new Map<string, Conversation>();
-
-            messages?.forEach((msg: any) => {
-                const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
-                const otherName = msg.sender_id === user.id ? msg.receiver.full_name : msg.sender.full_name;
-
-                if (!conversationMap.has(otherId)) {
-                    conversationMap.set(otherId, {
-                        userId: otherId,
-                        fullName: otherName,
+            const map = new Map<string, Conversation>();
+            msgs?.forEach((msg: any) => {
+                const other = msg.sender_id === userId ? msg.receiver : msg.sender;
+                if (!map.has(other.id)) {
+                    map.set(other.id, {
+                        userId: other.id,
+                        fullName: other.full_name,
                         lastMessage: msg.content,
                         lastMessageDate: msg.created_at,
+                        avatarUrl: other.avatar_url
                     });
                 }
             });
+            setConversations(Array.from(map.values()));
+        } catch (err) {
+            console.error('Error fetching conversations:', err);
+        } finally {
+            setLoadingList(false);
+        }
+    };
 
-            setConversations(Array.from(conversationMap.values()));
-            setLoading(false);
+    // 3. Handle Active Chat Selection
+    useEffect(() => {
+        if (activeId && currentUser) {
+            loadChat(activeId, currentUser.id);
+        } else {
+            setActiveConversation(null);
+            setMessages([]);
+        }
+    }, [activeId, currentUser]);
+
+    const loadChat = async (otherId: string, myId: string) => {
+        setLoadingChat(true);
+        try {
+            // Get user details
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url')
+                .eq('id', otherId)
+                .single();
+
+            if (profile) setActiveConversation(profile);
+
+            // Get messages
+            const { data: msgs } = await supabase
+                .from('messages')
+                .select('*')
+                .or(`and(sender_id.eq.${myId},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${myId})`)
+                .order('created_at', { ascending: true });
+
+            if (msgs) setMessages(msgs);
+
+            // Realtime subscription
+            const channel = supabase
+                .channel(`chat:${otherId}`)
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `receiver_id=eq.${myId}`
+                }, (payload) => {
+                    if (payload.new.sender_id === otherId) {
+                        setMessages((prev) => [...prev, payload.new as Message]);
+                        // Refresh list to update last message
+                        fetchConversations(myId);
+                    }
+                })
+                .subscribe();
+
+            return () => { supabase.removeChannel(channel); };
+
+        } catch (err) {
+            console.error('Error loading chat:', err);
+        } finally {
+            setLoadingChat(false);
+        }
+    };
+
+    // 4. Send Message Handler
+    const handleSendMessage = async (content: string) => {
+        if (!currentUser || !activeConversation) return;
+
+        // Optimistic update
+        const optimisticMsg: Message = {
+            id: Date.now().toString(),
+            content,
+            sender_id: currentUser.id,
+            created_at: new Date().toISOString()
         };
+        setMessages((prev) => [...prev, optimisticMsg]);
 
-        getConversations();
-    }, [router]);
+        // Update list optimistically
+        setConversations(prev => {
+            const newAll = [...prev];
+            const idx = newAll.findIndex(c => c.userId === activeConversation.id);
+            if (idx >= 0) {
+                newAll[idx] = { ...newAll[idx], lastMessage: content, lastMessageDate: new Date().toISOString() };
+                // move to top
+                const item = newAll.splice(idx, 1)[0];
+                newAll.unshift(item);
+            }
+            return newAll;
+        });
 
-    if (loading) return <div className="flex items-center justify-center min-h-screen">{t('loadingInbox')}</div>;
+        const { error } = await supabase
+            .from('messages')
+            .insert({
+                sender_id: currentUser.id,
+                receiver_id: activeConversation.id,
+                content
+            });
+
+        if (error) {
+            console.error('Failed to send:', error);
+            // Revert logic would go here
+        }
+    };
+
+    // Filter conversations
+    const filteredConversations = conversations.filter(c =>
+        c.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Back handler for mobile
+    const handleBack = () => router.push('/messages');
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-10">
-                <div className="max-w-2xl mx-auto flex items-center">
-                    <Link href="/map" className="inline-flex items-center text-gray-600 hover:text-black transition">
-                        <ArrowLeft className={`w-5 h-5 ${dir === 'rtl' ? 'ml-2 rotate-180' : 'mr-2'}`} />
-                        {t('backToMap')}
-                    </Link>
-                    <h1 className={`font-bold text-lg text-black ${dir === 'rtl' ? 'mr-auto' : 'ml-auto'}`}>{t('messages')}</h1>
+        <div className="flex items-center justify-center w-full h-[calc(100vh-64px)] bg-gray-50 p-2 md:p-6">
+            <div className="flex w-full max-w-[1400px] h-full md:h-[92%] bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                {/* Sidebar: Hidden on mobile if chat is active */}
+                <div className={`${activeId ? 'hidden md:flex' : 'flex'} w-full md:w-auto h-full`}>
+                    <ChatSidebar
+                        conversations={filteredConversations}
+                        selectedUserId={activeId || undefined}
+                        onSearch={setSearchTerm}
+                        searchTerm={searchTerm}
+                    />
+                </div>
+
+                {/* Chat Area: Hidden on mobile if no chat active */}
+                <div className={`${!activeId ? 'hidden md:flex' : 'flex'} flex-1 h-full`}>
+                    <ChatWindow
+                        currentUser={currentUser}
+                        otherUser={activeConversation}
+                        messages={messages}
+                        onSendMessage={handleSendMessage}
+                        loading={loadingChat}
+                        onBack={handleBack}
+                    />
                 </div>
             </div>
-
-            <main className="max-w-2xl mx-auto px-4 py-8">
-                {conversations.length === 0 ? (
-                    <div className="text-center py-20">
-                        <div className="bg-gray-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <MessageCircle className="w-8 h-8 text-gray-400" />
-                        </div>
-                        <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('noMessagesYet')}</h2>
-                        <p className="text-gray-500 mb-6">{t('startConversation')}</p>
-                        <Link href="/map" className="bg-black text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 transition">
-                            {t('findNeighbors')}
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="space-y-2">
-                        {conversations.map((conv) => (
-                            <Link
-                                key={conv.userId}
-                                href={`/messages/${conv.userId}`}
-                                className="block bg-white p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-sm transition"
-                            >
-                                <div className="flex justify-between items-start mb-1">
-                                    <h3 className="font-semibold text-gray-900">{conv.fullName}</h3>
-                                    <span className="text-xs text-gray-500">
-                                        {new Date(conv.lastMessageDate).toLocaleDateString()}
-                                    </span>
-                                </div>
-                                <p className="text-gray-600 text-sm truncate">{conv.lastMessage}</p>
-                            </Link>
-                        ))}
-                    </div>
-                )}
-            </main>
         </div>
+    );
+}
+
+export default function MessagesPage() {
+    return (
+        <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}>
+            <MessagesContent />
+        </Suspense>
     );
 }

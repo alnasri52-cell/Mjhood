@@ -63,10 +63,7 @@ interface Resource {
     price_currency?: string;
 }
 
-interface CV {
-    id: string;
-    job_title: string; /* Minimally needed */
-}
+
 
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const { t, dir } = useLanguage();
@@ -74,7 +71,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
     const [profile, setProfile] = useState<Profile | null>(null);
     const [services, setServices] = useState<Service[]>([]);
     const [resources, setResources] = useState<Resource[]>([]);
-    const [cv, setCv] = useState<CV | null>(null);
+
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -121,16 +118,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 setResources(resourcesData);
             }
 
-            // Fetch CV
-            const { data: cvData } = await supabase
-                .from('cvs')
-                .select('id, job_title')
-                .eq('user_id', id)
-                .single();
 
-            if (cvData) {
-                setCv(cvData);
-            }
 
             setLoading(false);
         };
@@ -173,7 +161,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     contactEmail={isOwner ? profile.contact_email : undefined}
                     socialLinks={profile.social_links}
                     isOwner={isOwner}
-                    cvId={cv?.id}
+
                 />
 
 

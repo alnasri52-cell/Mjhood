@@ -22,7 +22,7 @@ import {
     UserPlus, CheckCircle, FileText
 } from 'lucide-react';
 import AddNeedModal from './AddNeedModal';
-import CVDetailModal from '@/components/cvs/CVDetailModal';
+
 import { LocalNeedCategory } from '@/lib/constants';
 
 // New structure: Services grouped by user location
@@ -95,26 +95,7 @@ interface Need {
     created_at: string;
 }
 
-interface CV {
-    id: string;
-    user_id: string;
-    full_name: string;
-    job_title: string;
-    summary: string;
-    latitude: number;
-    longitude: number;
-    phone?: string;
-    email?: string;
-    avatar_url?: string;
-    cv_file_url?: string;
-    work_experience?: any[];
-    education?: any[];
-    skills?: string[];
-    languages?: any[];
-    certifications?: any[];
-    portfolio_urls?: string[];
-    created_at: string;
-}
+
 
 interface Resource {
     id: string;
@@ -139,7 +120,7 @@ interface Resource {
 interface TalentMapProps {
     searchTerm?: string;
     selectedCategory?: string;
-    viewMode?: 'services' | 'needs' | 'cvs' | 'resources' | 'both';
+    viewMode?: 'services' | 'needs' | 'resources' | 'both';
 }
 
 const getCategoryIcon = (category: string) => {
@@ -191,58 +172,7 @@ const getCategoryIcon = (category: string) => {
     });
 };
 
-// Map CV job titles to categories
-const getCVCategory = (jobTitle: string): string => {
-    // ... (keep implementation same, skipped for brevity in prompt instruction but must be preserved if inside block)
-    const title = jobTitle.toLowerCase();
-    // Engineering
-    if (title.includes('مهندس') || title.includes('engineer') || title.includes('هندسة')) {
-        return 'Engineering';
-    }
-    // Healthcare
-    if (title.includes('طبيب') || title.includes('doctor') || title.includes('ممرض') || title.includes('nurse') ||
-        title.includes('صيدلان') || title.includes('pharmac') || title.includes('معالج') || title.includes('therapist')) {
-        return 'Healthcare';
-    }
-    // Education
-    if (title.includes('معلم') || title.includes('teacher') || title.includes('مدرس') || title.includes('مدرب') ||
-        title.includes('trainer') || title.includes('أستاذ') || title.includes('professor')) {
-        return 'Education';
-    }
-    // IT & Development
-    if (title.includes('مطور') || title.includes('developer') || title.includes('مبرمج') || title.includes('programmer') ||
-        title.includes('برمج') || title.includes('coding') || title.includes('تقني') || title.includes('tech')) {
-        return 'IT & Development';
-    }
-    // Design & Creative
-    if (title.includes('مصمم') || title.includes('designer') || title.includes('تصميم') || title.includes('design') ||
-        title.includes('مصور') || title.includes('photographer') || title.includes('فنان') || title.includes('artist')) {
-        return 'Design & Creative';
-    }
-    // Business & Finance
-    if (title.includes('محاسب') || title.includes('accountant') || title.includes('مدير') || title.includes('manager') ||
-        title.includes('مبيعات') || title.includes('sales') || title.includes('تسويق') || title.includes('marketing') ||
-        title.includes('محلل') || title.includes('analyst')) {
-        return 'Business & Finance';
-    }
-    // Legal & Admin
-    if (title.includes('محامي') || title.includes('lawyer') || title.includes('قانون') || title.includes('legal') ||
-        title.includes('موظف') || title.includes('admin') || title.includes('سكرتير') || title.includes('secretary')) {
-        return 'Legal & Admin';
-    }
-    // Hospitality & Services
-    if (title.includes('طاهي') || title.includes('chef') || title.includes('طبخ') || title.includes('cook') ||
-        title.includes('سائق') || title.includes('driver') || title.includes('استقبال') || title.includes('reception')) {
-        return 'Hospitality & Services';
-    }
-    // Trades & Crafts
-    if (title.includes('كهربائي') || title.includes('electric') || title.includes('سباك') || title.includes('plumb') ||
-        title.includes('نجار') || title.includes('carpenter') || title.includes('فني') || title.includes('technician') ||
-        title.includes('حداد') || title.includes('welder')) {
-        return 'Trades & Crafts';
-    }
-    return 'Other';
-};
+
 
 
 const getNeedCategoryIcon = (category: LocalNeedCategory) => {
@@ -285,23 +215,7 @@ const getNeedIcon = (category: LocalNeedCategory) => {
     });
 };
 
-const getCVIcon = () => {
-    const iconHtml = renderToStaticMarkup(
-        <div className="w-8 h-8 rounded-full bg-[#10b981] flex items-center justify-center shadow-lg border-2 border-white">
-            <FileText className="w-4 h-4 text-white" />
-        </div>
-    );
 
-    return L.divIcon({
-        html: iconHtml,
-        className: 'custom-marker-icon',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        // @ts-ignore
-        markerType: 'cv'
-    });
-};
 
 const getResourceCategoryIcon = (category: string) => {
     // ...
@@ -380,7 +294,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     const { t } = useLanguage();
     const [services, setServices] = useState<Service[]>([]);
     const [needs, setNeeds] = useState<Need[]>([]);
-    const [cvs, setCvs] = useState<CV[]>([]);
+
     const [resources, setResources] = useState<Resource[]>([]);
     const [loading, setLoading] = useState(true);
     const [visibleServices, setVisibleServices] = useState<Service[]>([]);
@@ -396,9 +310,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     const [reportModalOpen, setReportModalOpen] = useState(false);
     const [reportTarget, setReportTarget] = useState<{ id: string; name: string; type: 'service' | 'need' } | null>(null);
 
-    // CV Modal State
-    const [selectedCV, setSelectedCV] = useState<CV | null>(null);
-    const [isCVModalOpen, setIsCVModalOpen] = useState(false);
+
 
     const handleVote = async (needId: string, type: 'up' | 'down') => {
         if (votedNeeds.has(needId)) return;
@@ -487,40 +399,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             }
         }
     };
-    const fetchCVs = async (signal?: AbortSignal) => {
-        console.log('--- fetchCVs: START ---');
-        try {
-            let query = supabase
-                .from('cvs')
-                .select('*, profiles:user_id(service_location_lat, service_location_lng, latitude, longitude)')
-                .is('deleted_at', null)
-                .order('created_at', { ascending: false });
 
-            if (signal) query = query.abortSignal(signal);
-
-            let { data, error } = await query;
-
-            if (error) {
-                console.error('Error fetching CVs:', JSON.stringify(error, null, 2));
-                setCvs([]);
-            } else {
-                const mappedCvs = data?.map((cv: any) => ({
-                    ...cv,
-                    latitude: cv.latitude || cv.profiles?.service_location_lat || cv.profiles?.latitude,
-                    longitude: cv.longitude || cv.profiles?.service_location_lng || cv.profiles?.longitude
-                })) || [];
-                console.log('--- fetchCVs: Mapped Count ---', mappedCvs.length);
-                setCvs(mappedCvs);
-            }
-        } catch (err: any) {
-            if (err.name === 'AbortError') {
-                console.log('--- fetchCVs: Aborted ---');
-            } else {
-                console.error('Error fetching CVs:', err);
-                setCvs([]);
-            }
-        }
-    };
 
     const fetchResources = async (signal?: AbortSignal) => {
         console.log('--- fetchResources: START ---');
@@ -696,7 +575,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 console.log('--- AuthStateChange: Triggering Refetch ---', viewMode);
                 if (viewMode === 'services' || viewMode === 'both') fetchServices();
                 if (viewMode === 'needs' || viewMode === 'both') fetchNeeds();
-                if (viewMode === 'cvs' || viewMode === 'both') fetchCVs();
+
                 if (viewMode === 'resources' || viewMode === 'both') fetchResources();
             }, 500);
         });
@@ -722,9 +601,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                 if (viewMode === 'needs' || viewMode === 'both') {
                     promises.push(fetchNeeds(signal));
                 }
-                if (viewMode === 'cvs' || viewMode === 'both') {
-                    promises.push(fetchCVs(signal));
-                }
+
                 if (viewMode === 'resources' || viewMode === 'both') {
                     promises.push(fetchResources(signal));
                 }
@@ -780,24 +657,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             )
             .subscribe();
 
-        // Real-time subscription for CVs
-        const cvsChannel = supabase
-            .channel('cvs-map-realtime')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'cvs'
-                },
-                () => {
-                    // Simple refresh on change
-                    if (viewMode === 'cvs' || viewMode === 'both') {
-                        fetchCVs();
-                    }
-                }
-            )
-            .subscribe();
+
 
         // Real-time subscription for Resources
         const resourcesChannel = supabase
@@ -826,9 +686,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             if (viewMode === 'needs' || viewMode === 'both') {
                 fetchNeeds();
             }
-            if (viewMode === 'cvs' || viewMode === 'both') {
-                fetchCVs();
-            }
+
             if (viewMode === 'resources' || viewMode === 'both') {
                 fetchResources();
             }
@@ -839,7 +697,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
             controller.abort();
             servicesChannel.unsubscribe();
             needsChannel.unsubscribe();
-            cvsChannel.unsubscribe();
+
             resourcesChannel.unsubscribe();
             clearInterval(intervalId);
         };
@@ -848,7 +706,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     // Filter services based on search term and category
     const filteredServices = services.filter(service => {
         // 0. Check View Mode
-        if (viewMode === 'needs' || viewMode === 'cvs' || viewMode === 'resources') return false;
+        if (viewMode === 'needs' || viewMode === 'resources') return false;
 
         // Safety check for deleted items
         if ((service as any).deleted_at) return false;
@@ -878,7 +736,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     // Filter needs based on search term and category
     const filteredNeeds = needs.filter(need => {
         // 0. Check View Mode
-        if (viewMode === 'services' || viewMode === 'cvs' || viewMode === 'resources') return false;
+        if (viewMode === 'services' || viewMode === 'resources') return false;
 
         // 1. Filter by Category
         if (selectedCategory) {
@@ -901,38 +759,12 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         return true;
     });
 
-    // Filter CVs based on search term and category
-    const filteredCVs = cvs.filter(cv => {
-        // 0. Check View Mode
-        if (viewMode === 'services' || viewMode === 'needs' || viewMode === 'resources') return false;
 
-        // 1. Filter by Category
-        if (selectedCategory) {
-            const cvCategory = getCVCategory(cv.job_title || '');
-            if (cvCategory !== selectedCategory) {
-                return false;
-            }
-        }
-
-        // 2. Filter by Search Term
-        if (searchTerm) {
-            const term = searchTerm.toLowerCase();
-            const nameMatch = cv.full_name?.toLowerCase().includes(term);
-            const jobTitleMatch = cv.job_title?.toLowerCase().includes(term);
-            const summaryMatch = cv.summary?.toLowerCase().includes(term);
-
-            if (!nameMatch && !jobTitleMatch && !summaryMatch) {
-                return false;
-            }
-        }
-
-        return true;
-    });
 
     // Filter resources based on search term and category
     const filteredResources = resources.filter(resource => {
         // 0. Check View Mode
-        if (viewMode === 'services' || viewMode === 'needs' || viewMode === 'cvs') return false;
+        if (viewMode === 'services' || viewMode === 'needs') return false;
 
         // 1. Filter by Category
         if (selectedCategory) {
@@ -988,7 +820,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
     // Custom Cluster Icons with Pie Chart (Segmented) Logic
     const createSegmentedClusterIcon = (cluster: any) => {
         const markers = cluster.getAllChildMarkers();
-        const counts = { service: 0, need: 0, cv: 0, resource: 0 };
+        const counts = { service: 0, need: 0, resource: 0 };
 
         markers.forEach((m: any) => {
             const type = m.options.icon?.options?.markerType;
@@ -1003,14 +835,14 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
         const colors: Record<string, string> = {
             service: '#3b82f6', // Blue
             need: '#ef4444',    // Red
-            cv: '#10b981',      // Green (Emerald)
+
             resource: '#9333ea' // Purple
         };
 
         // Build Gradient
         let gradientSegments = [];
         let currentDeg = 0;
-        const types = ['service', 'need', 'cv', 'resource'];
+        const types = ['service', 'need', 'resource'];
 
         for (const type of types) {
             const count = (counts as any)[type];
@@ -1043,7 +875,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
 
             {/* Unified Marker Cluster Group with Segmented Icons */}
             <MarkerClusterGroup
-                key={`unified-${filteredServices.length}-${filteredNeeds.length}-${filteredCVs.length}-${filteredResources.length}`}
+                key={`unified-${filteredServices.length}-${filteredNeeds.length}-${filteredResources.length}`}
                 chunkedLoading
                 iconCreateFunction={createSegmentedClusterIcon}
                 maxClusterRadius={60}
@@ -1270,53 +1102,7 @@ function MapContent({ searchTerm = '', selectedCategory = '', viewMode = 'servic
                     </Marker>
                 ))}
 
-                {/* CV Markers */}
-                {filteredCVs.map((cv) => (
-                    <Marker
-                        key={`cv-${cv.id}`}
-                        position={[cv.latitude, cv.longitude]}
-                        icon={getCVIcon()}
-                    >
-                        <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
-                            <div className="relative pt-8 pb-4 px-4 text-center">
 
-                                {/* Overlapping Avatar (Initials) */}
-                                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
-                                    <div className="p-1 bg-white rounded-full shadow-sm mb-1">
-                                        <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-2xl border-4 border-white shadow-md">
-                                            {cv.full_name?.charAt(0) || '?'}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Name & Title */}
-                                <div className="mt-12 mb-2">
-                                    <h3 className="font-bold text-lg text-gray-900 leading-tight">
-                                        {cv.full_name}
-                                    </h3>
-                                    <p className="text-xs text-green-500 font-medium uppercase tracking-wide mt-1">
-                                        {cv.job_title}
-                                    </p>
-                                </div>
-
-                                {/* Description */}
-                                {cv.summary && (
-                                    <p className="text-sm text-gray-600 line-clamp-3 mb-4 leading-relaxed px-2">
-                                        {cv.summary}
-                                    </p>
-                                )}
-
-                                {/* Action Button */}
-                                <Link
-                                    href={`/cv/${cv.id}`}
-                                    className="inline-block w-full bg-gray-100 text-gray-900 text-sm font-bold py-3 rounded-full hover:bg-gray-200 transition shadow-sm uppercase tracking-wide"
-                                >
-                                    {t('viewCV')}
-                                </Link>
-                            </div>
-                        </Popup>
-                    </Marker>
-                ))}
 
                 {/* Resources Markers */}
                 {filteredResources.map((resource) => (
