@@ -77,7 +77,7 @@ export default function NeedDetailPage({ params }: { params: Promise<{ id: strin
         const fetchComments = async () => {
             const { data, error } = await supabase
                 .from('need_comments')
-                .select('*, profiles:user_id(full_name, avatar_url)')
+                .select('*, profiles!need_comments_user_id_profiles_fkey(full_name, avatar_url)')
                 .eq('need_id', id)
                 .order('created_at', { ascending: true });
 
@@ -143,7 +143,7 @@ export default function NeedDetailPage({ params }: { params: Promise<{ id: strin
                 // Refetch comments to get the profile data
                 const { data } = await supabase
                     .from('need_comments')
-                    .select('*, profiles:user_id(full_name, avatar_url)')
+                    .select('*, profiles!need_comments_user_id_profiles_fkey(full_name, avatar_url)')
                     .eq('need_id', id)
                     .order('created_at', { ascending: true });
                 if (data) setComments(data);
