@@ -16,7 +16,7 @@ import {
     HelpCircle, Flag,
     ThumbsUp, ThumbsDown, ShoppingCart, Pill, DollarSign, Trees, DoorClosed,
     Moon, School, Stethoscope, Dumbbell, Coffee, Bus, Mail, BookOpen, Users,
-    CheckCircle
+    CheckCircle, LocateFixed
 } from 'lucide-react';
 import AddNeedModal from './AddNeedModal';
 
@@ -37,6 +37,60 @@ interface Need {
 interface TalentMapProps {
     searchTerm?: string;
     selectedCategory?: string;
+}
+
+// Locate Me button component
+function LocateMe({ dir }: { dir: string }) {
+    const map = useMap();
+    const [locating, setLocating] = useState(false);
+    const [markerRef, setMarkerRef] = useState<L.CircleMarker | null>(null);
+
+    const handleLocate = () => {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser');
+            return;
+        }
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                map.flyTo([latitude, longitude], 15, { duration: 1.5 });
+
+                // Remove old marker
+                if (markerRef) map.removeLayer(markerRef);
+
+                // Add pulsing blue dot
+                const marker = L.circleMarker([latitude, longitude], {
+                    radius: 8,
+                    fillColor: '#00AEEF',
+                    fillOpacity: 1,
+                    color: '#fff',
+                    weight: 3,
+                    className: 'animate-pulse'
+                }).addTo(map);
+                marker.bindTooltip(dir === 'rtl' ? 'موقعك الحالي' : 'You are here', { direction: 'top', offset: [0, -10] });
+                setMarkerRef(marker);
+                setLocating(false);
+            },
+            (error) => {
+                console.error('Geolocation error:', error);
+                alert(dir === 'rtl' ? 'تعذر تحديد موقعك' : 'Could not determine your location');
+                setLocating(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
+
+    return (
+        <button
+            onClick={handleLocate}
+            disabled={locating}
+            className={`absolute bottom-6 z-[500] w-10 h-10 bg-white hover:bg-gray-50 rounded-full shadow-md border border-gray-200 flex items-center justify-center transition-all active:scale-95 ${dir === 'rtl' ? 'right-3' : 'left-3'}`}
+            title={dir === 'rtl' ? 'حدد موقعي' : 'Find my location'}
+        >
+            <LocateFixed className={`w-5 h-5 ${locating ? 'text-[#00AEEF] animate-pulse' : 'text-gray-600'}`} />
+        </button>
+    );
 }
 
 const getNeedCategoryIcon = (category: LocalNeedCategory) => {
@@ -436,6 +490,7 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
 }
 
 export default function TalentMap({ searchTerm, selectedCategory }: TalentMapProps) {
+    const { dir } = useLanguage();
     const [isMounted, setIsMounted] = useState(false);
     const searchParams = useSearchParams();
     const [userCountry, setUserCountry] = useState<string | null>(null);
@@ -533,6 +588,7 @@ export default function TalentMap({ searchTerm, selectedCategory }: TalentMapPro
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <MapContent searchTerm={searchTerm} selectedCategory={selectedCategory} />
+            <LocateMe dir={dir} />
         </MapContainer>
     );
 }
