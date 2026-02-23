@@ -238,6 +238,12 @@ export const translations = {
         addNeedButton: 'Add Need',
         addingNeed: 'Adding...',
         needAdded: 'Need added successfully!',
+        needCreated: 'Need created successfully!',
+        addNeedPage: 'Add a Need',
+        selectLocation: 'Select Location',
+        clickMapToSelectLocation: 'Click on the map to choose the location of the need',
+        needTitle: 'Title',
+        needTitlePlaceholder: 'e.g. We need a grocery store here',
         voteError: 'You have already voted on this need.',
 
         // Local Needs Categories
@@ -413,14 +419,8 @@ export const translations = {
         "Garden Equipment": "Garden Equipment",
         "Party Supplies": "Party Supplies",
 
-        // Add Need/Resource Pages
-        addNeedPage: 'Add Need',
+        // Add Resource Pages
         addResourcePage: 'Add Resource',
-        needTitle: 'Need Title',
-        needTitlePlaceholder: 'e.g. Grocery Store',
-        selectLocation: 'Select Location',
-        clickMapToSelectLocation: 'Click on the map to select location',
-        needCreated: 'Need added successfully!',
         resourceCreated: 'Resource added successfully!',
         descriptionPlaceholder: 'Describe your resource...',
         resourceImages: 'Resource Images (Optional)',
@@ -658,6 +658,12 @@ export const translations = {
         addNeedButton: 'أضف الاحتياج',
         addingNeed: 'جاري الإضافة...',
         needAdded: 'تمت إضافة الاحتياج بنجاح!',
+        needCreated: 'تم إنشاء الاحتياج بنجاح!',
+        addNeedPage: 'إضافة احتياج',
+        selectLocation: 'حدد الموقع',
+        clickMapToSelectLocation: 'اضغط على الخريطة لاختيار موقع الاحتياج',
+        needTitle: 'العنوان',
+        needTitlePlaceholder: 'مثال: نحتاج بقالة هنا',
         voteError: 'لقد قمت بالتصويت على هذا الاحتياج مسبقاً.',
 
         // Local Needs Categories
