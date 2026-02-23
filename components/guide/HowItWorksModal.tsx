@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { X, MapPin, Heart, Plus, FileText, Filter } from 'lucide-react';
+import { X, MapPin, Heart, Plus, Filter } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 interface HowItWorksModalProps {
@@ -27,12 +27,10 @@ export default function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProp
             text: t('guideNeedsVsServicesText'),
             icon: (
                 <div className="flex justify-center gap-4">
-                    <MapPin className="w-12 h-12 text-blue-500" />
                     <MapPin className="w-12 h-12 text-red-500" />
-                    <MapPin className="w-12 h-12 text-purple-600" />
                 </div>
             ),
-            color: 'bg-purple-50'
+            color: 'bg-red-50'
         },
 
         {

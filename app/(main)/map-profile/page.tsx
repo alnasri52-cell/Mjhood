@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function MapProfilePage() {
-    redirect('/map-profile/services');
+    redirect('/map-profile/needs');
 }

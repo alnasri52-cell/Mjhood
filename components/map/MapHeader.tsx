@@ -1,23 +1,14 @@
 'use client';
 
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { Search } from 'lucide-react';
 
 interface MapHeaderProps {
-    viewMode: 'services' | 'needs' | 'resources' | 'both';
-    setViewMode: (mode: 'services' | 'needs' | 'resources' | 'both') => void;
-    searchTerm: string;
-    onSearchChange: (value: string) => void;
     selectedCategory: string;
     onCategoryChange: (value: string) => void;
     categories: readonly string[];
 }
 
 export default function MapHeader({
-    viewMode,
-    setViewMode,
-    searchTerm,
-    onSearchChange,
     selectedCategory,
     onCategoryChange,
     categories
@@ -26,84 +17,34 @@ export default function MapHeader({
 
     return (
         <>
-            {/* Search & Filter & Toggle - All in one container for better flow */}
+            {/* Category Pills */}
             <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[100] w-full pointer-events-none px-4">
-                <div className="pointer-events-auto space-y-3 max-w-md mx-auto flex flex-col items-center">
-
-
-                    {/* View Mode Toggle - Now below search with CVs option */}
-                    <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-lg p-1 flex items-center border border-gray-200">
+                <div className="pointer-events-auto overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex gap-2 min-w-max px-2 justify-center">
                         <button
-                            onClick={() => setViewMode('services')}
-                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'services'
-                                ? 'bg-[#3b82f6] text-white shadow-md'
-                                : 'bg-transparent text-gray-500 hover:text-gray-900'
+                            onClick={() => onCategoryChange('')}
+                            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap shadow-md transition-colors ${selectedCategory === ''
+                                ? 'bg-black text-white'
+                                : 'bg-white text-gray-700 hover:bg-gray-50'
                                 }`}
                         >
-                            {t('services' as any)}
+                            {t('allPill')}
                         </button>
-                        <button
-                            onClick={() => setViewMode('resources')}
-                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'resources'
-                                ? 'bg-[#9333ea] text-white shadow-md'
-                                : 'bg-transparent text-gray-500 hover:text-gray-900'
-                                }`}
-                        >
-                            {t('resources' as any)}
-                        </button>
-                        <button
-                            onClick={() => setViewMode('needs')}
-                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'needs'
-                                ? 'bg-[#ef4444] text-white shadow-md'
-                                : 'bg-transparent text-gray-500 hover:text-gray-900'
-                                }`}
-                        >
-                            {t('needs' as any)}
-                        </button>
-
-                        <button
-                            onClick={() => setViewMode('both')}
-                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-300 ${viewMode === 'both'
-                                ? 'bg-black text-white shadow-md'
-                                : 'bg-transparent text-gray-500 hover:text-gray-900'
-                                }`}
-                        >
-                            {t('both' as any)}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Category Pills - Now at the bottom */}
-                {viewMode !== 'both' && (
-                    <div className="pointer-events-auto mt-3 overflow-x-auto pb-2 scrollbar-hide">
-                        <div className="flex gap-2 min-w-max px-2 justify-center">
+                        {categories.map((cat) => (
                             <button
-                                onClick={() => onCategoryChange('')}
-                                className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap shadow-md transition-colors ${selectedCategory === ''
+                                key={cat}
+                                onClick={() => onCategoryChange(cat)}
+                                className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap shadow-md transition-colors ${selectedCategory === cat
                                     ? 'bg-black text-white'
                                     : 'bg-white text-gray-700 hover:bg-gray-50'
                                     }`}
                             >
-                                {t('allPill')}
+                                {t(cat as any)}
                             </button>
-                            {categories.map((cat) => (
-                                <button
-                                    key={cat}
-                                    onClick={() => onCategoryChange(cat)}
-                                    className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap shadow-md transition-colors ${selectedCategory === cat
-                                        ? 'bg-black text-white'
-                                        : 'bg-white text-gray-700 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    {t(cat as any)}
-                                </button>
-                            ))}
-                        </div>
+                        ))}
                     </div>
-                )}
+                </div>
             </div>
         </>
     );
 }
-
-

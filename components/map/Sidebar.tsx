@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -12,20 +12,13 @@ import {
     LogOut,
     Search,
     MessageSquare,
-    Briefcase,
     MapPin,
     LogIn,
     UserPlus,
     Globe,
     Home,
     LayoutDashboard,
-    Settings,
-    ChevronLeft,
-    ChevronRight,
     HelpCircle,
-    ChevronDown,
-    FileText,
-    Archive,
     HandHeart
 } from 'lucide-react';
 
@@ -43,8 +36,6 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [isProfileComplete, setIsProfileComplete] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [showMapProfileDropdown, setShowMapProfileDropdown] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchUserProfile = async (userId: string) => {
@@ -110,30 +101,10 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
             }
         });
 
-        // Don't set up real-time profile subscription - it's causing errors
-        // The auth state change listener is sufficient for our needs
-
         return () => {
             subscription.unsubscribe();
         };
-    }, []); // Empty dependencies
-
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setShowMapProfileDropdown(false);
-            }
-        };
-
-        if (showMapProfileDropdown) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [showMapProfileDropdown]);
+    }, []);
 
     const handleLogout = async () => {
         try {
@@ -157,8 +128,6 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
         setLanguage(language === 'en' ? 'ar' : 'en');
     };
 
-    // if (loading) return null; // Don't block rendering
-
     const navItems = [
         { icon: Home, label: 'home', href: '/' },
         { icon: Search, label: 'advancedSearch', href: '/search' },
@@ -167,12 +136,12 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
         { icon: LayoutDashboard, label: 'Admin Portal', href: '/admin', authRequired: true, role: 'admin' },
     ];
 
-    // Add "Map Profile" for all authenticated users
+    // Add "My Needs" for all authenticated users (direct link, no dropdown)
     if (user) {
         navItems.splice(3, 0, {
-            icon: MapPin,
-            label: 'mapProfile',
-            href: '/map-profile',
+            icon: HandHeart,
+            label: 'needsLabel',
+            href: '/map-profile/needs',
             authRequired: true
         });
     }
@@ -232,67 +201,6 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                 {filteredNavItems.map((item) => {
                     const isActive = pathname === item.href;
 
-                    // Special handling for Map Profile - render as dropdown
-                    if (item.label === 'mapProfile' && user) {
-                        const isDropdownActive = pathname === '/map-profile';
-                        return (
-                            <div key="mapProfile" className="relative" ref={dropdownRef}>
-                                <button
-                                    onClick={() => setShowMapProfileDropdown(!showMapProfileDropdown)}
-                                    className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl transition-all duration-200 group/item ${isDropdownActive
-                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
-                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                                        }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <item.icon className={`w-5 h-5 min-w-[20px] ${isDropdownActive ? 'text-white' : 'text-gray-500 group-hover/item:text-gray-900'}`} />
-                                        <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-300 opacity-0 w-0 md:opacity-100 md:w-auto`}>
-                                            {t(item.label as any)}
-                                        </span>
-                                    </div>
-                                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 opacity-0 md:opacity-100 ${showMapProfileDropdown ? 'rotate-180' : ''} ${isDropdownActive ? 'text-white' : 'text-gray-500'}`} />
-                                </button>
-
-                                {/* Dropdown Menu */}
-                                {showMapProfileDropdown && (
-                                    <div className={`absolute ${dir === 'rtl' ? 'right-0' : 'left-0'} mt-2 w-full md:w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50`}>
-                                        <Link
-                                            href="/map-profile/services"
-                                            onClick={() => setShowMapProfileDropdown(false)}
-                                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                                        >
-                                            <Briefcase className="w-4 h-4 text-blue-500" />
-                                            <span className="text-sm font-medium text-gray-700">{t('servicesLabel' as any)}</span>
-                                        </Link>
-                                        <Link
-                                            href="/map-profile/resources"
-                                            onClick={() => setShowMapProfileDropdown(false)}
-                                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                                        >
-                                            <Archive className="w-4 h-4 text-purple-600" />
-                                            <span className="text-sm font-medium text-gray-700">{t('resources')}</span>
-                                        </Link>
-                                        <Link
-                                            href="/map-profile/needs"
-                                            onClick={() => setShowMapProfileDropdown(false)}
-                                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                                        >
-                                            <HandHeart className="w-4 h-4 text-red-500" />
-                                            <span className="text-sm font-medium text-gray-700">{t('needsLabel' as any)}</span>
-                                        </Link>
-
-                                    </div>
-                                )}
-
-                                {/* Tooltip for collapsed state */}
-                                <div className={`absolute ${dir === 'rtl' ? 'right-16' : 'left-16'} bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover/item:opacity-100 pointer-events-none md:hidden whitespace-nowrap z-50`}>
-                                    {t(item.label as any)}
-                                </div>
-                            </div>
-                        );
-                    }
-
-                    // Regular navigation items
                     return (
                         <Link
                             key={item.href}
