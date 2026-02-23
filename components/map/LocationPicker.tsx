@@ -72,7 +72,7 @@ function LocateMe({ onChange }: { onChange: (lat: number, lng: number) => void }
             type="button"
             onClick={handleLocate}
             disabled={locating}
-            className={`absolute top-3 z-[500] w-9 h-9 bg-white hover:bg-gray-50 rounded-lg shadow-md border border-gray-200 flex items-center justify-center transition-all active:scale-95 ${dir === 'rtl' ? 'left-3' : 'right-3'}`}
+            className="absolute top-3 right-3 z-[500] w-9 h-9 bg-white hover:bg-gray-50 rounded-lg shadow-md border border-gray-200 flex items-center justify-center transition-all active:scale-95"
             title={dir === 'rtl' ? 'استخدم موقعي الحالي' : 'Use my current location'}
         >
             <LocateFixed className={`w-4.5 h-4.5 ${locating ? 'text-[#00AEEF] animate-pulse' : 'text-gray-600'}`} />
