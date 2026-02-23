@@ -372,14 +372,14 @@ export const translations = {
         // How to Use Guide
         howItWorks: 'How to Use',
         guideWelcomeTitle: 'Welcome to Mjhood!',
-        guideWelcomeText: 'Mjhood is your community map. See where local talent is available and pinpoint neighborhood needs. We connect honest effort with opportunities to build a stronger local economy together.',
-        guideNeedsVsServicesTitle: 'Map Colors',
-        guideNeedsVsServicesText: 'Blue: Services. Red: Needs. Purple: Resources.',
-        guideHowToAddTitle: 'Adding to the Map',
-        guideHowToAddText: 'Go to "Map Profile" to add your Services, Needs, or Resources.',
+        guideWelcomeText: 'Mjhood is your community needs map. Pinpoint what your neighborhood is missing and vote on what matters most. Together we build a stronger community.',
+        guideNeedsVsServicesTitle: 'Needs on the Map',
+        guideNeedsVsServicesText: 'Each red pin represents a community need. Tap any pin to see details, and vote with thumbs up or down to show support.',
+        guideHowToAddTitle: 'Adding a Need',
+        guideHowToAddText: 'Go to "My Needs" in the sidebar to add a new need to the map. Describe what your area is missing and pick a category.',
 
-        guideMapFiltersTitle: 'Filter Your View',
-        guideMapFiltersText: 'Use the tabs at the top of the map to switch between Services and Needs, or view them all at once.',
+        guideMapFiltersTitle: 'Filter & Search',
+        guideMapFiltersText: 'Use the search bar to find needs by keyword, or use the category pills to filter by type (Grocery, Pharmacy, Park, etc.).',
         gotIt: 'Got it!',
 
         // Map View Modes
@@ -792,14 +792,14 @@ export const translations = {
         // How to Use Guide
         howItWorks: 'كيفية الاستخدام',
         guideWelcomeTitle: 'مرحباً بك في مجهود!',
-        guideWelcomeText: 'مجهود هو خريطة مجتمعك. اكتشف المواهب المحلية وحدد احتياجات الحي. نربط الجهد الصادق بالفرص لبناء اقتصاد محلي أقوى معًا.',
-        guideNeedsVsServicesTitle: 'ألوان الخريطة',
-        guideNeedsVsServicesText: 'أزرق: خدمات. أحمر: احتياجات. بنفسجي: موارد.',
-        guideHowToAddTitle: 'الإضافة للخريطة',
-        guideHowToAddText: 'اذهب إلى "ملف الخريطة" لإضافة خدماتك، احتياجاتك، أو مواردك.',
+        guideWelcomeText: 'مجهود هو خريطة احتياجات مجتمعك. حدد ما ينقص حيك وصوّت على ما يهمك. معاً نبني مجتمعاً أقوى.',
+        guideNeedsVsServicesTitle: 'الاحتياجات على الخريطة',
+        guideNeedsVsServicesText: 'كل دبوس أحمر يمثل احتياج مجتمعي. اضغط على أي دبوس لعرض التفاصيل، وصوّت بالإعجاب أو عدم الإعجاب لإظهار دعمك.',
+        guideHowToAddTitle: 'إضافة احتياج',
+        guideHowToAddText: 'اذهب إلى "احتياجاتي" في القائمة الجانبية لإضافة احتياج جديد على الخريطة. صِف ما ينقص منطقتك واختر فئة.',
 
-        guideMapFiltersTitle: 'تصفية العرض',
-        guideMapFiltersText: 'استخدم علامات التبويب في أعلى الخريطة للتبديل بين الخدمات والاحتياجات، أو عرضها جميعاً.',
+        guideMapFiltersTitle: 'البحث والتصفية',
+        guideMapFiltersText: 'استخدم شريط البحث للعثور على الاحتياجات بالكلمات المفتاحية، أو استخدم أزرار الفئات للتصفية حسب النوع (بقالة، صيدلية، حديقة، إلخ).',
         gotIt: 'فهمت!',
 
         // Map View Modes

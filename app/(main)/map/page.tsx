@@ -21,6 +21,8 @@ export default function MapPage() {
         <div className="relative h-screen w-full overflow-hidden">
             {/* Map Header - Category Pills */}
             <MapHeader
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
                 selectedCategory={selectedCategory}
                 onCategoryChange={setSelectedCategory}
                 categories={LOCAL_NEEDS_CATEGORIES}
