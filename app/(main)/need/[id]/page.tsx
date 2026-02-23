@@ -39,6 +39,8 @@ interface Comment {
     content: string;
     parent_id: string | null;
     created_at: string;
+    upvotes: number;
+    downvotes: number;
     profiles?: {
         full_name: string;
         avatar_url?: string;
@@ -52,6 +54,8 @@ function CommentThread({
     currentUser,
     onReply,
     onDelete,
+    onVote,
+    votedComments,
     replyingTo,
     replyContent,
     setReplyContent,
@@ -65,6 +69,8 @@ function CommentThread({
     currentUser: any;
     onReply: (commentId: string | null) => void;
     onDelete: (commentId: string) => void;
+    onVote: (commentId: string, type: 'up' | 'down') => void;
+    votedComments: Set<string>;
     replyingTo: string | null;
     replyContent: string;
     setReplyContent: (val: string) => void;
@@ -76,7 +82,9 @@ function CommentThread({
     const [collapsed, setCollapsed] = useState(false);
     const children = allComments.filter(c => c.parent_id === comment.id);
     const hasChildren = children.length > 0;
-    const maxDepth = 4; // Max visual nesting depth
+    const maxDepth = 4;
+    const score = (comment.upvotes || 0) - (comment.downvotes || 0);
+    const hasVoted = votedComments.has(comment.id);
 
     const timeAgo = (dateString: string) => {
         const now = new Date();
@@ -141,21 +149,50 @@ function CommentThread({
                                     {comment.content}
                                 </p>
 
-                                {/* Action buttons */}
-                                <div className="flex items-center gap-4 mt-1.5">
+                                {/* Action buttons - Reddit style */}
+                                <div className="flex items-center gap-1 mt-1.5">
+                                    {/* Upvote */}
+                                    <button
+                                        onClick={() => !hasVoted && currentUser && onVote(comment.id, 'up')}
+                                        disabled={hasVoted || !currentUser}
+                                        className={`p-1 rounded transition ${hasVoted ? 'opacity-40 cursor-not-allowed' : 'hover:bg-green-50 hover:text-green-600'} text-gray-400`}
+                                    >
+                                        <ThumbsUp className="w-3.5 h-3.5" />
+                                    </button>
+
+                                    {/* Score */}
+                                    <span className={`text-xs font-bold min-w-[20px] text-center ${score > 0 ? 'text-green-600' : score < 0 ? 'text-red-500' : 'text-gray-400'
+                                        }`}>
+                                        {score}
+                                    </span>
+
+                                    {/* Downvote */}
+                                    <button
+                                        onClick={() => !hasVoted && currentUser && onVote(comment.id, 'down')}
+                                        disabled={hasVoted || !currentUser}
+                                        className={`p-1 rounded transition ${hasVoted ? 'opacity-40 cursor-not-allowed' : 'hover:bg-red-50 hover:text-red-500'} text-gray-400`}
+                                    >
+                                        <ThumbsDown className="w-3.5 h-3.5" />
+                                    </button>
+
+                                    <span className="text-gray-200 mx-1">|</span>
+
+                                    {/* Reply */}
                                     {currentUser && (
                                         <button
                                             onClick={() => onReply(replyingTo === comment.id ? null : comment.id)}
-                                            className={`text-xs font-medium flex items-center gap-1 transition ${replyingTo === comment.id ? 'text-[#00AEEF]' : 'text-gray-400 hover:text-gray-600'}`}
+                                            className={`text-xs font-medium flex items-center gap-1 px-1.5 py-1 rounded transition ${replyingTo === comment.id ? 'text-[#00AEEF] bg-[#00AEEF]/5' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
                                         >
                                             <Reply className="w-3.5 h-3.5" />
                                             {dir === 'rtl' ? 'رد' : 'Reply'}
                                         </button>
                                     )}
+
+                                    {/* Delete */}
                                     {currentUser?.id === comment.user_id && (
                                         <button
                                             onClick={() => onDelete(comment.id)}
-                                            className="text-xs text-gray-400 hover:text-red-500 font-medium transition opacity-0 group-hover:opacity-100 flex items-center gap-1"
+                                            className="text-xs text-gray-400 hover:text-red-500 font-medium transition opacity-0 group-hover:opacity-100 flex items-center gap-1 px-1.5 py-1 rounded hover:bg-red-50"
                                         >
                                             <Trash2 className="w-3 h-3" />
                                             {dir === 'rtl' ? 'حذف' : 'Delete'}
@@ -221,6 +258,8 @@ function CommentThread({
                             currentUser={currentUser}
                             onReply={onReply}
                             onDelete={onDelete}
+                            onVote={onVote}
+                            votedComments={votedComments}
                             replyingTo={replyingTo}
                             replyContent={replyContent}
                             setReplyContent={setReplyContent}
@@ -250,6 +289,7 @@ export default function NeedDetailPage({ params }: { params: Promise<{ id: strin
     const [submitting, setSubmitting] = useState(false);
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [commentsLoading, setCommentsLoading] = useState(true);
+    const [votedComments, setVotedComments] = useState<Set<string>>(new Set());
 
     const fetchComments = useCallback(async () => {
         const { data, error } = await supabase
@@ -378,6 +418,44 @@ export default function NeedDetailPage({ params }: { params: Promise<{ id: strin
             console.error('Error deleting comment:', error);
         } else {
             await fetchComments();
+        }
+    };
+
+    const handleVoteComment = async (commentId: string, type: 'up' | 'down') => {
+        if (votedComments.has(commentId) || !currentUser) return;
+
+        // Optimistic update
+        setComments(prev => prev.map(c => {
+            if (c.id === commentId) {
+                return {
+                    ...c,
+                    upvotes: type === 'up' ? (c.upvotes || 0) + 1 : c.upvotes,
+                    downvotes: type === 'down' ? (c.downvotes || 0) + 1 : c.downvotes
+                };
+            }
+            return c;
+        }));
+        setVotedComments(prev => new Set(prev).add(commentId));
+
+        try {
+            const comment = comments.find(c => c.id === commentId);
+            if (!comment) return;
+
+            const updates = {
+                upvotes: type === 'up' ? (comment.upvotes || 0) + 1 : comment.upvotes,
+                downvotes: type === 'down' ? (comment.downvotes || 0) + 1 : comment.downvotes
+            };
+
+            const { error } = await supabase
+                .from('need_comments')
+                .update(updates)
+                .eq('id', commentId);
+
+            if (error) {
+                console.error('Error voting on comment:', error);
+            }
+        } catch (err) {
+            console.error('Error:', err);
         }
     };
 
@@ -567,6 +645,8 @@ export default function NeedDetailPage({ params }: { params: Promise<{ id: strin
                                             setReplyContent('');
                                         }}
                                         onDelete={handleDeleteComment}
+                                        onVote={handleVoteComment}
+                                        votedComments={votedComments}
                                         replyingTo={replyingTo}
                                         replyContent={replyContent}
                                         setReplyContent={setReplyContent}
