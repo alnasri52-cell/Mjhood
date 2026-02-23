@@ -4,8 +4,8 @@ import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Plus } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { useRouter } from 'next/navigation';
 import MapHeader from '@/components/map/MapHeader';
-import AddNeedModal from '@/components/map/AddNeedModal';
 import { LOCAL_NEEDS_CATEGORIES } from '@/lib/constants';
 
 // Dynamically import map components to avoid SSR issues with Leaflet
@@ -16,10 +16,9 @@ const TalentMap = dynamic(() => import('@/components/map/TalentMap'), {
 
 export default function MapPage() {
     const { t, dir } = useLanguage();
+    const router = useRouter();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [refreshKey, setRefreshKey] = useState(0);
 
     return (
         <div className="relative h-screen w-full overflow-hidden">
@@ -34,28 +33,18 @@ export default function MapPage() {
 
             {/* Map Component */}
             <TalentMap
-                key={refreshKey}
                 searchTerm={searchTerm}
                 selectedCategory={selectedCategory}
             />
 
             {/* Floating Add Need Button */}
             <button
-                onClick={() => setShowAddModal(true)}
+                onClick={() => router.push('/map-profile/add-need')}
                 className={`fixed bottom-8 z-[100] w-14 h-14 bg-[#00AEEF] hover:bg-[#0095cc] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 active:scale-95 group ${dir === 'rtl' ? 'left-8' : 'right-8'}`}
                 title={dir === 'rtl' ? 'أضف احتياج' : 'Add a Need'}
             >
                 <Plus className="w-7 h-7 group-hover:rotate-90 transition-transform duration-200" />
             </button>
-
-            {/* Add Need Modal */}
-            <AddNeedModal
-                isOpen={showAddModal}
-                onClose={() => setShowAddModal(false)}
-                onSuccess={() => {
-                    setRefreshKey(prev => prev + 1);
-                }}
-            />
         </div>
     );
 }
