@@ -42,7 +42,7 @@ export default function MapPage() {
             {/* Floating Add Need Button */}
             <button
                 onClick={() => setShowAddModal(true)}
-                className="fixed bottom-8 right-8 z-[100] w-14 h-14 bg-[#00AEEF] hover:bg-[#0095cc] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 active:scale-95 group"
+                className={`fixed bottom-8 z-[100] w-14 h-14 bg-[#00AEEF] hover:bg-[#0095cc] text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 active:scale-95 group ${dir === 'rtl' ? 'left-8' : 'right-8'}`}
                 title={dir === 'rtl' ? 'أضف احتياج' : 'Add a Need'}
             >
                 <Plus className="w-7 h-7 group-hover:rotate-90 transition-transform duration-200" />
