@@ -62,7 +62,7 @@ const getNeedCategoryIcon = (category: LocalNeedCategory) => {
 
 const getNeedIcon = (category: LocalNeedCategory) => {
     const iconHtml = renderToStaticMarkup(
-        <div className="w-8 h-8 rounded-full bg-[#ef4444] flex items-center justify-center shadow-lg border-2 border-white">
+        <div className="w-8 h-8 rounded-full bg-[#00AEEF] flex items-center justify-center shadow-lg border-2 border-white">
             {getNeedCategoryIcon(category)}
         </div>
     );
@@ -294,7 +294,7 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
 
         return L.divIcon({
             html: `
-                <div style="background: #ef4444;" class="flex items-center justify-center w-full h-full rounded-full shadow-lg border-2 border-white box-border">
+                <div style="background: #00AEEF;" class="flex items-center justify-center w-full h-full rounded-full shadow-lg border-2 border-white box-border">
                     <div class="w-[24px] h-[24px] bg-white/90 rounded-full flex items-center justify-center backdrop-blur-sm">
                         <span class="text-xs font-bold text-gray-800">${total}</span>
                     </div>
