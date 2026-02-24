@@ -24,9 +24,10 @@ import {
 
 interface SidebarProps {
     onOpenGuide?: () => void;
+    onClose?: () => void;
 }
 
-export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
+export default function Sidebar({ onOpenGuide, onClose }: SidebarProps = {}) {
     const router = useRouter();
     const pathname = usePathname();
     const { t, language, setLanguage, dir } = useLanguage();
@@ -197,6 +198,7 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                         <Link
                             key={item.href}
                             href={item.href}
+                            onClick={() => onClose?.()}
                             className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group/item ${isActive
                                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
                                 : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'

@@ -85,7 +85,8 @@ function LocateMe({ dir }: { dir: string }) {
         <button
             onClick={handleLocate}
             disabled={locating}
-            className={`absolute bottom-10 z-[500] w-10 h-10 bg-white hover:bg-gray-50 rounded-full shadow-md border border-gray-200 flex items-center justify-center transition-all active:scale-95 ${dir === 'rtl' ? 'right-3' : 'left-3'}`}
+            className={`absolute z-[500] w-10 h-10 bg-white hover:bg-gray-50 rounded-full shadow-md border border-gray-200 flex items-center justify-center transition-all active:scale-95 ${dir === 'rtl' ? 'right-3' : 'left-3'}`}
+            style={{ bottom: 'calc(40px + env(safe-area-inset-bottom, 0px))' }}
             title={dir === 'rtl' ? 'حدد موقعي' : 'Find my location'}
         >
             <LocateFixed className={`w-5 h-5 ${locating ? 'text-[#00AEEF] animate-pulse' : 'text-gray-600'}`} />

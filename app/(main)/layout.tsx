@@ -19,6 +19,8 @@ export default function MainLayout({
     const pathname = usePathname();
     const isMapPage = pathname === '/map';
 
+    const closeMobileMenu = () => setMobileMenuOpen(false);
+
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <div className="flex flex-1">
@@ -27,7 +29,7 @@ export default function MainLayout({
                     <Sidebar onOpenGuide={() => setShowGuide(true)} />
                 </div>
 
-                {/* Mobile Menu Button - inline with search on map page */}
+                {/* Mobile Menu Button */}
                 <button
                     onClick={() => setMobileMenuOpen(true)}
                     className={`fixed top-[18px] z-[200] md:hidden w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 flex items-center justify-center ${dir === 'rtl' ? 'right-4' : 'left-4'}`}
@@ -46,16 +48,23 @@ export default function MainLayout({
                         {/* Backdrop */}
                         <div
                             className="fixed inset-0 bg-black/40 z-[1200] md:hidden"
-                            onClick={() => setMobileMenuOpen(false)}
+                            onClick={closeMobileMenu}
                         />
-                        {/* Slide-in sidebar */}
+                        {/* Slide-in sidebar - touch isolated */}
                         <div
-                            className={`fixed top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} h-screen w-56 z-[1300] md:hidden shadow-2xl bg-white overflow-y-auto`}
+                            className={`fixed top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} h-screen w-56 z-[1300] md:hidden shadow-2xl bg-white`}
+                            style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
+                            onTouchMove={(e) => e.stopPropagation()}
                         >
-                            <Sidebar onOpenGuide={() => { setShowGuide(true); setMobileMenuOpen(false); }} />
+                            <div className="h-full overflow-y-auto">
+                                <Sidebar
+                                    onOpenGuide={() => { setShowGuide(true); closeMobileMenu(); }}
+                                    onClose={closeMobileMenu}
+                                />
+                            </div>
                             {/* Close button */}
                             <button
-                                onClick={() => setMobileMenuOpen(false)}
+                                onClick={closeMobileMenu}
                                 className={`absolute top-4 ${dir === 'rtl' ? 'left-3' : 'right-3'} w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center z-[1400]`}
                             >
                                 <X className="w-4 h-4 text-gray-600" />
