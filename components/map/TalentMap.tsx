@@ -357,18 +357,25 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
     const createClusterIcon = (cluster: any) => {
         const total = cluster.getChildCount();
 
-        // Calculate average heat color from child markers
+        // Look up vote data by matching child marker positions to filteredNeeds
         const childMarkers = cluster.getAllChildMarkers();
         let totalUpvotes = 0;
         let totalDownvotes = 0;
+        let matched = 0;
         childMarkers.forEach((m: any) => {
-            if (m.options?.needData) {
-                totalUpvotes += m.options.needData.upvotes || 0;
-                totalDownvotes += m.options.needData.downvotes || 0;
+            const lat = m.getLatLng().lat;
+            const lng = m.getLatLng().lng;
+            const need = filteredNeeds.find(n =>
+                Math.abs(n.latitude - lat) < 0.0001 && Math.abs(n.longitude - lng) < 0.0001
+            );
+            if (need) {
+                totalUpvotes += need.upvotes || 0;
+                totalDownvotes += need.downvotes || 0;
+                matched++;
             }
         });
-        const avgUp = Math.round(totalUpvotes / Math.max(childMarkers.length, 1));
-        const avgDown = Math.round(totalDownvotes / Math.max(childMarkers.length, 1));
+        const avgUp = matched > 0 ? Math.round(totalUpvotes / matched) : 0;
+        const avgDown = matched > 0 ? Math.round(totalDownvotes / matched) : 0;
         const clusterColor = getHeatColor(avgUp, avgDown);
 
         return L.divIcon({
