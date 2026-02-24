@@ -45,16 +45,19 @@ export default function MainLayout({
                 {/* Mobile Sidebar Overlay */}
                 {mobileMenuOpen && (
                     <>
-                        {/* Backdrop */}
+                        {/* Backdrop - blocks ALL touch events from reaching map */}
                         <div
                             className="fixed inset-0 bg-black/40 z-[1200] md:hidden"
+                            style={{ touchAction: 'none' }}
                             onClick={closeMobileMenu}
+                            onTouchStart={(e) => e.stopPropagation()}
+                            onTouchMove={(e) => e.stopPropagation()}
+                            onTouchEnd={(e) => e.stopPropagation()}
                         />
-                        {/* Slide-in sidebar - touch isolated */}
+                        {/* Slide-in sidebar */}
                         <div
                             className={`fixed top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} h-screen w-56 z-[1300] md:hidden shadow-2xl bg-white`}
-                            style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
-                            onTouchMove={(e) => e.stopPropagation()}
+                            style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
                         >
                             <div className="h-full overflow-y-auto">
                                 <Sidebar
