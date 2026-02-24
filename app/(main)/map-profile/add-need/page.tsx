@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { ArrowLeft, MapPin, CheckCircle, ShoppingCart, Pill, DollarSign, Trees, DoorClosed, Moon, School, Stethoscope, Dumbbell, Coffee, Bus, Mail, BookOpen, Users, HelpCircle, ChevronDown } from 'lucide-react';
 import { LOCAL_NEEDS_CATEGORIES, LocalNeedCategory } from '@/lib/constants';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { useAuthModal } from '@/lib/contexts/AuthContext';
 import dynamic from 'next/dynamic';
 
 const LocationPicker = dynamic(() => import('@/components/map/LocationPicker'), {
@@ -49,12 +50,15 @@ export default function AddNeedPage() {
     const [description, setDescription] = useState('');
     const [showDescription, setShowDescription] = useState(false);
 
+    const { openModal } = useAuthModal();
+
     useEffect(() => {
         const checkAuth = async () => {
             const { data: { user: authUser } } = await supabase.auth.getUser();
 
             if (!authUser) {
-                router.push('/auth/login');
+                openModal('login');
+                router.push('/map');
                 return;
             }
 
@@ -198,8 +202,8 @@ export default function AddNeedPage() {
                                         type="button"
                                         onClick={() => setCategory(cat)}
                                         className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl transition-all duration-150 ${isSelected
-                                                ? 'bg-[#00AEEF]/10 border-2 border-[#00AEEF] scale-[1.02]'
-                                                : 'border-2 border-transparent hover:bg-gray-50'
+                                            ? 'bg-[#00AEEF]/10 border-2 border-[#00AEEF] scale-[1.02]'
+                                            : 'border-2 border-transparent hover:bg-gray-50'
                                             }`}
                                     >
                                         <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${isSelected ? 'bg-[#00AEEF] text-white' : 'bg-gray-100 text-gray-500'
