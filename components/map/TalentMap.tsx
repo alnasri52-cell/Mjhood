@@ -357,11 +357,9 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
     const createClusterIcon = (cluster: any) => {
         const total = cluster.getChildCount();
 
-        // Look up vote data by matching child marker positions to filteredNeeds
+        // Use the hottest need's color for the cluster
         const childMarkers = cluster.getAllChildMarkers();
-        let totalUpvotes = 0;
-        let totalDownvotes = 0;
-        let matched = 0;
+        let maxNet = 0;
         childMarkers.forEach((m: any) => {
             const lat = m.getLatLng().lat;
             const lng = m.getLatLng().lng;
@@ -369,14 +367,11 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
                 Math.abs(n.latitude - lat) < 0.0001 && Math.abs(n.longitude - lng) < 0.0001
             );
             if (need) {
-                totalUpvotes += need.upvotes || 0;
-                totalDownvotes += need.downvotes || 0;
-                matched++;
+                const net = (need.upvotes || 0) - (need.downvotes || 0);
+                if (net > maxNet) maxNet = net;
             }
         });
-        const avgUp = matched > 0 ? Math.round(totalUpvotes / matched) : 0;
-        const avgDown = matched > 0 ? Math.round(totalDownvotes / matched) : 0;
-        const clusterColor = getHeatColor(avgUp, avgDown);
+        const clusterColor = getHeatColor(maxNet, 0);
 
         return L.divIcon({
             html: `
