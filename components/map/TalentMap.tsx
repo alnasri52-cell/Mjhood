@@ -624,7 +624,11 @@ export default function TalentMap({ searchTerm, selectedCategory }: TalentMapPro
                     </span>
                     <div
                         className="w-32 sm:w-40 h-2.5 rounded-full"
-                        style={{ background: 'linear-gradient(to right, #00AEEF, #22C55E, #F59E0B, #F97316, #EF4444)' }}
+                        style={{
+                            background: dir === 'rtl'
+                                ? 'linear-gradient(to left, #00AEEF, #22C55E, #F59E0B, #F97316, #EF4444)'
+                                : 'linear-gradient(to right, #00AEEF, #22C55E, #F59E0B, #F97316, #EF4444)'
+                        }}
                     />
                     <span className="text-[10px] font-semibold text-[#EF4444]">
                         {dir === 'rtl' ? '🔥 رائج' : '🔥 Hot'}
