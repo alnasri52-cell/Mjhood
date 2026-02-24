@@ -56,9 +56,18 @@ nextjs-portal,
     /* Hide default close button as per design or custom one */
 }
 
-/* Hide Leaflet zoom controls on mobile — users pinch-to-zoom */
+/* Hide Leaflet zoom controls and minimize attribution on mobile */
 @media (max-width: 767px) {
-    .leaflet-control-zoom {
+
+    .leaflet-control-zoom,
+    .leaflet-control-zoom-in,
+    .leaflet-control-zoom-out {
         display: none !important;
+    }
+
+    .leaflet-control-attribution {
+        font-size: 8px !important;
+        padding: 1px 4px !important;
+        opacity: 0.5;
     }
 }

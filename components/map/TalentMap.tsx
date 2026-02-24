@@ -85,7 +85,7 @@ function LocateMe({ dir }: { dir: string }) {
         <button
             onClick={handleLocate}
             disabled={locating}
-            className="absolute bottom-16 left-3 z-[500] w-10 h-10 bg-white hover:bg-gray-50 rounded-full shadow-md border border-gray-200 flex items-center justify-center transition-all active:scale-95"
+            className="absolute bottom-28 left-3 z-[500] w-10 h-10 bg-white hover:bg-gray-50 rounded-full shadow-md border border-gray-200 flex items-center justify-center transition-all active:scale-95"
             title={dir === 'rtl' ? 'حدد موقعي' : 'Find my location'}
         >
             <LocateFixed className={`w-5 h-5 ${locating ? 'text-[#00AEEF] animate-pulse' : 'text-gray-600'}`} />
@@ -617,7 +617,7 @@ export default function TalentMap({ searchTerm, selectedCategory }: TalentMapPro
             <MapContent searchTerm={searchTerm} selectedCategory={selectedCategory} />
             <LocateMe dir={dir} />
             {/* Heat Legend - centered on map area */}
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[500]">
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-[500]">
                 <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-md border border-gray-200 px-4 py-2 flex items-center gap-2">
                     <span className="text-[10px] font-semibold text-[#00AEEF]">
                         {dir === 'rtl' ? 'جديد' : 'New'}
