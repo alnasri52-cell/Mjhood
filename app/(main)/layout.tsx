@@ -50,7 +50,7 @@ export default function MainLayout({
                         />
                         {/* Slide-in sidebar */}
                         <div
-                            className={`fixed top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} h-screen w-72 z-[1300] md:hidden shadow-2xl bg-white overflow-y-auto`}
+                            className={`fixed top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} h-screen w-56 z-[1300] md:hidden shadow-2xl bg-white overflow-y-auto`}
                         >
                             <Sidebar onOpenGuide={() => { setShowGuide(true); setMobileMenuOpen(false); }} />
                             {/* Close button */}

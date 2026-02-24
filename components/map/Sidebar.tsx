@@ -158,22 +158,22 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
             className="h-full w-full bg-white border-r border-gray-200 text-gray-900 flex flex-col justify-between overflow-hidden shadow-sm"
         >
             {/* Logo Section */}
-            <div className="p-4 border-b border-gray-100 flex flex-col items-center justify-center min-h-[180px]">
+            <div className="p-3 border-b border-gray-100 flex flex-col items-center justify-center">
                 <Link href="/map" className="flex flex-col items-center justify-center w-full overflow-hidden group">
 
-                    <div className="flex flex-col items-center justify-center w-full transition-all duration-300 gap-0">
+                    <div className="flex flex-col items-center justify-center w-full gap-0">
                         <img
                             src="/mjhood_symbol_final.png"
                             alt="Mjhood Symbol"
-                            className="h-20 w-auto object-contain"
+                            className="h-12 w-auto object-contain"
                         />
                         <img
                             src="/mjhood_logo_text_final.png"
                             alt="Mjhood Text"
-                            className="h-24 w-auto object-contain"
+                            className="h-16 w-auto object-contain"
                         />
                         {/* Slogan */}
-                        <div className="mt-2 text-base font-bold text-gray-700 text-center transition-opacity duration-300 leading-tight">
+                        <div className="text-xs font-bold text-gray-700 text-center leading-tight">
                             {language === 'en' ? (
                                 <span>
                                     Efforts meet <span className="text-[#00AEEF] font-bold">Opportunities!</span>
