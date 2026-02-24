@@ -64,29 +64,28 @@ export default function AddNeedPage() {
 
             setUser(authUser);
             setLoading(false);
+
+            // Auto-detect location only after auth confirmed
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        setSelectedLocation({
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        });
+                        setDetectingLocation(false);
+                    },
+                    () => {
+                        setDetectingLocation(false);
+                    },
+                    { enableHighAccuracy: true, timeout: 8000 }
+                );
+            } else {
+                setDetectingLocation(false);
+            }
         };
 
         checkAuth();
-
-        // Auto-detect location
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    setSelectedLocation({
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    });
-                    setDetectingLocation(false);
-                },
-                () => {
-                    // Failed — user can still pick manually
-                    setDetectingLocation(false);
-                },
-                { enableHighAccuracy: true, timeout: 8000 }
-            );
-        } else {
-            setDetectingLocation(false);
-        }
     }, [router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
