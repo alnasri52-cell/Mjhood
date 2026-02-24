@@ -22,8 +22,8 @@ export default function MapHeader({
 
     return (
         <>
-            {/* Search Bar */}
-            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[100] w-full max-w-md pointer-events-none px-4">
+            {/* Search Bar - extra padding on menu-button side on mobile */}
+            <div className={`absolute top-4 left-1/2 transform -translate-x-1/2 z-[100] w-full max-w-md pointer-events-none ${dir === 'rtl' ? 'pl-4 pr-16 md:pr-4' : 'pr-4 pl-16 md:pl-4'}`}>
                 <div className="pointer-events-auto relative">
                     <Search className={`absolute top-3 w-5 h-5 text-gray-400 ${dir === 'rtl' ? 'right-3' : 'left-3'}`} />
                     <input

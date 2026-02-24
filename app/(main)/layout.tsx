@@ -6,7 +6,7 @@ import Footer from '@/components/layout/Footer';
 import HowItWorksModal from '@/components/guide/HowItWorksModal';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export default function MainLayout({
     children,
@@ -22,15 +22,16 @@ export default function MainLayout({
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <div className="flex flex-1">
-                {/* Desktop Sidebar: hidden on mobile, visible on md+ */}
-                <div className="hidden md:block w-64">
+                {/* Desktop Sidebar */}
+                <div className={`hidden md:block fixed top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} h-screen w-64 z-[1000]`}>
                     <Sidebar onOpenGuide={() => setShowGuide(true)} />
                 </div>
 
-                {/* Mobile Menu Button */}
+                {/* Mobile Menu Button - inline with search on map page */}
                 <button
                     onClick={() => setMobileMenuOpen(true)}
-                    className={`fixed top-3 z-[1100] md:hidden w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-md border border-gray-200 flex items-center justify-center ${dir === 'rtl' ? 'right-3' : 'left-3'}`}
+                    className={`fixed top-[18px] z-[200] md:hidden w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 flex items-center justify-center ${dir === 'rtl' ? 'right-4' : 'left-4'}`}
+                    aria-label="Open menu"
                 >
                     <img
                         src="/mjhood_symbol_final.png"
@@ -44,11 +45,13 @@ export default function MainLayout({
                     <>
                         {/* Backdrop */}
                         <div
-                            className="fixed inset-0 bg-black/40 z-[1200] md:hidden animate-fadeIn"
+                            className="fixed inset-0 bg-black/40 z-[1200] md:hidden"
                             onClick={() => setMobileMenuOpen(false)}
                         />
                         {/* Slide-in sidebar */}
-                        <div className={`fixed top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} h-screen w-64 z-[1300] md:hidden shadow-xl`}>
+                        <div
+                            className={`fixed top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} h-screen w-72 z-[1300] md:hidden shadow-2xl bg-white overflow-y-auto`}
+                        >
                             <Sidebar onOpenGuide={() => { setShowGuide(true); setMobileMenuOpen(false); }} />
                             {/* Close button */}
                             <button

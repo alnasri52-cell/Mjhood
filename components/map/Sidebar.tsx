@@ -155,7 +155,7 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
 
     return (
         <aside
-            className={`fixed top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} h-screen w-full bg-white border-r border-gray-200 text-gray-900 transition-all duration-300 z-[1000] flex flex-col justify-between group overflow-hidden shadow-sm`}
+            className="h-full w-full bg-white border-r border-gray-200 text-gray-900 flex flex-col justify-between overflow-hidden shadow-sm"
         >
             {/* Logo Section */}
             <div className="p-4 border-b border-gray-100 flex flex-col items-center justify-center min-h-[180px]">
