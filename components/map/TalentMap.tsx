@@ -85,7 +85,7 @@ function LocateMe({ dir }: { dir: string }) {
         <button
             onClick={handleLocate}
             disabled={locating}
-            className="absolute bottom-20 left-3 z-[500] w-10 h-10 bg-white hover:bg-gray-50 rounded-full shadow-md border border-gray-200 flex items-center justify-center transition-all active:scale-95"
+            className="absolute bottom-24 left-3 z-[500] w-10 h-10 bg-white hover:bg-gray-50 rounded-full shadow-md border border-gray-200 flex items-center justify-center transition-all active:scale-95"
             title={dir === 'rtl' ? 'حدد موقعي' : 'Find my location'}
         >
             <LocateFixed className={`w-5 h-5 ${locating ? 'text-[#00AEEF] animate-pulse' : 'text-gray-600'}`} />
@@ -617,22 +617,20 @@ export default function TalentMap({ searchTerm, selectedCategory }: TalentMapPro
             <MapContent searchTerm={searchTerm} selectedCategory={selectedCategory} />
             <LocateMe dir={dir} />
             {/* Heat Legend - centered on map area */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[400]">
-                <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-md border border-gray-200 px-4 py-2 flex items-center gap-2">
-                    <span className="text-[10px] font-semibold text-[#00AEEF]">
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-[400]">
+                <div className="bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-gray-200/60 px-2 sm:px-3 py-1 sm:py-1.5 flex items-center gap-1 sm:gap-2">
+                    <span className="text-[7px] sm:text-[10px] font-semibold text-[#00AEEF]">
                         {dir === 'rtl' ? 'جديد' : 'New'}
                     </span>
                     <div
-                        className="w-32 sm:w-40 h-2.5 rounded-full"
+                        className="w-14 sm:w-32 h-1.5 sm:h-2 rounded-full"
                         style={{
                             background: dir === 'rtl'
                                 ? 'linear-gradient(to left, #00AEEF, #22C55E, #F59E0B, #F97316, #EF4444)'
                                 : 'linear-gradient(to right, #00AEEF, #22C55E, #F59E0B, #F97316, #EF4444)'
                         }}
                     />
-                    <span className="text-[10px] font-semibold text-[#EF4444]">
-                        {dir === 'rtl' ? '🔥 رائج' : '🔥 Hot'}
-                    </span>
+                    <span className="text-[7px] sm:text-[10px]">🔥</span>
                 </div>
             </div>
         </MapContainer>
