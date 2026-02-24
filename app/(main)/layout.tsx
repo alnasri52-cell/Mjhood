@@ -6,6 +6,7 @@ import Footer from '@/components/layout/Footer';
 import HowItWorksModal from '@/components/guide/HowItWorksModal';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { usePathname } from 'next/navigation';
+import { Menu, X } from 'lucide-react';
 
 export default function MainLayout({
     children,
@@ -14,16 +15,52 @@ export default function MainLayout({
 }) {
     const { dir } = useLanguage();
     const [showGuide, setShowGuide] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const pathname = usePathname();
     const isMapPage = pathname === '/map';
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <div className="flex flex-1">
-                {/* Sidebar: hidden on mobile, visible on md+ */}
-                <div className="hidden md:block">
+                {/* Desktop Sidebar: hidden on mobile, visible on md+ */}
+                <div className="hidden md:block w-64">
                     <Sidebar onOpenGuide={() => setShowGuide(true)} />
                 </div>
+
+                {/* Mobile Menu Button */}
+                <button
+                    onClick={() => setMobileMenuOpen(true)}
+                    className={`fixed top-3 z-[1100] md:hidden w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-md border border-gray-200 flex items-center justify-center ${dir === 'rtl' ? 'right-3' : 'left-3'}`}
+                >
+                    <img
+                        src="/mjhood_symbol_final.png"
+                        alt="Menu"
+                        className="w-6 h-6 object-contain"
+                    />
+                </button>
+
+                {/* Mobile Sidebar Overlay */}
+                {mobileMenuOpen && (
+                    <>
+                        {/* Backdrop */}
+                        <div
+                            className="fixed inset-0 bg-black/40 z-[1200] md:hidden animate-fadeIn"
+                            onClick={() => setMobileMenuOpen(false)}
+                        />
+                        {/* Slide-in sidebar */}
+                        <div className={`fixed top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} h-screen w-64 z-[1300] md:hidden shadow-xl`}>
+                            <Sidebar onOpenGuide={() => { setShowGuide(true); setMobileMenuOpen(false); }} />
+                            {/* Close button */}
+                            <button
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={`absolute top-4 ${dir === 'rtl' ? 'left-3' : 'right-3'} w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center z-[1400]`}
+                            >
+                                <X className="w-4 h-4 text-gray-600" />
+                            </button>
+                        </div>
+                    </>
+                )}
+
                 <main className={`flex-1 flex flex-col transition-all duration-300 ${dir === 'rtl' ? 'md:mr-64' : 'md:ml-64'
                     }`}>
                     <div className="flex-1 w-full">

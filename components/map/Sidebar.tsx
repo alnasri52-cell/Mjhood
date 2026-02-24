@@ -155,21 +155,13 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
 
     return (
         <aside
-            className={`fixed top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} h-screen w-16 md:w-64 bg-white border-r border-gray-200 text-gray-900 transition-all duration-300 z-[1000] flex flex-col justify-between group overflow-hidden shadow-sm`}
+            className={`fixed top-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} h-screen w-full bg-white border-r border-gray-200 text-gray-900 transition-all duration-300 z-[1000] flex flex-col justify-between group overflow-hidden shadow-sm`}
         >
             {/* Logo Section */}
             <div className="p-4 border-b border-gray-100 flex flex-col items-center justify-center min-h-[180px]">
                 <Link href="/map" className="flex flex-col items-center justify-center w-full overflow-hidden group">
-                    {/* Collapsed State Logo (Only visible when sidebar is small/collapsed) */}
-                    <div className="w-10 h-10 min-w-[40px] flex items-center justify-center md:hidden">
-                        <img
-                            src="/mjhood_symbol_final.png"
-                            alt="Mjhood Symbol"
-                            className="w-full h-full object-contain"
-                        />
-                    </div>
 
-                    <div className="hidden md:flex flex-col items-center justify-center w-full transition-all duration-300 gap-0">
+                    <div className="flex flex-col items-center justify-center w-full transition-all duration-300 gap-0">
                         <img
                             src="/mjhood_symbol_final.png"
                             alt="Mjhood Symbol"
@@ -211,17 +203,11 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                                 }`}
                         >
                             <item.icon className={`w-5 h-5 min-w-[20px] ${isActive ? 'text-white' : 'text-gray-500 group-hover/item:text-gray-900'}`} />
-                            <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${
-                                // Hide text on mobile/collapsed, show on hover/md
-                                'opacity-0 w-0 md:opacity-100 md:w-auto'
-                                }`}>
+                            <span className="font-medium whitespace-nowrap overflow-hidden">
                                 {t(item.label as any)}
                             </span>
 
-                            {/* Tooltip for collapsed state */}
-                            <div className={`absolute ${dir === 'rtl' ? 'right-16' : 'left-16'} bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover/item:opacity-100 pointer-events-none md:hidden whitespace-nowrap z-50`}>
-                                {t(item.label as any)}
-                            </div>
+
                         </Link>
                     );
                 })}
@@ -234,7 +220,7 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                         <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold border border-indigo-200">
                             {user.email?.charAt(0).toUpperCase()}
                         </div>
-                        <div className="flex-1 min-w-0 overflow-hidden opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300">
+                        <div className="flex-1 min-w-0 overflow-hidden">
                             <p className="text-sm font-medium truncate text-gray-900">{user.email}</p>
                             <button
                                 onClick={() => setShowLogoutConfirm(true)}
@@ -248,19 +234,19 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                     <div className="space-y-2">
                         <button
                             onClick={() => openModal('login')}
-                            className="w-full flex items-center justify-center md:justify-start gap-0 md:gap-3 px-2 md:px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                            className="w-full flex items-center justify-start gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
                         >
                             <LogIn className="w-5 h-5 min-w-[20px]" />
-                            <span className="opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300 text-sm font-bold overflow-hidden whitespace-nowrap">
+                            <span className="text-sm font-bold overflow-hidden whitespace-nowrap">
                                 {t('login' as any)}
                             </span>
                         </button>
                         <button
                             onClick={() => openModal('signup')}
-                            className="w-full flex items-center justify-center md:justify-start gap-0 md:gap-3 px-2 md:px-3 py-2 rounded-lg bg-[#00AEEF] text-white hover:bg-[#0095cc] transition-all shadow-md shadow-blue-200"
+                            className="w-full flex items-center justify-start gap-3 px-3 py-2 rounded-lg bg-[#00AEEF] text-white hover:bg-[#0095cc] transition-all shadow-md shadow-blue-200"
                         >
                             <UserPlus className="w-5 h-5 min-w-[20px]" />
-                            <span className="opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300 text-sm font-bold overflow-hidden whitespace-nowrap">
+                            <span className="text-sm font-bold overflow-hidden whitespace-nowrap">
                                 {t('signup' as any)}
                             </span>
                         </button>
@@ -271,10 +257,10 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                 {onOpenGuide && (
                     <button
                         onClick={onOpenGuide}
-                        className="w-full flex items-center justify-center md:justify-start gap-0 md:gap-3 px-2 md:px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                        className="w-full flex items-center justify-start gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
                     >
                         <HelpCircle className="w-5 h-5 min-w-[20px]" />
-                        <span className="opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300 text-sm font-medium overflow-hidden whitespace-nowrap">
+                        <span className="text-sm font-medium overflow-hidden whitespace-nowrap">
                             {t('howItWorks' as any)}
                         </span>
                     </button>
@@ -283,10 +269,10 @@ export default function Sidebar({ onOpenGuide }: SidebarProps = {}) {
                 {/* Language Toggle */}
                 <button
                     onClick={toggleLanguage}
-                    className="w-full flex items-center justify-center md:justify-start gap-0 md:gap-3 px-2 md:px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                    className="w-full flex items-center justify-start gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
                 >
                     <Globe className="w-5 h-5 min-w-[20px]" />
-                    <span className="opacity-0 w-0 md:opacity-100 md:w-auto transition-all duration-300 text-sm font-medium overflow-hidden whitespace-nowrap">
+                    <span className="text-sm font-medium overflow-hidden whitespace-nowrap">
                         {language === 'en' ? 'العربية' : 'English'}
                     </span>
                 </button>
