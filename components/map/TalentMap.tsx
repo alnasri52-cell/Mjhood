@@ -114,9 +114,20 @@ const getNeedCategoryIcon = (category: LocalNeedCategory) => {
     }
 };
 
-const getNeedIcon = (category: LocalNeedCategory) => {
+// Cold-to-hot color based on net upvotes
+const getHeatColor = (upvotes: number, downvotes: number): string => {
+    const net = (upvotes || 0) - (downvotes || 0);
+    if (net >= 50) return '#EF4444'; // Red — On Fire
+    if (net >= 25) return '#F97316'; // Orange — Hot
+    if (net >= 10) return '#F59E0B'; // Amber — Popular
+    if (net >= 3) return '#22C55E';  // Green — Getting noticed
+    return '#00AEEF';                // Blue — New/Fresh
+};
+
+const getNeedIcon = (category: LocalNeedCategory, upvotes: number = 0, downvotes: number = 0) => {
+    const color = getHeatColor(upvotes, downvotes);
     const iconHtml = renderToStaticMarkup(
-        <div className="w-8 h-8 rounded-full bg-[#00AEEF] flex items-center justify-center shadow-lg border-2 border-white">
+        <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg border-2 border-white" style={{ backgroundColor: color }}>
             {getNeedCategoryIcon(category)}
         </div>
     );
@@ -346,9 +357,23 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
     const createClusterIcon = (cluster: any) => {
         const total = cluster.getChildCount();
 
+        // Calculate average heat color from child markers
+        const childMarkers = cluster.getAllChildMarkers();
+        let totalUpvotes = 0;
+        let totalDownvotes = 0;
+        childMarkers.forEach((m: any) => {
+            if (m.options?.needData) {
+                totalUpvotes += m.options.needData.upvotes || 0;
+                totalDownvotes += m.options.needData.downvotes || 0;
+            }
+        });
+        const avgUp = Math.round(totalUpvotes / Math.max(childMarkers.length, 1));
+        const avgDown = Math.round(totalDownvotes / Math.max(childMarkers.length, 1));
+        const clusterColor = getHeatColor(avgUp, avgDown);
+
         return L.divIcon({
             html: `
-                <div style="background: #00AEEF;" class="flex items-center justify-center w-full h-full rounded-full shadow-lg border-2 border-white box-border">
+                <div style="background: ${clusterColor};" class="flex items-center justify-center w-full h-full rounded-full shadow-lg border-2 border-white box-border">
                     <div class="w-[24px] h-[24px] bg-white/90 rounded-full flex items-center justify-center backdrop-blur-sm">
                         <span class="text-xs font-bold text-gray-800">${total}</span>
                     </div>
@@ -378,7 +403,7 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
                     <Marker
                         key={`need-${need.id}`}
                         position={[need.latitude, need.longitude]}
-                        icon={getNeedIcon(need.category)}
+                        icon={getNeedIcon(need.category, need.upvotes, need.downvotes)}
                     >
                         <Popup className="custom-popup-card" minWidth={280} maxWidth={280} closeButton={false} autoPan={false}>
                             <div className="relative pt-8 pb-4 px-4 text-center">
