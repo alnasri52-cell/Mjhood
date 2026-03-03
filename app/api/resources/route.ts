@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+function getSupabaseAdmin() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
+    return createClient(url, key);
+}
 
 /**
  * GET /api/resources
@@ -59,7 +63,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
     try {
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+        const supabaseAdmin = getSupabaseAdmin();
 
         // Get the user from the session
         const authHeader = request.headers.get('authorization');
@@ -149,7 +153,7 @@ export async function POST(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
     try {
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+        const supabaseAdmin = getSupabaseAdmin();
 
         // Get the user from the session
         const authHeader = request.headers.get('authorization');
@@ -216,7 +220,7 @@ export async function PATCH(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
     try {
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+        const supabaseAdmin = getSupabaseAdmin();
 
         // Get the user from the session
         const authHeader = request.headers.get('authorization');

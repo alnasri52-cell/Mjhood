@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Use admin client to bypass RLS for vote insertion and counter reads
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-init to avoid build-time crash when env vars aren't set
+function getSupabaseAdmin() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
+    return createClient(url, key);
+}
 
 /**
  * POST /api/needs/vote
@@ -18,6 +20,7 @@ const supabaseAdmin = createClient(
  */
 export async function POST(request: NextRequest) {
     try {
+        const supabaseAdmin = getSupabaseAdmin();
         const body = await request.json();
         const { needId, voteType, fingerprint } = body;
 
