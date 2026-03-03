@@ -276,16 +276,44 @@ export default function UserManagementPage() {
                                                             Change Role
                                                         </button>
                                                         <button
-                                                            onClick={() => {
-                                                                if (confirm(`Are you sure you want to ban ${user.full_name}?`)) {
-                                                                    alert('Ban User functionality coming soon');
+                                                            onClick={async () => {
+                                                                const isBanned = user.status === 'banned';
+                                                                const action = isBanned ? 'unban' : 'ban';
+                                                                const confirmMsg = isBanned
+                                                                    ? `Unban ${user.full_name}? They will be able to log in again.`
+                                                                    : `Ban ${user.full_name}? This will:\n• Hide all their needs\n• Delete all their comments\n• Prevent them from logging in`;
+                                                                if (!confirm(confirmMsg)) {
+                                                                    setOpenMenuId(null);
+                                                                    return;
+                                                                }
+                                                                try {
+                                                                    const { data: { session } } = await supabase.auth.getSession();
+                                                                    const res = await fetch('/api/admin/ban', {
+                                                                        method: 'POST',
+                                                                        headers: {
+                                                                            'Content-Type': 'application/json',
+                                                                            'Authorization': `Bearer ${session?.access_token}`,
+                                                                        },
+                                                                        body: JSON.stringify({ userId: user.id, action }),
+                                                                    });
+                                                                    const data = await res.json();
+                                                                    if (!res.ok) throw new Error(data.error);
+                                                                    setUsers(users.map(u =>
+                                                                        u.id === user.id ? { ...u, status: isBanned ? 'active' : 'banned' } : u
+                                                                    ));
+                                                                    alert(data.message);
+                                                                } catch (err: any) {
+                                                                    alert('Error: ' + err.message);
                                                                 }
                                                                 setOpenMenuId(null);
                                                             }}
-                                                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-red-600 flex items-center gap-2"
+                                                            className={`w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 ${user.status === 'banned' ? 'text-green-600' : 'text-red-600'}`}
                                                         >
-                                                            <Ban className="w-4 h-4" />
-                                                            Ban User
+                                                            {user.status === 'banned' ? (
+                                                                <><CheckCircle className="w-4 h-4" /> Unban User</>
+                                                            ) : (
+                                                                <><Ban className="w-4 h-4" /> Ban User</>
+                                                            )}
                                                         </button>
                                                     </div>
                                                 )}

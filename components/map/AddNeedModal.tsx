@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { X, LogIn, AlertTriangle, ArrowLeft, ShoppingCart, Pill, DollarSign, Trees, DoorClosed, Moon, School, Stethoscope, Dumbbell, Coffee, Bus, Mail, BookOpen, Users, HelpCircle } from 'lucide-react';
 import { supabase } from '@/lib/database/supabase';
 import { LOCAL_NEEDS_CATEGORIES, LocalNeedCategory } from '@/lib/constants';
+import { reverseGeocode } from '@/lib/geocoding';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useAuthModal } from '@/lib/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -39,6 +40,7 @@ export default function AddNeedModal({ isOpen, onClose, onSuccess }: AddNeedModa
     const [step, setStep] = useState<1 | 2>(1); // Step 1: category, Step 2: title
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState('');
+    const [customCategory, setCustomCategory] = useState('');
     const [description, setDescription] = useState('');
     const [loading, setLoading] = useState(false);
     const [user, setUser] = useState<any>(null);
@@ -101,11 +103,35 @@ export default function AddNeedModal({ isOpen, onClose, onSuccess }: AddNeedModa
         setLoading(true);
 
         try {
+            // Check for nearby duplicates using PostGIS RPC
+            try {
+                const { data: duplicates } = await supabase.rpc('check_nearby_duplicates', {
+                    check_lat: profileLat,
+                    check_lng: profileLng,
+                    check_category: category,
+                    radius_meters: 100,
+                });
+
+                if (duplicates && duplicates.length > 0) {
+                    const dup = duplicates[0];
+                    const msg = dir === 'rtl'
+                        ? `يوجد "${dup.title}" على بعد ${Math.round(dup.distance_meters)}م. هل تريد الإضافة على أي حال?`
+                        : `"${dup.title}" is ${Math.round(dup.distance_meters)}m away. Add anyway?`;
+                    if (!confirm(msg)) {
+                        setLoading(false);
+                        return;
+                    }
+                }
+            } catch {
+                // If RPC not available, skip duplicate check silently
+            }
+
             const { error } = await supabase
                 .from('local_needs')
                 .insert({
                     title: title.trim(),
                     category,
+                    custom_category: category === 'Other' ? customCategory.trim() || null : null,
                     description: description.trim() || null,
                     latitude: profileLat,
                     longitude: profileLng,
@@ -114,8 +140,23 @@ export default function AddNeedModal({ isOpen, onClose, onSuccess }: AddNeedModa
 
             if (error) throw error;
 
+            // Reverse geocode to get city/neighborhood (async, non-blocking)
+            reverseGeocode(profileLat!, profileLng!)
+                .then(({ city, neighborhood }) => {
+                    if (city || neighborhood) {
+                        supabase.from('local_needs')
+                            .update({ city, neighborhood })
+                            .eq('user_id', user.id)
+                            .order('created_at', { ascending: false })
+                            .limit(1)
+                            .then(() => { });
+                    }
+                })
+                .catch(() => { });
+
             setTitle('');
             setCategory('');
+            setCustomCategory('');
             setDescription('');
             setStep(1);
             onSuccess();
@@ -242,6 +283,23 @@ export default function AddNeedModal({ isOpen, onClose, onSuccess }: AddNeedModa
                                 })()}
                                 <span className="text-sm font-medium text-[#00AEEF]">{t(category as any)}</span>
                             </div>
+
+                            {/* Custom category input when 'Other' selected */}
+                            {category === 'Other' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                        {dir === 'rtl' ? 'ما نوع المكان؟' : 'What type of place?'}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={customCategory}
+                                        onChange={(e) => setCustomCategory(e.target.value.slice(0, 30))}
+                                        placeholder={dir === 'rtl' ? 'مثال: مطبخ سحابي' : 'e.g., Cloud Kitchen'}
+                                        maxLength={30}
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#00AEEF] focus:border-[#00AEEF] outline-none transition-all text-gray-900 placeholder:text-gray-400 text-sm"
+                                    />
+                                </div>
+                            )}
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1.5">

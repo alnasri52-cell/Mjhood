@@ -1,13 +1,16 @@
 'use client';
 
+import { generateFingerprint } from '@/lib/utils/fingerprint';
+
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import { COUNTRY_DATA } from '@/lib/constants/countryData';
 import 'leaflet/dist/leaflet.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import Link from 'next/link';
 import { supabase } from '@/lib/database/supabase';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { useAuthModal } from '@/lib/contexts/AuthContext';
 
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -32,6 +35,8 @@ interface Need {
     upvotes: number;
     downvotes: number;
     created_at: string;
+    image_urls?: string[];
+    user_id?: string;
 }
 
 interface TalentMapProps {
@@ -171,9 +176,11 @@ function MapController() {
 }
 
 import ReportModal from './ReportModal';
+import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 
 function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) {
     const { t } = useLanguage();
+    const { openModal: openAuthModal } = useAuthModal();
     const [needs, setNeeds] = useState<Need[]>([]);
     const [loading, setLoading] = useState(true);
     const map = useMap();
@@ -191,6 +198,13 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
     const handleVote = async (needId: string, type: 'up' | 'down') => {
         if (votedNeeds.has(needId)) return;
 
+        // Require authentication for voting
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+            openAuthModal();
+            return;
+        }
+
         // Optimistic update
         setNeeds(prev => prev.map(n => {
             if (n.id === needId) {
@@ -206,22 +220,47 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
         setVotedNeeds(prev => new Set(prev).add(needId));
 
         try {
-            const need = needs.find(n => n.id === needId);
-            if (!need) return;
+            // Generate fingerprint for guest vote de-duplication
+            const fingerprint = await generateFingerprint();
 
-            const updates = {
-                upvotes: type === 'up' ? (need.upvotes || 0) + 1 : need.upvotes,
-                downvotes: type === 'down' ? (need.downvotes || 0) + 1 : need.downvotes
+            // Get auth token if user is logged in
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
             };
-
-            const { error } = await supabase
-                .from('local_needs')
-                .update(updates)
-                .eq('id', needId);
-
-            if (error) {
-                console.error('Error updating vote:', error);
+            if (session?.access_token) {
+                headers['Authorization'] = `Bearer ${session.access_token}`;
             }
+
+            const res = await fetch('/api/needs/vote', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    needId,
+                    voteType: type,
+                    fingerprint,
+                }),
+            });
+
+            if (res.status === 409) {
+                // Already voted — keep the optimistic UI (votedNeeds set prevents re-voting)
+                console.log('Already voted on this need');
+                return;
+            }
+
+            if (!res.ok) {
+                console.error('Vote API error:', await res.text());
+                return;
+            }
+
+            // Update with server-confirmed counts
+            const result = await res.json();
+            setNeeds(prev => prev.map(n => {
+                if (n.id === needId) {
+                    return { ...n, upvotes: result.upvotes, downvotes: result.downvotes };
+                }
+                return n;
+            }));
         } catch (err) {
             console.error('Error in handleVote:', err);
         }
@@ -236,71 +275,93 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
         setReportModalOpen(true);
     };
 
-    const fetchNeeds = async (signal?: AbortSignal) => {
-        console.log('--- fetchNeeds: START ---');
+    const fetchNeeds = async (bounds?: { min_lng: number; min_lat: number; max_lng: number; max_lat: number }) => {
         try {
-            let query = supabase
-                .from('local_needs')
-                .select('*, profiles:user_id(service_location_lat, service_location_lng, latitude, longitude)')
-                .is('deleted_at', null)
-                .order('created_at', { ascending: false });
-
-            if (signal) query = query.abortSignal(signal);
-
-            let { data, error } = await query;
-
-            if (error) {
-                console.error('Error fetching needs:', JSON.stringify(error, null, 2));
-                setNeeds([]);
-                return;
-            }
-
-            const mappedNeeds = data?.map((need: any) => ({
-                ...need,
-                latitude: need.latitude || need.profiles?.service_location_lat || need.profiles?.latitude,
-                longitude: need.longitude || need.profiles?.service_location_lng || need.profiles?.longitude
-            })) || [];
-
-            console.log('--- fetchNeeds: Mapped Count ---', mappedNeeds.length);
-            setNeeds(mappedNeeds);
-        } catch (error: any) {
-            if (error.name === 'AbortError') {
-                console.log('--- fetchNeeds: Aborted ---');
+            // If bounds provided, use viewport API; otherwise fetch all (initial load fallback)
+            if (bounds) {
+                const params = new URLSearchParams({
+                    min_lng: bounds.min_lng.toString(),
+                    min_lat: bounds.min_lat.toString(),
+                    max_lng: bounds.max_lng.toString(),
+                    max_lat: bounds.max_lat.toString(),
+                });
+                const res = await fetch(`/api/needs/viewport?${params}`);
+                if (!res.ok) throw new Error('Viewport fetch failed');
+                const data = await res.json();
+                setNeeds(data || []);
             } else {
-                console.error('Error fetching needs:', error);
-                setNeeds([]);
+                // Fallback: fetch all (used on initial load before map bounds available)
+                const { data, error } = await supabase
+                    .from('local_needs')
+                    .select('*, profiles:user_id(service_location_lat, service_location_lng, latitude, longitude)')
+                    .is('deleted_at', null)
+                    .eq('status', 'active')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('Error fetching needs:', error);
+                    setNeeds([]);
+                    return;
+                }
+
+                const mappedNeeds = data?.map((need: any) => ({
+                    ...need,
+                    latitude: need.latitude || need.profiles?.service_location_lat || need.profiles?.latitude,
+                    longitude: need.longitude || need.profiles?.service_location_lng || need.profiles?.longitude
+                })) || [];
+                setNeeds(mappedNeeds);
             }
+        } catch (error: any) {
+            console.error('Error fetching needs:', error);
         }
     };
+
+    // Fetch needs based on viewport when map moves
+    const fetchTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleViewportChange = useCallback(() => {
+        if (!map) return;
+        const bounds = map.getBounds();
+        const viewportBounds = {
+            min_lng: bounds.getWest(),
+            min_lat: bounds.getSouth(),
+            max_lng: bounds.getEast(),
+            max_lat: bounds.getNorth(),
+        };
+
+        // Debounce: wait 300ms after last move before fetching
+        if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
+        fetchTimerRef.current = setTimeout(() => {
+            fetchNeeds(viewportBounds);
+        }, 300);
+    }, [map]);
 
     // Re-fetch data when auth state changes
     useEffect(() => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setTimeout(() => {
-                console.log('--- AuthStateChange: Triggering Refetch ---');
-                fetchNeeds();
+                handleViewportChange();
             }, 500);
         });
 
         return () => subscription.unsubscribe();
-    }, []);
+    }, [handleViewportChange]);
 
     useEffect(() => {
-        const controller = new AbortController();
-        const signal = controller.signal;
-
-        const fetchAllData = async () => {
-            console.log('--- fetchAllData: START ---');
+        // Initial fetch (all needs, before map bounds available)
+        const initialFetch = async () => {
             try {
-                await fetchNeeds(signal);
-            } catch (error) {
-                console.error('Error fetching data:', error);
+                await fetchNeeds();
             } finally {
-                if (!signal.aborted) setLoading(false);
+                setLoading(false);
             }
         };
+        initialFetch();
 
-        fetchAllData();
+        // Listen for map move events to fetch viewport-scoped data
+        if (map) {
+            map.on('moveend', handleViewportChange);
+        }
 
         // Real-time subscription for needs
         const needsChannel = supabase
@@ -313,26 +374,25 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
                     table: 'local_needs'
                 },
                 () => {
-                    fetchNeeds();
+                    handleViewportChange();
                 }
             )
             .subscribe();
 
-        // Polling fallback (every 30 seconds)
-        const intervalId = setInterval(() => {
-            fetchNeeds();
-        }, 30000);
-
         return () => {
-            console.log('--- useEffect Cleanup: Aborting Fetch ---');
-            controller.abort();
+            if (map) map.off('moveend', handleViewportChange);
             needsChannel.unsubscribe();
-            clearInterval(intervalId);
+            if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
         };
-    }, []);
+    }, [map, handleViewportChange]);
 
-    // Filter needs based on search term and category
+    const blockedIds = useBlockedUsers();
+
+    // Filter needs based on search term, category, and blocked users
     const filteredNeeds = needs.filter(need => {
+        // 0. Filter out blocked users
+        if (need.user_id && blockedIds.has(need.user_id)) return false;
+
         // 1. Filter by Category
         if (selectedCategory) {
             if (need.category !== selectedCategory) {
@@ -427,7 +487,20 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
                                     </p>
                                 )}
 
-                                {/* Voting Buttons */}
+                                {/* Image thumbnails */}
+                                {need.image_urls && need.image_urls.length > 0 && (
+                                    <div className="flex items-center justify-center gap-2 mb-4">
+                                        {need.image_urls.slice(0, 3).map((url: string, i: number) => (
+                                            <img
+                                                key={i}
+                                                src={url}
+                                                alt=""
+                                                className="w-14 h-14 rounded-lg object-cover border border-gray-200"
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
                                 <div className="flex items-center justify-center gap-6 mb-4">
                                     <button
                                         onClick={(e) => {

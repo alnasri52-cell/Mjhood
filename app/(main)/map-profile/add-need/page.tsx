@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, MapPin, CheckCircle, ShoppingCart, Pill, DollarSign, Trees, DoorClosed, Moon, School, Stethoscope, Dumbbell, Coffee, Bus, Mail, BookOpen, Users, HelpCircle, ChevronDown } from 'lucide-react';
+import { ArrowLeft, MapPin, CheckCircle, ShoppingCart, Pill, DollarSign, Trees, DoorClosed, Moon, School, Stethoscope, Dumbbell, Coffee, Bus, Mail, BookOpen, Users, HelpCircle, ChevronDown, Camera, X, ImagePlus } from 'lucide-react';
 import { LOCAL_NEEDS_CATEGORIES, LocalNeedCategory } from '@/lib/constants';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useAuthModal } from '@/lib/contexts/AuthContext';
@@ -49,6 +49,8 @@ export default function AddNeedPage() {
     const [category, setCategory] = useState<string>(LOCAL_NEEDS_CATEGORIES[0]);
     const [description, setDescription] = useState('');
     const [showDescription, setShowDescription] = useState(false);
+    const [images, setImages] = useState<File[]>([]);
+    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
     const { openModal } = useAuthModal();
 
@@ -88,6 +90,49 @@ export default function AddNeedPage() {
         checkAuth();
     }, [router]);
 
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        const remaining = 3 - images.length;
+        const newFiles = files.slice(0, remaining);
+        if (newFiles.length === 0) return;
+
+        setImages(prev => [...prev, ...newFiles]);
+        newFiles.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                setImagePreviews(prev => [...prev, ev.target?.result as string]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const removeImage = (index: number) => {
+        setImages(prev => prev.filter((_, i) => i !== index));
+        setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const uploadImages = async (needId: string): Promise<string[]> => {
+        const urls: string[] = [];
+        for (let i = 0; i < images.length; i++) {
+            const file = images[i];
+            const ext = file.name.split('.').pop() || 'jpg';
+            const path = `${user.id}/${needId}/${i}.${ext}`;
+
+            const { error } = await supabase.storage
+                .from('need-images')
+                .upload(path, file, { upsert: true });
+
+            if (error) throw error;
+
+            const { data: urlData } = supabase.storage
+                .from('need-images')
+                .getPublicUrl(path);
+
+            urls.push(urlData.publicUrl);
+        }
+        return urls;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -96,7 +141,8 @@ export default function AddNeedPage() {
 
         setSaving(true);
         try {
-            const { error } = await supabase
+            // Insert need first to get ID
+            const { data: needData, error } = await supabase
                 .from('local_needs')
                 .insert({
                     user_id: user.id,
@@ -105,9 +151,20 @@ export default function AddNeedPage() {
                     description: description.trim() || null,
                     latitude: selectedLocation.lat,
                     longitude: selectedLocation.lng,
-                });
+                })
+                .select('id')
+                .single();
 
             if (error) throw error;
+
+            // Upload images if any
+            if (images.length > 0 && needData) {
+                const imageUrls = await uploadImages(needData.id);
+                await supabase
+                    .from('local_needs')
+                    .update({ image_urls: imageUrls })
+                    .eq('id', needData.id);
+            }
 
             // Show success toast
             setShowSuccess(true);
@@ -257,6 +314,50 @@ export default function AddNeedPage() {
                                 />
                             </div>
                         )}
+                    </div>
+
+                    {/* 4. Photos — optional */}
+                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Camera className="w-4 h-4 text-[#00AEEF]" />
+                            <span className="text-sm font-semibold text-gray-900">
+                                {dir === 'rtl' ? 'صور (اختياري)' : 'Photos (optional)'}
+                            </span>
+                            <span className="text-xs text-gray-400 ml-auto">
+                                {images.length}/3
+                            </span>
+                        </div>
+
+                        <div className="flex gap-3 flex-wrap">
+                            {imagePreviews.map((src, i) => (
+                                <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200">
+                                    <img src={src} alt="" className="w-full h-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeImage(i)}
+                                        className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center"
+                                    >
+                                        <X className="w-3 h-3 text-white" />
+                                    </button>
+                                </div>
+                            ))}
+
+                            {images.length < 3 && (
+                                <label className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-[#00AEEF] hover:bg-[#00AEEF]/5 transition">
+                                    <ImagePlus className="w-6 h-6 text-gray-400" />
+                                    <span className="text-[10px] text-gray-400 mt-1">
+                                        {dir === 'rtl' ? 'إضافة' : 'Add'}
+                                    </span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        className="hidden"
+                                        onChange={handleImageSelect}
+                                    />
+                                </label>
+                            )}
+                        </div>
                     </div>
 
                     {/* Submit Button — full width, prominent */}

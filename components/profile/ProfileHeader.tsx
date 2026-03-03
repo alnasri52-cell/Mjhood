@@ -126,14 +126,7 @@ export default function ProfileHeader({
 
                     {isOwner ? (
                         <EditProfileButton profileId={id} />
-                    ) : (
-                        <Link
-                            href={`/messages/${id}`}
-                            className="block w-full md:w-auto text-center bg-black text-white px-6 py-2.5 rounded-lg font-medium hover:bg-gray-800 transition shadow-lg"
-                        >
-                            {t('message')}
-                        </Link>
-                    )}
+                    ) : null /* Message button hidden — future paid feature */}
                 </div>
             </div>
         </div>

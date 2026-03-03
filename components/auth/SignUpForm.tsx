@@ -23,6 +23,7 @@ export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormPro
     const [role, setRole] = useState<'client' | 'talent'>('client');
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -165,9 +166,30 @@ export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormPro
                     />
                 </div>
 
+                {/* Terms & Privacy Checkbox */}
+                <div className="flex items-start gap-3">
+                    <input
+                        type="checkbox"
+                        id="terms-checkbox"
+                        checked={agreedToTerms}
+                        onChange={(e) => setAgreedToTerms(e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <label htmlFor="terms-checkbox" className="text-sm text-gray-600 cursor-pointer">
+                        {t('agreeToTerms' as any) || 'I agree to the '}
+                        <a href="/terms" target="_blank" className="text-blue-600 hover:underline font-medium">
+                            {t('termsOfService' as any) || 'Terms of Service'}
+                        </a>
+                        {' '}{t('and' as any) || 'and'}{' '}
+                        <a href="/privacy" target="_blank" className="text-blue-600 hover:underline font-medium">
+                            {t('privacyPolicy' as any) || 'Privacy Policy'}
+                        </a>
+                    </label>
+                </div>
+
                 <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || !agreedToTerms}
                     className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 >
                     {loading ? t('creatingAccount' as any) : t('createAccountButton' as any)}

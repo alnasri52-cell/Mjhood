@@ -16,7 +16,8 @@ import {
     User,
     Briefcase,
     Shield,
-    MessageSquare
+    MessageSquare,
+    Camera
 } from 'lucide-react';
 import { supabase } from '@/lib/database/supabase';
 import { useRouter } from 'next/navigation';
@@ -40,6 +41,7 @@ export default function AdminSidebar({
         { icon: Briefcase, label: 'Services', href: '/admin/services', permission: 'services' },
         { icon: MessageSquare, label: 'Needs', href: '/admin/needs', permission: 'needs' },
         { icon: ShieldAlert, label: 'Trust & Safety', href: '/admin/trust', permission: 'trust' },
+        { icon: Camera, label: 'Fulfillment Queue', href: '/admin/fulfillments', permission: null },
         { icon: Users, label: 'Team', href: '/admin/admins', permission: null }, // Always show for admins/moderators
         { icon: BarChart3, label: 'Investor Data', href: '/admin/investor', permission: null },
         { icon: Activity, label: 'System Health', href: '/admin/system', permission: null },

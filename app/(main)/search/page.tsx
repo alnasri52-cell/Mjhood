@@ -38,7 +38,7 @@ export default function AdvancedSearchPage() {
         setHasSearched(true);
         setResults([]);
         try {
-            let query = supabase.from('local_needs').select('*').is('deleted_at', null);
+            let query = supabase.from('local_needs').select('*').is('deleted_at', null).eq('status', 'active');
             if (selectedCategory) query = query.eq('category', selectedCategory);
 
             const { data, error } = await query;

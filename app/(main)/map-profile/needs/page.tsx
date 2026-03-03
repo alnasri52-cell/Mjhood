@@ -42,6 +42,7 @@ export default function MyNeedsPage() {
                 .select('*')
                 .eq('user_id', authUser.id)
                 .is('deleted_at', null)
+                .in('status', ['active', 'fulfilled'])
                 .order('created_at', { ascending: false });
 
             if (error) {
@@ -63,11 +64,11 @@ export default function MyNeedsPage() {
         setModalType('confirm');
         setPendingAction(() => async () => {
             try {
-                // Here we would insert into a deletion_requests table
-                // For now, we'll simulate success
-                // const { error } = await supabase.from('deletion_requests').insert({ need_id: id, user_id: user.id });
+                const { error } = await supabase
+                    .from('deletion_requests')
+                    .insert({ need_id: id, user_id: user.id });
 
-                // if (error) throw error;
+                if (error) throw error;
 
                 setModalMessage(t('deleteRequestSubmitted' as any) || 'Deletion request submitted successfully.');
                 setModalType('success');

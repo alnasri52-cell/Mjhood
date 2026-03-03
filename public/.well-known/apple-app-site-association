@@ -1,0 +1,14 @@
+{
+    "applinks": {
+        "apps": [],
+        "details": [
+            {
+                "appID": "Z577D782LQ.com.mjhood.app",
+                "paths": ["/need/*"]
+            }
+        ]
+    },
+    "webcredentials": {
+        "apps": ["Z577D782LQ.com.mjhood.app"]
+    }
+}

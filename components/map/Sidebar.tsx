@@ -132,7 +132,7 @@ export default function Sidebar({ onOpenGuide, onClose }: SidebarProps = {}) {
     const navItems = [
         { icon: Home, label: 'home', href: '/' },
         { icon: Search, label: 'advancedSearch', href: '/search' },
-        { icon: MessageSquare, label: 'messages', href: '/messages', authRequired: true },
+        // { icon: MessageSquare, label: 'messages', href: '/messages', authRequired: true }, // Hidden — future paid feature
         { icon: User, label: 'profile', href: `/profile/${user?.id}`, authRequired: true },
         { icon: LayoutDashboard, label: 'Admin Portal', href: '/admin', authRequired: true, role: 'admin' },
     ];
