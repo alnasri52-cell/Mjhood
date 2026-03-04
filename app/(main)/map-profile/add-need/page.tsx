@@ -157,14 +157,33 @@ export default function AddNeedPage() {
 
             if (error) throw error;
 
+            // Geocode + upload images in parallel
+            const tasks: Promise<any>[] = [];
+
+            // Reverse geocode to get city/neighborhood
+            tasks.push(
+                import('@/lib/geocoding').then(({ reverseGeocode }) =>
+                    reverseGeocode(selectedLocation.lat, selectedLocation.lng)
+                ).then(geo => {
+                    if (geo.city || geo.neighborhood) {
+                        return supabase
+                            .from('local_needs')
+                            .update({ city: geo.city, neighborhood: geo.neighborhood })
+                            .eq('id', needData.id);
+                    }
+                }).catch(err => console.warn('Geocoding skipped:', err))
+            );
+
             // Upload images if any
             if (images.length > 0 && needData) {
-                const imageUrls = await uploadImages(needData.id);
-                await supabase
-                    .from('local_needs')
-                    .update({ image_urls: imageUrls })
-                    .eq('id', needData.id);
+                tasks.push(
+                    uploadImages(needData.id).then(imageUrls =>
+                        supabase.from('local_needs').update({ image_urls: imageUrls }).eq('id', needData.id)
+                    )
+                );
             }
+
+            await Promise.all(tasks);
 
             // Show success toast
             setShowSuccess(true);
