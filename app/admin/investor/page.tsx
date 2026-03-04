@@ -5,6 +5,7 @@ import { Download, Map as MapIcon, FileText, Filter, Calendar, TrendingUp } from
 import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
 import { supabase } from '@/lib/database/supabase';
+import { useToast } from '@/components/admin/AdminToast';
 
 const MapContainer = dynamic(
     () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -33,6 +34,7 @@ export default function InvestorDataPage() {
     const [reportData, setReportData] = useState<ReportData | null>(null);
     const [heatmapData, setHeatmapData] = useState<{ lat: number; lng: number; intensity: number }[]>([]);
     const [velocityData, setVelocityData] = useState<any[]>([]);
+    const { toast } = useToast();
 
     useEffect(() => {
         const fetchHeatmapPoints = async () => {
@@ -235,7 +237,7 @@ export default function InvestorDataPage() {
             setReportData(data);
         } catch (error) {
             console.error('Error generating report:', error);
-            alert('Failed to generate report');
+            toast('Failed to generate report', 'error');
         } finally {
             setGenerating(false);
         }

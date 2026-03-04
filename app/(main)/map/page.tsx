@@ -9,7 +9,7 @@ import MapHeader from '@/components/map/MapHeader';
 import { LOCAL_NEEDS_CATEGORIES } from '@/lib/constants';
 
 // Dynamically import map components to avoid SSR issues with Leaflet
-const TalentMap = dynamic(() => import('@/components/map/TalentMap'), {
+const NeedsMap = dynamic(() => import('@/components/map/NeedsMap'), {
     ssr: false,
     loading: () => <div className="h-screen w-full bg-gray-100 animate-pulse" />
 });
@@ -32,7 +32,7 @@ export default function MapPage() {
             />
 
             {/* Map Component */}
-            <TalentMap
+            <NeedsMap
                 searchTerm={searchTerm}
                 selectedCategory={selectedCategory}
             />

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import { Search, Filter, MoreVertical, Shield, Ban, CheckCircle } from 'lucide-react';
+import { useToast } from '@/components/admin/AdminToast';
 
 interface UserProfile {
     id: string;
@@ -27,6 +28,7 @@ export default function UserManagementPage() {
     const [newRole, setNewRole] = useState<string>('');
     const [updating, setUpdating] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const { toast } = useToast();
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -123,10 +125,10 @@ export default function UserManagementPage() {
 
             setRoleChangeUser(null);
             setNewRole('');
-            alert(`Successfully changed ${roleChangeUser.full_name}'s role to ${newRole}`);
+            toast(`Successfully changed ${roleChangeUser.full_name}'s role to ${newRole}`, 'success');
         } catch (error: any) {
             console.error('Error updating role:', error);
-            alert('Failed to update role: ' + error.message);
+            toast('Failed to update role: ' + error.message, 'error');
         } finally {
             setUpdating(false);
         }
@@ -300,9 +302,9 @@ export default function UserManagementPage() {
                                                                     setUsers(users.map(u =>
                                                                         u.id === user.id ? { ...u, status: isBanned ? 'active' : 'banned' } : u
                                                                     ));
-                                                                    alert(data.message);
+                                                                    toast(data.message, 'success');
                                                                 } catch (err: any) {
-                                                                    alert('Error: ' + err.message);
+                                                                    toast('Error: ' + err.message, 'error');
                                                                 }
                                                                 setOpenMenuId(null);
                                                             }}

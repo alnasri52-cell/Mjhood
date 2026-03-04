@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Flag, AlertTriangle, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/database/supabase';
 import ReportActionModal from '@/components/admin/ReportActionModal';
+import { useToast } from '@/components/admin/AdminToast';
 
 interface FlaggedItem {
     id: string;
@@ -32,6 +33,7 @@ export default function TrustSafetyPage() {
     // Deleted Items State
     const [deletedItems, setDeletedItems] = useState<any[]>([]);
     const [deletedCount, setDeletedCount] = useState(0);
+    const { toast } = useToast();
 
     // Derived Sorted & Filtered Flags
     const filteredFlags = flags.filter(flag => {
@@ -141,7 +143,7 @@ export default function TrustSafetyPage() {
             .eq('id', item.id);
 
         if (error) {
-            alert('Failed to restore item: ' + error.message);
+            toast('Failed to restore item: ' + error.message, 'error');
         } else {
             fetchDeletedItems(); // Refresh list
         }

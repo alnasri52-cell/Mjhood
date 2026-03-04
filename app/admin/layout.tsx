@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/database/supabase';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { ToastProvider } from '@/components/admin/AdminToast';
 
 export default function AdminLayout({
     children,
@@ -147,11 +148,13 @@ export default function AdminLayout({
     }
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <AdminSidebar userRole={userRole} userPermissions={userPermissions} />
-            <main className="ml-64 p-8">
-                {children}
-            </main>
-        </div>
+        <ToastProvider>
+            <div className="min-h-screen bg-gray-100">
+                <AdminSidebar userRole={userRole} userPermissions={userPermissions} />
+                <main className="ml-64 p-8">
+                    {children}
+                </main>
+            </div>
+        </ToastProvider>
     );
 }

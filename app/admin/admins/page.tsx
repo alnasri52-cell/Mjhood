@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Shield, UserPlus, Trash2, Check, X, Search, MoreVertical } from 'lucide-react';
 import { supabase } from '@/lib/database/supabase';
+import { useToast } from '@/components/admin/AdminToast';
 
 type AdminUser = {
     id: string;
@@ -21,6 +22,7 @@ export default function AdminManagementPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [newAdminEmail, setNewAdminEmail] = useState('');
     const [adding, setAdding] = useState(false);
+    const { toast } = useToast();
 
     useEffect(() => {
         fetchAdmins();
@@ -89,7 +91,7 @@ export default function AdminManagementPage() {
                 .single();
 
             if (searchError || !user) { // Use searchError here
-                alert('User not found. Please ensure the user has a profile and the email is correct.');
+                toast('User not found. Please ensure the user has a profile and the email is correct.', 'error');
                 setAdding(false);
                 return; // Added return here
             }
@@ -110,11 +112,11 @@ export default function AdminManagementPage() {
             setShowAddModal(false);
             setNewAdminEmail('');
             fetchAdmins();
-            alert('Admin added successfully!');
+            toast('Admin added successfully!', 'success');
 
         } catch (error) {
             console.error('Error adding admin:', error);
-            alert('Failed to add admin.');
+            toast('Failed to add admin.', 'error');
         } finally {
             setAdding(false);
         }
@@ -138,7 +140,7 @@ export default function AdminManagementPage() {
             fetchAdmins();
         } catch (error) {
             console.error('Error removing admin:', error);
-            alert('Failed to remove admin.');
+            toast('Failed to remove admin.', 'error');
         }
     };
 
@@ -155,14 +157,14 @@ export default function AdminManagementPage() {
 
             if (!response.ok || result.error) {
                 console.error('Error updating role:', result.error);
-                alert('Failed to update role: ' + (result.error || 'Unknown error'));
+                toast('Failed to update role: ' + (result.error || 'Unknown error'), 'error');
                 return;
             }
 
             await fetchAdmins();
         } catch (error) {
             console.error('Error updating role:', error);
-            alert('Failed to update role');
+            toast('Failed to update role', 'error');
         }
     };
 
@@ -189,7 +191,7 @@ export default function AdminManagementPage() {
 
             if (!response.ok || result.error) {
                 console.error('Error updating permissions:', result.error);
-                alert('Failed to update permissions: ' + (result.error || 'Unknown error'));
+                toast('Failed to update permissions: ' + (result.error || 'Unknown error'), 'error');
                 return;
             }
 
@@ -199,7 +201,7 @@ export default function AdminManagementPage() {
             ));
         } catch (error) {
             console.error('Error updating permissions:', error);
-            alert('Failed to update permissions');
+            toast('Failed to update permissions', 'error');
         }
     };
 

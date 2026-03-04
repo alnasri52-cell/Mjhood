@@ -39,7 +39,7 @@ interface Need {
     user_id?: string;
 }
 
-interface TalentMapProps {
+interface NeedsMapProps {
     searchTerm?: string;
     selectedCategory?: string;
 }
@@ -181,7 +181,7 @@ function MapController() {
 import ReportModal from './ReportModal';
 import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 
-function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) {
+function MapContent({ searchTerm = '', selectedCategory = '' }: NeedsMapProps) {
     const { t } = useLanguage();
     const { openModal: openAuthModal } = useAuthModal();
     const [needs, setNeeds] = useState<Need[]>([]);
@@ -593,7 +593,7 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: TalentMapProps) 
     );
 }
 
-export default function TalentMap({ searchTerm, selectedCategory }: TalentMapProps) {
+export default function NeedsMap({ searchTerm, selectedCategory }: NeedsMapProps) {
     const { dir } = useLanguage();
     const [isMounted, setIsMounted] = useState(false);
     const searchParams = useSearchParams();

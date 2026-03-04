@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import { Trash2, RefreshCw, AlertTriangle, Search } from 'lucide-react';
+import { useToast } from '@/components/admin/AdminToast';
 
 interface DeletedItem {
     id: string;
@@ -17,6 +18,7 @@ export default function TrashPage() {
     const [items, setItems] = useState<DeletedItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const { toast } = useToast();
 
     const fetchDeletedItems = async () => {
         setLoading(true);
@@ -59,7 +61,7 @@ export default function TrashPage() {
             .eq('id', item.id);
 
         if (error) {
-            alert('Failed to restore item: ' + error.message);
+            toast('Failed to restore item: ' + error.message, 'error');
         } else {
             // Remove from local state
             setItems(prev => prev.filter(i => i.id !== item.id));
@@ -76,7 +78,7 @@ export default function TrashPage() {
             .eq('id', item.id);
 
         if (error) {
-            alert('Failed to delete item: ' + error.message);
+            toast('Failed to delete item: ' + error.message, 'error');
         } else {
             setItems(prev => prev.filter(i => i.id !== item.id));
         }

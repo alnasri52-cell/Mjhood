@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Image as ImageIcon, MapPin, Clock, User, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/lib/database/supabase';
+import { useToast } from '@/components/admin/AdminToast';
 
 interface Submission {
     id: string;
@@ -27,6 +28,7 @@ export default function AdminFulfillmentsPage() {
     const [groups, setGroups] = useState<NeedGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'pending' | 'all'>('pending');
+    const { toast } = useToast();
 
     useEffect(() => {
         fetchSubmissions();
@@ -114,7 +116,7 @@ export default function AdminFulfillmentsPage() {
 
             fetchSubmissions();
         } catch (err: any) {
-            alert('Error: ' + err.message);
+            toast('Error: ' + err.message, 'error');
         }
     };
 
@@ -142,10 +144,10 @@ export default function AdminFulfillmentsPage() {
                 })
                 .eq('id', needId);
 
-            alert('Need marked as fulfilled!');
+            toast('Need marked as fulfilled!', 'success');
             fetchSubmissions();
         } catch (err: any) {
-            alert('Error: ' + err.message);
+            toast('Error: ' + err.message, 'error');
         }
     };
 
@@ -168,8 +170,8 @@ export default function AdminFulfillmentsPage() {
                     <button
                         onClick={() => setFilter('pending')}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'pending'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                     >
                         Pending Only
@@ -177,8 +179,8 @@ export default function AdminFulfillmentsPage() {
                     <button
                         onClick={() => setFilter('all')}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'all'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                     >
                         All
@@ -246,8 +248,8 @@ export default function AdminFulfillmentsPage() {
                                                     <User className="w-4 h-4 text-gray-400" />
                                                     <span className="text-sm font-medium text-gray-700">{sub.submitter_name}</span>
                                                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sub.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                                                            sub.status === 'approved' ? 'bg-green-100 text-green-700' :
-                                                                'bg-red-100 text-red-700'
+                                                        sub.status === 'approved' ? 'bg-green-100 text-green-700' :
+                                                            'bg-red-100 text-red-700'
                                                         }`}>
                                                         {sub.status}
                                                     </span>
