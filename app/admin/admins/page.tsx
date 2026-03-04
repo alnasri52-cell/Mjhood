@@ -10,7 +10,6 @@ type AdminUser = {
     full_name: string;
     email: string;
     role: 'admin' | 'moderator' | 'user';
-    created_at: string;
     last_sign_in_at?: string;
     permissions?: string[];
 };
@@ -48,8 +47,7 @@ export default function AdminManagementPage() {
                 const adminsWithEmail = profiles.map(p => ({
                     ...p,
                     email: emailMap[p.id] || p.contact_email || 'No email',
-                    created_at: new Date().toISOString(), // Mock value since column doesn't exist
-                    permissions: p.permissions || [] // Use actual permissions from DB
+                    permissions: p.permissions || []
                 }));
                 setAdmins(adminsWithEmail as AdminUser[]);
             } catch (err) {
@@ -58,8 +56,7 @@ export default function AdminManagementPage() {
                 const adminsWithEmail = profiles.map(p => ({
                     ...p,
                     email: p.contact_email || 'No email',
-                    created_at: new Date().toISOString(), // Mock value since column doesn't exist
-                    permissions: p.permissions || [] // Use actual permissions from DB
+                    permissions: p.permissions || []
                 }));
                 setAdmins(adminsWithEmail as AdminUser[]);
             }

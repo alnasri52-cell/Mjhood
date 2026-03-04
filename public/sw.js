@@ -1,5 +1,5 @@
 // Service Worker for Mjhood PWA
-const CACHE_NAME = 'mjhood-v3'; // Increment version to force update
+const CACHE_NAME = 'mjhood-v4'; // Bumped for launch
 const urlsToCache = [
     '/manifest.json',
     '/icons/icon-192x192.png',
