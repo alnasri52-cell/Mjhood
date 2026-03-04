@@ -102,20 +102,23 @@ function LocateMe({ dir }: { dir: string }) {
 const getNeedCategoryIcon = (category: LocalNeedCategory) => {
     const props = { className: "w-4 h-4 text-white" };
     switch (category) {
+        case "Mosque": return <Moon {...props} />;
+        case "Cafe": return <Coffee {...props} />;
+        case "Restaurant": return <Coffee {...props} />;
+        case "Bakery": return <Coffee {...props} />;
         case "Grocery Store": return <ShoppingCart {...props} />;
+        case "Mall": return <ShoppingCart {...props} />;
         case "Pharmacy": return <Pill {...props} />;
-        case "ATM / Bank": return <DollarSign {...props} />;
-        case "Park / Green Space": return <Trees {...props} />;
+        case "Medical Center": return <Stethoscope {...props} />;
+        case "Gym": return <Dumbbell {...props} />;
+        case "Private School": return <School {...props} />;
+        case "Park": return <Trees {...props} />;
+        case "ATM / Bank Branch": return <DollarSign {...props} />;
         case "Public Restroom": return <DoorClosed {...props} />;
-        case "Mosque / Place of Worship": return <Moon {...props} />;
-        case "School / Kindergarten": return <School {...props} />;
-        case "Hospital / Clinic": return <Stethoscope {...props} />;
-        case "Gym / Fitness Center": return <Dumbbell {...props} />;
-        case "Cafe / Restaurant": return <Coffee {...props} />;
-        case "Public Transport Stop": return <Bus {...props} />;
-        case "Post Office": return <Mail {...props} />;
-        case "Library": return <BookOpen {...props} />;
-        case "Community Center": return <Users {...props} />;
+        case "Gas Station": return <Bus {...props} />;
+        case "EV Charging": return <Bus {...props} />;
+        case "Co-working Space": return <BookOpen {...props} />;
+        case "Sports Venue": return <Dumbbell {...props} />;
         default: return <HelpCircle {...props} />;
     }
 };

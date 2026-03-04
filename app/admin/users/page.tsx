@@ -46,16 +46,10 @@ export default function UserManagementPage() {
                 const response = await fetch('/api/admin/users');
                 const { emailMap } = await response.json();
 
-                console.log('Email map from API:', emailMap);
 
                 // Use real email from auth or contact_email field
                 const enrichedUsers = profiles.map((profile: any) => {
                     const authEmail = emailMap[profile.id];
-                    console.log(`Profile ${profile.full_name}:`, {
-                        profileId: profile.id,
-                        authEmail,
-                        contactEmail: profile.contact_email
-                    });
                     return {
                         ...profile,
                         email: authEmail || profile.contact_email || 'No email',

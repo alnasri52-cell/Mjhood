@@ -69,7 +69,6 @@ export default function AdminLayout({
                     setUserPermissions(profileWithPerms?.permissions || []);
                 } catch (err) {
                     // Permissions column doesn't exist yet, that's okay
-                    console.log('Permissions column not found, using empty permissions');
                     setUserPermissions([]);
                 }
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User, LogOut, MapPin, Briefcase } from 'lucide-react';
+import { User, LogOut, MapPin } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 
 export default function UserMenu() {
@@ -99,7 +99,7 @@ export default function UserMenu() {
                         onClick={() => setIsOpen(false)}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mr-3 text-gray-400"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg>
-                        My Services
+                        My Needs
                     </Link>
                     <Link
                         href={`/profile/${user.id}`}
@@ -109,17 +109,6 @@ export default function UserMenu() {
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mr-3 text-gray-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         My Profile
                     </Link>
-
-                    {role !== 'talent' && (
-                        <Link
-                            href="/become-seller"
-                            className="flex items-center px-4 py-3 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 transition font-medium"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            <Briefcase className="w-4 h-4 mr-3 text-blue-600" />
-                            Become a Seller
-                        </Link>
-                    )}
 
                     <button
                         onClick={() => {

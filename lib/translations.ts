@@ -186,6 +186,7 @@ export const translations = {
         termsOfService: 'Terms of Service',
         contactUs: 'Contact Us',
         allRightsReserved: 'All rights reserved.',
+        legal: 'Legal',
         footerDescription: 'Connecting efforts with opportunities in your neighborhood.',
         noResultsInArea: 'No services found in this area. Try moving the map.',
 
@@ -629,6 +630,7 @@ export const translations = {
         termsOfService: 'شروط الخدمة',
         contactUs: 'اتصل بنا',
         allRightsReserved: 'جميع الحقوق محفوظة.',
+        legal: 'قانوني',
         footerDescription: 'ربط الجهود بالفرص في حيك.',
         noResultsInArea: 'لا توجد خدمات في هذه المنطقة. حاول تحريك الخريطة.',
 

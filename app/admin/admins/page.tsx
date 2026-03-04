@@ -35,10 +35,6 @@ export default function AdminManagementPage() {
             .select('id, full_name, role, contact_email, phone, permissions')
             .in('role', ['admin', 'moderator']);
 
-        console.log('Fetching admins/moderators...');
-        console.log('Error:', error);
-        console.log('Profiles data:', profiles);
-        console.log('Number of profiles:', profiles?.length);
 
         if (profiles) {
             // Fetch emails from auth system via API
@@ -147,7 +143,6 @@ export default function AdminManagementPage() {
     };
 
     const handleUpdateRole = async (id: string, newRole: 'admin' | 'moderator') => {
-        console.log('Updating role for user:', id, 'to:', newRole);
 
         try {
             const response = await fetch('/api/admin/update-role', {
@@ -157,7 +152,6 @@ export default function AdminManagementPage() {
             });
 
             const result = await response.json();
-            console.log('Update result:', result);
 
             if (!response.ok || result.error) {
                 console.error('Error updating role:', result.error);
@@ -165,7 +159,6 @@ export default function AdminManagementPage() {
                 return;
             }
 
-            console.log('Role updated successfully, refetching admins...');
             await fetchAdmins();
         } catch (error) {
             console.error('Error updating role:', error);

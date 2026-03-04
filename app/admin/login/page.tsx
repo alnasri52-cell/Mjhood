@@ -36,7 +36,6 @@ export default function AdminLoginPage() {
                 .eq('id', user.id)
                 .single();
 
-            console.log('Profile check:', { profile, profileError, userId: user.id });
 
             if (profileError) throw profileError;
 

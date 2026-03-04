@@ -41,7 +41,6 @@ export default function NeedsPage() {
             }
 
             if (!needsData || needsData.length === 0) {
-                console.log('No needs found in database');
                 setNeeds([]);
                 setLoading(false);
                 return;
@@ -68,11 +67,9 @@ export default function NeedsPage() {
                     profiles: need.user_id ? profilesMap.get(need.user_id) : null
                 }));
 
-                console.log('Successfully fetched needs:', needsWithProfiles);
                 setNeeds(needsWithProfiles);
             } else {
                 // No user IDs, just use needs as-is
-                console.log('Successfully fetched needs (no profiles):', needsData);
                 setNeeds(needsData);
             }
 
