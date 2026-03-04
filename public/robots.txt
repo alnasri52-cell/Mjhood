@@ -1,0 +1,11 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://mjhood.com/sitemap.xml
+
+# Disallow admin routes
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/

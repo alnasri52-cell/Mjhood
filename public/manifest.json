@@ -1,7 +1,7 @@
 {
     "name": "Mjhood",
     "short_name": "Mjhood",
-    "description": "Connecting talents with opportunities in your neighborhood",
+    "description": "Map your community needs and make your neighborhood better",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#0F172A",
