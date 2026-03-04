@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
 
             if (profile?.role !== 'admin' && profile?.role !== 'moderator') {
                 await supabase.auth.signOut();
-                throw new Error(`Unauthorized access. Admin privileges required. Current role: ${profile?.role || 'none'}`);
+                throw new Error('Invalid credentials. Please check your email and password.');
             }
 
             router.push('/admin');
