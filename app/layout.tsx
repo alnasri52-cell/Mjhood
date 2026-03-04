@@ -46,6 +46,8 @@ export const viewport: Viewport = {
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 import { AuthModalProvider } from "@/lib/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
+import CookieConsent from "@/components/ui/CookieConsent";
+import { Analytics } from "@vercel/analytics/next";
 
 export default function RootLayout({
   children,
@@ -61,8 +63,10 @@ export default function RootLayout({
           <AuthModalProvider>
             {children}
             <AuthModal />
+            <CookieConsent />
           </AuthModalProvider>
         </LanguageProvider>
+        <Analytics />
 
         {/* Service Worker Registration */}
         <script dangerouslySetInnerHTML={{

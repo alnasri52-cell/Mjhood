@@ -9,12 +9,51 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+// Simple in-memory rate limiter (resets on deploy)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 3;          // max requests
+const RATE_WINDOW = 60 * 1000; // per minute
+
+function isRateLimited(ip: string): boolean {
+    const now = Date.now();
+    const entry = rateLimitMap.get(ip);
+
+    if (!entry || now > entry.resetTime) {
+        rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_WINDOW });
+        return false;
+    }
+
+    if (entry.count >= RATE_LIMIT) {
+        return true;
+    }
+
+    entry.count++;
+    return false;
+}
+
 export async function POST(req: NextRequest) {
     try {
+        // Rate limit by IP
+        const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+            || req.headers.get('x-real-ip')
+            || 'unknown';
+
+        if (isRateLimited(ip)) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please wait a minute before trying again.' },
+                { status: 429 }
+            );
+        }
+
         const { name, email, message } = await req.json();
 
         if (!name || !email || !message) {
             return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+        }
+
+        // Basic input sanitization
+        if (name.length > 200 || email.length > 200 || message.length > 5000) {
+            return NextResponse.json({ error: 'Input too long' }, { status: 400 });
         }
 
         await transporter.sendMail({
