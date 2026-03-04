@@ -1,275 +1,285 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, MapPin, ThumbsUp, UserPlus, TrendingUp, MessageSquare, Zap } from 'lucide-react';
 import { supabase } from '@/lib/database/supabase';
+import {
+    Users, MapPin, ThumbsUp, AlertTriangle, TrendingUp,
+    ArrowUpRight, ArrowDownRight, Clock, Zap
+} from 'lucide-react';
+import {
+    BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+    PieChart, Pie,
+} from 'recharts';
 
 interface DashboardStats {
     totalUsers: number;
-    totalNeeds: number;
+    activeNeeds: number;
     totalVotes: number;
-    totalComments: number;
+    pendingReports: number;
     usersToday: number;
-    usersThisWeek: number;
     needsToday: number;
-    needsThisWeek: number;
-    recentUsers: any[];
-    recentNeeds: any[];
-    topCategories: { category: string; count: number }[];
-    trendingNeeds: { id: string; title: string; category: string; upvotes: number; velocity: string }[];
+    votesToday: number;
+    categoryBreakdown: { name: string; count: number }[];
+    trendingNeeds: { id: string; title: string; category: string; upvotes: number; created_at: string }[];
+    otherEntries: { title: string; category: string; created_at: string }[];
+    recentActivity: { type: string; text: string; time: string }[];
 }
 
+const CHART_COLORS = ['#3b82f6', '#06b6d4', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#ec4899', '#14b8a6', '#f97316', '#6366f1'];
+
 export default function AdminDashboard() {
-    const [stats, setStats] = useState<DashboardStats>({
-        totalUsers: 0,
-        totalNeeds: 0,
-        totalVotes: 0,
-        totalComments: 0,
-        usersToday: 0,
-        usersThisWeek: 0,
-        needsToday: 0,
-        needsThisWeek: 0,
-        recentUsers: [],
-        recentNeeds: [],
-        topCategories: [],
-        trendingNeeds: [],
-    });
+    const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const now = new Date();
-                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-                const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-                // Parallel fetch all stats
-                const [
-                    { count: totalUsers },
-                    { count: totalNeeds },
-                    { count: totalVotes },
-                    { count: totalComments },
-                    { count: usersToday },
-                    { count: usersThisWeek },
-                    { count: needsToday },
-                    { count: needsThisWeek },
-                    { data: recentUsers },
-                    { data: recentNeeds },
-                    { data: allNeeds },
-                    { data: velocityNeeds },
-                ] = await Promise.all([
-                    supabase.from('profiles').select('*', { count: 'exact', head: true }),
-                    supabase.from('local_needs').select('*', { count: 'exact', head: true }).is('deleted_at', null),
-                    supabase.from('need_votes').select('*', { count: 'exact', head: true }),
-                    supabase.from('need_comments').select('*', { count: 'exact', head: true }),
-                    supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', todayStart),
-                    supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', weekStart),
-                    supabase.from('local_needs').select('*', { count: 'exact', head: true }).gte('created_at', todayStart).is('deleted_at', null),
-                    supabase.from('local_needs').select('*', { count: 'exact', head: true }).gte('created_at', weekStart).is('deleted_at', null),
-                    supabase.from('profiles').select('id, full_name, created_at').order('created_at', { ascending: false }).limit(5),
-                    supabase.from('local_needs').select('id, title, category, created_at, upvotes').is('deleted_at', null).order('created_at', { ascending: false }).limit(5),
-                    supabase.from('local_needs').select('category').is('deleted_at', null),
-                    supabase.from('local_needs').select('id, title, category, upvotes, created_at').is('deleted_at', null).gt('upvotes', 0).order('upvotes', { ascending: false }).limit(10),
-                ]);
-
-                // Calculate top categories
-                const categoryCounts: Record<string, number> = {};
-                allNeeds?.forEach((n: any) => {
-                    categoryCounts[n.category] = (categoryCounts[n.category] || 0) + 1;
-                });
-                const topCategories = Object.entries(categoryCounts)
-                    .map(([category, count]) => ({ category, count }))
-                    .sort((a, b) => b.count - a.count)
-                    .slice(0, 5);
-
-                // Calculate velocity for trending needs
-                const nowMs = Date.now();
-                const trendingNeeds = (velocityNeeds || [])
-                    .map(n => {
-                        const daysOld = Math.max(1, (nowMs - new Date(n.created_at).getTime()) / (1000 * 60 * 60 * 24));
-                        return {
-                            ...n,
-                            velocity: ((n.upvotes || 0) / daysOld).toFixed(2),
-                        };
-                    })
-                    .sort((a, b) => parseFloat(b.velocity) - parseFloat(a.velocity))
-                    .slice(0, 5);
-
-                setStats({
-                    totalUsers: totalUsers || 0,
-                    totalNeeds: totalNeeds || 0,
-                    totalVotes: totalVotes || 0,
-                    totalComments: totalComments || 0,
-                    usersToday: usersToday || 0,
-                    usersThisWeek: usersThisWeek || 0,
-                    needsToday: needsToday || 0,
-                    needsThisWeek: needsThisWeek || 0,
-                    recentUsers: recentUsers || [],
-                    recentNeeds: recentNeeds || [],
-                    topCategories,
-                    trendingNeeds,
-                });
-            } catch (error) {
-                console.error('Dashboard error:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchStats();
     }, []);
 
-    const statCards = [
-        { label: 'Total Users', value: stats.totalUsers.toLocaleString(), sub: `+${stats.usersToday} today · +${stats.usersThisWeek} this week`, icon: Users, color: 'bg-blue-500' },
-        { label: 'Active Needs', value: stats.totalNeeds.toLocaleString(), sub: `+${stats.needsToday} today · +${stats.needsThisWeek} this week`, icon: MapPin, color: 'bg-green-500' },
-        { label: 'Total Votes', value: stats.totalVotes.toLocaleString(), sub: 'All time', icon: ThumbsUp, color: 'bg-purple-500' },
-        { label: 'Total Comments', value: stats.totalComments.toLocaleString(), sub: 'All time', icon: MessageSquare, color: 'bg-amber-500' },
-    ];
+    const fetchStats = async () => {
+        try {
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+
+            // All counts in parallel
+            const [
+                usersRes, needsRes, votesRes, reportsRes,
+                usersTodayRes, needsTodayRes, votesTodayRes,
+                categoriesRes, trendingRes, otherRes, recentNeedsRes
+            ] = await Promise.all([
+                supabase.from('profiles').select('*', { count: 'exact', head: true }),
+                supabase.from('local_needs').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+                supabase.from('need_votes').select('*', { count: 'exact', head: true }),
+                supabase.from('flagged_content').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+                supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('updated_at', todayStart),
+                supabase.from('local_needs').select('*', { count: 'exact', head: true }).gte('created_at', todayStart).is('deleted_at', null),
+                supabase.from('need_votes').select('*', { count: 'exact', head: true }).gte('created_at', todayStart),
+                supabase.from('local_needs').select('category').is('deleted_at', null),
+                supabase.from('local_needs').select('id, title, category, upvotes, created_at').is('deleted_at', null).order('upvotes', { ascending: false }).limit(10),
+                supabase.from('local_needs').select('title, category, created_at').ilike('category', '%other%').is('deleted_at', null).order('created_at', { ascending: false }).limit(20),
+                supabase.from('local_needs').select('title, category, created_at').is('deleted_at', null).order('created_at', { ascending: false }).limit(8),
+            ]);
+
+            // Category breakdown
+            const catMap: Record<string, number> = {};
+            categoriesRes.data?.forEach(n => {
+                const cat = n.category || 'Uncategorized';
+                catMap[cat] = (catMap[cat] || 0) + 1;
+            });
+            const categoryBreakdown = Object.entries(catMap)
+                .map(([name, count]) => ({ name, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10);
+
+            // Recent activity
+            const recentActivity = (recentNeedsRes.data || []).map(n => ({
+                type: 'need',
+                text: `New need: "${n.title}" in ${n.category}`,
+                time: new Date(n.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            }));
+
+            setStats({
+                totalUsers: usersRes.count || 0,
+                activeNeeds: needsRes.count || 0,
+                totalVotes: votesRes.count || 0,
+                pendingReports: reportsRes.count || 0,
+                usersToday: usersTodayRes.count || 0,
+                needsToday: needsTodayRes.count || 0,
+                votesToday: votesTodayRes.count || 0,
+                categoryBreakdown,
+                trendingNeeds: trendingRes.data || [],
+                otherEntries: otherRes.data || [],
+                recentActivity,
+            });
+        } catch (err) {
+            console.error('Dashboard fetch error:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+            <div className="flex items-center justify-center h-96">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent" />
             </div>
         );
     }
 
+    if (!stats) return null;
+
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-                <p className="text-gray-500">Real-time platform metrics from Supabase.</p>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {statCards.map((stat, index) => (
-                    <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className={`p-3 rounded-lg ${stat.color} bg-opacity-10`}>
-                                <stat.icon className={`w-6 h-6 ${stat.color.replace('bg-', 'text-')}`} />
-                            </div>
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-                        <p className="text-sm text-gray-500">{stat.label}</p>
-                        <p className="text-xs text-green-600 mt-1">{stat.sub}</p>
-                    </div>
-                ))}
-            </div>
-
-            {/* Trending Needs — Velocity */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div className="flex items-center gap-2 mb-4">
-                    <Zap className="w-5 h-5 text-orange-500" />
-                    <h2 className="font-bold text-lg text-gray-900">Trending Needs</h2>
-                    <span className="text-xs text-gray-400 ml-2">ranked by votes/day</span>
+        <div className="admin-animate-in space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <Zap className="w-6 h-6 text-amber-400" />
+                        War Room
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-1">Real-time platform health & intelligence</p>
                 </div>
-                <div className="space-y-3">
-                    {stats.trendingNeeds.length === 0 ? (
-                        <p className="text-gray-500 text-sm">No trending needs yet.</p>
-                    ) : (
-                        stats.trendingNeeds.map((need, i) => (
-                            <div key={need.id} className="flex items-center gap-4 py-2 border-b border-gray-50 last:border-0">
-                                <span className="w-7 h-7 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 font-bold text-sm flex-shrink-0">
-                                    {i + 1}
-                                </span>
+                <button
+                    onClick={() => { setLoading(true); fetchStats(); }}
+                    className="admin-btn admin-btn-ghost"
+                >
+                    <Clock className="w-4 h-4" /> Refresh
+                </button>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <KPICard
+                    icon={<Users className="w-5 h-5" />}
+                    label="Total Citizens"
+                    value={stats.totalUsers}
+                    badge={stats.usersToday > 0 ? `+${stats.usersToday} today` : undefined}
+                    badgeColor="green"
+                    iconColor="#3b82f6"
+                />
+                <KPICard
+                    icon={<MapPin className="w-5 h-5" />}
+                    label="Active Needs"
+                    value={stats.activeNeeds}
+                    badge={stats.needsToday > 0 ? `+${stats.needsToday} today` : undefined}
+                    badgeColor="green"
+                    iconColor="#22c55e"
+                />
+                <KPICard
+                    icon={<ThumbsUp className="w-5 h-5" />}
+                    label="Total Votes"
+                    value={stats.totalVotes}
+                    badge={stats.votesToday > 0 ? `+${stats.votesToday} today` : undefined}
+                    badgeColor="green"
+                    iconColor="#06b6d4"
+                />
+                <KPICard
+                    icon={<AlertTriangle className="w-5 h-5" />}
+                    label="Pending Reports"
+                    value={stats.pendingReports}
+                    badge={stats.pendingReports > 0 ? 'Needs attention' : 'All clear'}
+                    badgeColor={stats.pendingReports > 0 ? 'red' : 'green'}
+                    iconColor={stats.pendingReports > 0 ? '#ef4444' : '#22c55e'}
+                />
+            </div>
+
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Category Breakdown */}
+                <div className="lg:col-span-2 admin-card">
+                    <h3 className="admin-section-title">Top Categories by Demand</h3>
+                    <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={stats.categoryBreakdown} layout="vertical" margin={{ left: 80 }}>
+                                <XAxis type="number" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                                <YAxis type="category" dataKey="name" tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} width={75} />
+                                <Tooltip
+                                    contentStyle={{ background: '#1a1d27', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f1f5f9' }}
+                                    cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                                />
+                                <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={20}>
+                                    {stats.categoryBreakdown.map((_, idx) => (
+                                        <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Trending Needs */}
+                <div className="admin-card">
+                    <h3 className="admin-section-title flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-amber-400" /> Top Voted Needs
+                    </h3>
+                    <div className="space-y-3">
+                        {stats.trendingNeeds.slice(0, 6).map((need, i) => (
+                            <div key={need.id} className="flex items-center gap-3">
+                                <span className="text-xs font-bold text-gray-600 w-5">#{i + 1}</span>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-900 truncate">{need.title}</p>
-                                    <p className="text-xs text-gray-400">{need.category}</p>
+                                    <p className="text-sm text-white truncate">{need.title}</p>
+                                    <p className="text-xs text-gray-500">{need.category}</p>
                                 </div>
-                                <div className="flex items-center gap-3 flex-shrink-0">
-                                    <span className="text-sm font-bold text-gray-700">👍 {need.upvotes}</span>
-                                    <span className="px-2 py-1 bg-orange-50 text-orange-700 rounded text-xs font-bold">
-                                        {need.velocity}/day
+                                <span className="text-sm font-bold text-cyan-400">{need.upvotes}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* "Other" Watchlist */}
+                <div className="admin-card-glow">
+                    <h3 className="admin-section-title flex items-center gap-2">
+                        🔍 &quot;Other&quot; Category Watchlist
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-3">Custom entries users type when selecting &quot;Other&quot; — future category suggestions</p>
+                    {stats.otherEntries.length > 0 ? (
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                            {stats.otherEntries.map((entry, i) => (
+                                <div key={i} className="flex items-center justify-between py-1.5 border-b border-white/5">
+                                    <span className="text-sm text-white">&ldquo;{entry.title}&rdquo;</span>
+                                    <span className="text-[10px] text-gray-500">
+                                        {new Date(entry.created_at).toLocaleDateString()}
                                     </span>
                                 </div>
-                            </div>
-                        ))
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-600 italic">No &quot;Other&quot; entries yet</p>
+                    )}
+                </div>
+
+                {/* Recent Activity */}
+                <div className="admin-card">
+                    <h3 className="admin-section-title">Recent Activity</h3>
+                    {stats.recentActivity.length > 0 ? (
+                        <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                            {stats.recentActivity.map((item, i) => (
+                                <div key={i} className="flex items-start gap-3">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-gray-300 truncate">{item.text}</p>
+                                        <p className="text-[10px] text-gray-600">{item.time}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-600 italic">No activity today</p>
                     )}
                 </div>
             </div>
+        </div>
+    );
+}
 
-            {/* Bottom Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Recent Registrations */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                    <div className="flex items-center gap-2 mb-4">
-                        <UserPlus className="w-5 h-5 text-blue-500" />
-                        <h2 className="font-bold text-lg text-gray-900">Recent Registrations</h2>
-                    </div>
-                    <div className="space-y-3">
-                        {stats.recentUsers.length === 0 ? (
-                            <p className="text-gray-500 text-sm">No users yet.</p>
-                        ) : (
-                            stats.recentUsers.map((user) => (
-                                <div key={user.id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-                                    <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm">
-                                        {user.full_name?.charAt(0).toUpperCase() || 'U'}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-900 truncate">{user.full_name || 'Unknown'}</p>
-                                        <p className="text-xs text-gray-400">
-                                            {new Date(user.created_at).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
+// KPI Card Component
+function KPICard({
+    icon, label, value, badge, badgeColor, iconColor
+}: {
+    icon: React.ReactNode;
+    label: string;
+    value: number;
+    badge?: string;
+    badgeColor: 'green' | 'red';
+    iconColor: string;
+}) {
+    return (
+        <div className="kpi-card">
+            <div className="flex items-center justify-between mb-3">
+                <div className="p-2 rounded-lg" style={{ background: `${iconColor}15`, color: iconColor }}>
+                    {icon}
                 </div>
-
-                {/* Recent Needs */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                    <div className="flex items-center gap-2 mb-4">
-                        <MapPin className="w-5 h-5 text-green-500" />
-                        <h2 className="font-bold text-lg text-gray-900">Recent Needs</h2>
-                    </div>
-                    <div className="space-y-3">
-                        {stats.recentNeeds.length === 0 ? (
-                            <p className="text-gray-500 text-sm">No needs yet.</p>
-                        ) : (
-                            stats.recentNeeds.map((need: any) => (
-                                <div key={need.id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-                                    <div className="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center text-green-600 font-bold text-xs">
-                                        {need.category?.charAt(0) || '?'}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-900 truncate">{need.title}</p>
-                                        <p className="text-xs text-gray-400">
-                                            {need.category} · 👍 {need.upvotes || 0}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-
-                {/* Top Categories */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                    <div className="flex items-center gap-2 mb-4">
-                        <TrendingUp className="w-5 h-5 text-purple-500" />
-                        <h2 className="font-bold text-lg text-gray-900">Top Categories</h2>
-                    </div>
-                    <div className="space-y-3">
-                        {stats.topCategories.length === 0 ? (
-                            <p className="text-gray-500 text-sm">No data yet.</p>
-                        ) : (
-                            stats.topCategories.map((cat, i) => (
-                                <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                                    <div className="flex items-center gap-3">
-                                        <span className="w-6 h-6 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 font-bold text-xs">
-                                            {i + 1}
-                                        </span>
-                                        <span className="text-sm font-medium text-gray-700">{cat.category}</span>
-                                    </div>
-                                    <span className="text-sm font-bold text-gray-900">{cat.count}</span>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
+                {badge && (
+                    <span className={`kpi-badge ${badgeColor === 'green' ? 'kpi-badge-green' : 'kpi-badge-red'}`}>
+                        {badgeColor === 'green' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                        {badge}
+                    </span>
+                )}
             </div>
+            <div className="kpi-value" style={{ color: iconColor }}>{value.toLocaleString()}</div>
+            <div className="kpi-label">{label}</div>
         </div>
     );
 }

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/database/supabase';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { ToastProvider } from '@/components/admin/AdminToast';
+import './admin-theme.css';
 
 export default function AdminLayout({
     children,
@@ -149,9 +150,9 @@ export default function AdminLayout({
 
     return (
         <ToastProvider>
-            <div className="min-h-screen bg-gray-100">
+            <div className="admin-root">
                 <AdminSidebar userRole={userRole} userPermissions={userPermissions} />
-                <main className="ml-64 p-8">
+                <main className="admin-main">
                     {children}
                 </main>
             </div>

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
-import { Search, Eye, Edit, Trash2, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Search, Download, MapPin, ThumbsUp, ThumbsDown, Eye, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { useToast } from '@/components/admin/AdminToast';
 
 interface Need {
     id: string;
@@ -15,192 +16,221 @@ interface Need {
     downvotes: number;
     created_at: string;
     user_id: string | null;
-    profiles?: {
-        full_name: string;
-    };
+    deleted_at: string | null;
+    profiles?: { full_name: string };
 }
 
-export default function NeedsPage() {
+type SortField = 'upvotes' | 'created_at' | 'category' | 'title';
+type SortDir = 'asc' | 'desc';
+
+export default function NeedsEnginePage() {
+    const { toast } = useToast();
     const [needs, setNeeds] = useState<Need[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [search, setSearch] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [minVotes, setMinVotes] = useState(0);
+    const [sortField, setSortField] = useState<SortField>('upvotes');
+    const [sortDir, setSortDir] = useState<SortDir>('desc');
+    const [categories, setCategories] = useState<string[]>([]);
+    const [selectedNeed, setSelectedNeed] = useState<Need | null>(null);
 
-    useEffect(() => {
-        const fetchNeeds = async () => {
-            // Fetch needs without join
-            const { data: needsData, error: needsError } = await supabase
-                .from('local_needs')
-                .select('*')
-                .order('created_at', { ascending: false });
+    useEffect(() => { fetchNeeds(); }, []);
 
-            if (needsError) {
-                console.error('Error fetching needs:', needsError);
-                console.error('Error details:', JSON.stringify(needsError, null, 2));
-                setLoading(false);
-                return;
-            }
+    const fetchNeeds = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('local_needs')
+            .select('id, title, description, category, latitude, longitude, upvotes, downvotes, created_at, user_id, deleted_at, profiles(full_name)')
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false });
 
-            if (!needsData || needsData.length === 0) {
-                setNeeds([]);
-                setLoading(false);
-                return;
-            }
+        if (data) {
+            setNeeds(data as unknown as Need[]);
+            const cats = [...new Set(data.map(n => n.category).filter(Boolean))].sort();
+            setCategories(cats);
+        }
+        setLoading(false);
+    };
 
-            // Get unique user IDs
-            const userIds = [...new Set(needsData.map(need => need.user_id).filter(Boolean))];
+    const deleteNeed = async (id: string) => {
+        if (!confirm('Soft-delete this need?')) return;
+        const { error } = await supabase.from('local_needs').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+        if (error) toast('Failed to delete', 'error');
+        else {
+            toast('Need deleted', 'success');
+            setNeeds(prev => prev.filter(n => n.id !== id));
+            setSelectedNeed(null);
+        }
+    };
 
-            if (userIds.length > 0) {
-                // Fetch profiles for those users
-                const { data: profilesData } = await supabase
-                    .from('profiles')
-                    .select('id, full_name')
-                    .in('id', userIds);
+    // Filtering & Sorting
+    const filtered = needs
+        .filter(n => {
+            const matchSearch = !search || n.title?.toLowerCase().includes(search.toLowerCase()) || n.description?.toLowerCase().includes(search.toLowerCase());
+            const matchCat = categoryFilter === 'all' || n.category === categoryFilter;
+            const matchVotes = n.upvotes >= minVotes;
+            return matchSearch && matchCat && matchVotes;
+        })
+        .sort((a, b) => {
+            let cmp = 0;
+            if (sortField === 'upvotes') cmp = a.upvotes - b.upvotes;
+            else if (sortField === 'created_at') cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+            else if (sortField === 'category') cmp = (a.category || '').localeCompare(b.category || '');
+            else if (sortField === 'title') cmp = (a.title || '').localeCompare(b.title || '');
+            return sortDir === 'asc' ? cmp : -cmp;
+        });
 
-                // Create a map of user_id to profile
-                const profilesMap = new Map(
-                    (profilesData || []).map(profile => [profile.id, profile])
-                );
+    const exportCSV = () => {
+        const headers = ['Title', 'Category', 'Upvotes', 'Downvotes', 'Latitude', 'Longitude', 'Posted By', 'Date'];
+        const rows = filtered.map(n => [
+            `"${(n.title || '').replace(/"/g, '""')}"`,
+            n.category,
+            n.upvotes,
+            n.downvotes,
+            n.latitude,
+            n.longitude,
+            `"${(n.profiles?.full_name || 'Anonymous').replace(/"/g, '""')}"`,
+            new Date(n.created_at).toLocaleDateString(),
+        ]);
+        const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mjhood-needs-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast(`Exported ${filtered.length} needs`, 'success');
+    };
 
-                // Merge needs with profiles
-                const needsWithProfiles = needsData.map(need => ({
-                    ...need,
-                    profiles: need.user_id ? profilesMap.get(need.user_id) : null
-                }));
+    const toggleSort = (field: SortField) => {
+        if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+        else { setSortField(field); setSortDir('desc'); }
+    };
 
-                setNeeds(needsWithProfiles);
-            } else {
-                // No user IDs, just use needs as-is
-                setNeeds(needsData);
-            }
-
-            setLoading(false);
-        };
-
-        fetchNeeds();
-    }, []);
-
-    const filteredNeeds = needs.filter(need =>
-        need.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        need.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        need.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const SortIcon = ({ field }: { field: SortField }) => {
+        if (sortField !== field) return null;
+        return sortDir === 'desc' ? <ChevronDown className="w-3 h-3 inline ml-1" /> : <ChevronUp className="w-3 h-3 inline ml-1" />;
+    };
 
     return (
-        <div className="space-y-6">
+        <div className="admin-animate-in space-y-5">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Needs Management</h1>
-                    <p className="text-gray-500">View and manage all community needs on the platform.</p>
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <MapPin className="w-6 h-6 text-green-400" /> Needs Engine
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-1">{filtered.length} of {needs.length} needs</p>
                 </div>
+                <button onClick={exportCSV} className="admin-btn admin-btn-primary">
+                    <Download className="w-4 h-4" /> Export CSV
+                </button>
             </div>
 
-            {/* Search */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div className="relative max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            {/* Filters */}
+            <div className="flex flex-wrap gap-3">
+                <div className="relative flex-1 min-w-[200px] max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                     <input
                         type="text"
                         placeholder="Search needs..."
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="admin-input pl-10"
+                    />
+                </div>
+                <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="admin-select">
+                    <option value="all">All Categories</option>
+                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">Min votes:</span>
+                    <input
+                        type="number"
+                        value={minVotes}
+                        onChange={e => setMinVotes(parseInt(e.target.value) || 0)}
+                        className="admin-input w-20"
+                        min={0}
                     />
                 </div>
             </div>
 
-            {/* Needs Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Title</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Requester</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Votes</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Velocity</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {loading ? (
+            {/* Table */}
+            <div className="admin-card overflow-hidden">
+                {loading ? (
+                    <div className="flex justify-center py-12">
+                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent" />
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="admin-table">
+                            <thead>
                                 <tr>
-                                    <td colSpan={9} className="px-6 py-8 text-center text-gray-500">Loading needs...</td>
+                                    <th className="cursor-pointer" onClick={() => toggleSort('title')}>
+                                        Need <SortIcon field="title" />
+                                    </th>
+                                    <th className="cursor-pointer" onClick={() => toggleSort('category')}>
+                                        Category <SortIcon field="category" />
+                                    </th>
+                                    <th className="cursor-pointer" onClick={() => toggleSort('upvotes')}>
+                                        Votes <SortIcon field="upvotes" />
+                                    </th>
+                                    <th>Posted By</th>
+                                    <th className="cursor-pointer" onClick={() => toggleSort('created_at')}>
+                                        Date <SortIcon field="created_at" />
+                                    </th>
+                                    <th>Actions</th>
                                 </tr>
-                            ) : filteredNeeds.length === 0 ? (
-                                <tr>
-                                    <td colSpan={9} className="px-6 py-8 text-center text-gray-500">No needs found.</td>
-                                </tr>
-                            ) : (
-                                filteredNeeds.map((need) => (
-                                    <tr key={need.id} className="hover:bg-gray-50 transition">
-                                        <td className="px-6 py-4">
-                                            <p className="font-medium text-gray-900">{need.title}</p>
+                            </thead>
+                            <tbody>
+                                {filtered.map(need => (
+                                    <tr key={need.id}>
+                                        <td>
+                                            <p className="text-white font-medium truncate max-w-[200px]">{need.title}</p>
+                                            {need.description && (
+                                                <p className="text-xs text-gray-500 truncate max-w-[200px]">{need.description}</p>
+                                            )}
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 capitalize">
-                                                {need.category}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            {need.profiles?.full_name || <span className="text-gray-400 italic">Anonymous</span>}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <p className="text-sm text-gray-600 max-w-xs truncate">
-                                                {need.description || 'No description'}
-                                            </p>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            {need.latitude.toFixed(4)}, {need.longitude.toFixed(4)}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex items-center gap-1 text-green-600">
-                                                    <ThumbsUp className="w-4 h-4" />
-                                                    <span className="text-sm font-medium">{need.upvotes}</span>
-                                                </div>
-                                                <div className="flex items-center gap-1 text-red-600">
-                                                    <ThumbsDown className="w-4 h-4" />
-                                                    <span className="text-sm font-medium">{need.downvotes}</span>
-                                                </div>
+                                        <td><span className="admin-tag bg-green-500/10 text-green-400">{need.category}</span></td>
+                                        <td>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-cyan-400 font-bold">{need.upvotes}</span>
+                                                <ThumbsUp className="w-3 h-3 text-cyan-400" />
+                                                <span className="text-gray-600">|</span>
+                                                <span className="text-red-400">{need.downvotes}</span>
+                                                <ThumbsDown className="w-3 h-3 text-red-400" />
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            {(() => {
-                                                const daysOld = Math.max(1, (Date.now() - new Date(need.created_at).getTime()) / (1000 * 60 * 60 * 24));
-                                                const velocity = ((need.upvotes || 0) / daysOld).toFixed(1);
-                                                return (
-                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${parseFloat(velocity) > 1 ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-500'}`}>
-                                                        {velocity}/day
-                                                    </span>
-                                                );
-                                            })()}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            {new Date(need.created_at).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button className="p-2 hover:bg-gray-100 rounded-lg transition">
-                                                    <Eye className="w-4 h-4 text-gray-600" />
+                                        <td className="text-gray-400 text-sm">{(need.profiles as any)?.full_name || 'Anonymous'}</td>
+                                        <td className="text-gray-500 text-xs">{new Date(need.created_at).toLocaleDateString()}</td>
+                                        <td>
+                                            <div className="flex gap-1">
+                                                <button
+                                                    onClick={() => window.open(`/need/${need.id}`, '_blank')}
+                                                    className="p-1.5 rounded hover:bg-white/10 text-gray-500 hover:text-white transition"
+                                                    title="View"
+                                                >
+                                                    <Eye className="w-4 h-4" />
                                                 </button>
-                                                <button className="p-2 hover:bg-gray-100 rounded-lg transition">
-                                                    <Edit className="w-4 h-4 text-gray-600" />
-                                                </button>
-                                                <button className="p-2 hover:bg-red-50 rounded-lg transition">
-                                                    <Trash2 className="w-4 h-4 text-red-600" />
+                                                <button
+                                                    onClick={() => deleteNeed(need.id)}
+                                                    className="p-1.5 rounded hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                ))}
+                            </tbody>
+                        </table>
+                        {filtered.length === 0 && (
+                            <p className="text-center text-gray-600 py-12">No needs match your filters</p>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

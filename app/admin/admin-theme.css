@@ -1,0 +1,383 @@
+/* =============================================
+   MJHOOD ADMIN — Premium Dark Theme
+   ============================================= */
+
+:root {
+    /* Core palette */
+    --admin-bg: #0f1117;
+    --admin-surface: #1a1d27;
+    --admin-surface-hover: #22263a;
+    --admin-border: rgba(255, 255, 255, 0.06);
+    --admin-border-light: rgba(255, 255, 255, 0.1);
+
+    /* Brand accent */
+    --admin-accent: #3b82f6;
+    --admin-accent-glow: rgba(59, 130, 246, 0.15);
+    --admin-accent-hover: #2563eb;
+
+    /* Text */
+    --admin-text: #f1f5f9;
+    --admin-text-muted: #94a3b8;
+    --admin-text-dim: #64748b;
+
+    /* Status colors */
+    --admin-green: #22c55e;
+    --admin-green-bg: rgba(34, 197, 94, 0.1);
+    --admin-red: #ef4444;
+    --admin-red-bg: rgba(239, 68, 68, 0.1);
+    --admin-amber: #f59e0b;
+    --admin-amber-bg: rgba(245, 158, 11, 0.1);
+    --admin-cyan: #06b6d4;
+    --admin-cyan-bg: rgba(6, 182, 212, 0.1);
+    --admin-purple: #a855f7;
+    --admin-purple-bg: rgba(168, 85, 247, 0.1);
+
+    /* Chart palette */
+    --chart-1: #3b82f6;
+    --chart-2: #06b6d4;
+    --chart-3: #22c55e;
+    --chart-4: #f59e0b;
+    --chart-5: #a855f7;
+    --chart-6: #ef4444;
+    --chart-7: #ec4899;
+
+    /* Sidebar */
+    --sidebar-width: 260px;
+}
+
+/* =============================================
+   Layout
+   ============================================= */
+
+.admin-root {
+    background: var(--admin-bg);
+    color: var(--admin-text);
+    min-height: 100vh;
+}
+
+.admin-main {
+    margin-left: var(--sidebar-width);
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+/* =============================================
+   Glass Cards
+   ============================================= */
+
+.admin-card {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.admin-card:hover {
+    border-color: var(--admin-border-light);
+}
+
+.admin-card-glow {
+    background: linear-gradient(135deg, var(--admin-surface), rgba(59, 130, 246, 0.03));
+    border: 1px solid var(--admin-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-card-glow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--admin-accent), transparent);
+    opacity: 0.5;
+}
+
+/* =============================================
+   KPI Cards
+   ============================================= */
+
+.kpi-card {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 1rem;
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.kpi-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--admin-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.5rem;
+}
+
+.kpi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+}
+
+.kpi-badge-green {
+    background: var(--admin-green-bg);
+    color: var(--admin-green);
+}
+
+.kpi-badge-red {
+    background: var(--admin-red-bg);
+    color: var(--admin-red);
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* =============================================
+   Tables
+   ============================================= */
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th {
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--admin-text-dim);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-table td {
+    font-size: 0.875rem;
+    color: var(--admin-text);
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.admin-table tbody tr:hover {
+    background: var(--admin-surface-hover);
+}
+
+/* =============================================
+   Buttons
+   ============================================= */
+
+.admin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.admin-btn-primary {
+    background: var(--admin-accent);
+    color: white;
+}
+
+.admin-btn-primary:hover {
+    background: var(--admin-accent-hover);
+}
+
+.admin-btn-ghost {
+    background: transparent;
+    color: var(--admin-text-muted);
+    border: 1px solid var(--admin-border);
+}
+
+.admin-btn-ghost:hover {
+    background: var(--admin-surface-hover);
+    color: var(--admin-text);
+}
+
+.admin-btn-danger {
+    background: var(--admin-red-bg);
+    color: var(--admin-red);
+}
+
+.admin-btn-danger:hover {
+    background: var(--admin-red);
+    color: white;
+}
+
+.admin-btn-success {
+    background: var(--admin-green-bg);
+    color: var(--admin-green);
+}
+
+.admin-btn-success:hover {
+    background: var(--admin-green);
+    color: white;
+}
+
+/* =============================================
+   Inputs
+   ============================================= */
+
+.admin-input {
+    background: var(--admin-bg);
+    border: 1px solid var(--admin-border);
+    color: var(--admin-text);
+    padding: 0.625rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    width: 100%;
+    transition: border-color 0.15s ease;
+    outline: none;
+}
+
+.admin-input:focus {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 3px var(--admin-accent-glow);
+}
+
+.admin-input::placeholder {
+    color: var(--admin-text-dim);
+}
+
+.admin-select {
+    background: var(--admin-bg);
+    border: 1px solid var(--admin-border);
+    color: var(--admin-text);
+    padding: 0.625rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    outline: none;
+    cursor: pointer;
+}
+
+.admin-select:focus {
+    border-color: var(--admin-accent);
+}
+
+/* =============================================
+   Badges & Tags
+   ============================================= */
+
+.admin-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 999px;
+    text-transform: capitalize;
+}
+
+/* =============================================
+   Section Headings
+   ============================================= */
+
+.admin-section-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--admin-text-dim);
+    margin-bottom: 1rem;
+}
+
+/* =============================================
+   Animations
+   ============================================= */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.admin-animate-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.admin-slide-in {
+    animation: slideInRight 0.3s ease-out;
+}
+
+/* =============================================
+   Scrollbar
+   ============================================= */
+
+.admin-root ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.admin-root ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.admin-root ::-webkit-scrollbar-thumb {
+    background: var(--admin-border-light);
+    border-radius: 3px;
+}
+
+.admin-root ::-webkit-scrollbar-thumb:hover {
+    background: var(--admin-text-dim);
+}

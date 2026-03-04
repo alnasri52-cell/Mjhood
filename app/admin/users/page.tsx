@@ -1,386 +1,309 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
-import { Search, Filter, MoreVertical, Shield, Ban, CheckCircle } from 'lucide-react';
+import { Search, X, MapPin, Calendar, Shield, Ban, ChevronRight } from 'lucide-react';
 import { useToast } from '@/components/admin/AdminToast';
 
 interface UserProfile {
     id: string;
     full_name: string;
-    email?: string;
     role: string;
-    created_at?: string;
-    updated_at?: string;
-    status?: 'active' | 'suspended' | 'banned';
-    gender?: string;
-    employment_status?: string;
-    year_of_birth?: number;
+    contact_email: string | null;
+    gender: string | null;
+    employment_status: string | null;
+    year_of_birth: number | null;
+    avatar_url: string | null;
+    updated_at: string;
+    country: string | null;
+    phone: string | null;
+    deactivated_at: string | null;
 }
 
-export default function UserManagementPage() {
+interface UserNeed {
+    id: string;
+    title: string;
+    category: string;
+    upvotes: number;
+    created_at: string;
+}
+
+export default function UsersPage() {
+    const { toast } = useToast();
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterRole, setFilterRole] = useState('all');
-    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-    const [roleChangeUser, setRoleChangeUser] = useState<UserProfile | null>(null);
-    const [newRole, setNewRole] = useState<string>('');
-    const [updating, setUpdating] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
-    const { toast } = useToast();
+    const [search, setSearch] = useState('');
+    const [roleFilter, setRoleFilter] = useState<string>('all');
+    const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+    const [userNeeds, setUserNeeds] = useState<UserNeed[]>([]);
+    const [loadingNeeds, setLoadingNeeds] = useState(false);
+    const [authEmails, setAuthEmails] = useState<Record<string, string>>({});
 
-    useEffect(() => {
-        const fetchUsers = async () => {
-            // Fetch profiles
-            const { data: profiles, error } = await supabase
-                .from('profiles')
-                .select('*');
+    useEffect(() => { fetchUsers(); }, []);
 
-            if (error) {
-                console.error('Error fetching users:', error);
-                setLoading(false);
-                return;
-            }
+    const fetchUsers = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, full_name, role, contact_email, gender, employment_status, year_of_birth, avatar_url, updated_at, country, phone, deactivated_at')
+            .order('updated_at', { ascending: false });
 
-            // Fetch emails from our API route
-            try {
-                const response = await fetch('/api/admin/users');
-                const { emailMap } = await response.json();
+        if (data) setUsers(data);
 
-
-                // Use real email from auth or contact_email field
-                const enrichedUsers = profiles.map((profile: any) => {
-                    const authEmail = emailMap[profile.id];
-                    return {
-                        ...profile,
-                        email: authEmail || profile.contact_email || 'No email',
-                        status: profile.banned ? 'banned' : 'active',
-                    };
-                });
-
-                setUsers(enrichedUsers);
-            } catch (err) {
-                console.error('Error fetching emails:', err);
-                // Fallback to profiles without auth emails
-                const enrichedUsers = profiles.map((profile: any) => ({
-                    ...profile,
-                    email: profile.contact_email || 'No email',
-                    status: profile.banned ? 'banned' : 'active',
-                }));
-                setUsers(enrichedUsers);
-            }
-
-            setLoading(false);
-        };
-
-        fetchUsers();
-    }, []);
-
-    // Close menu when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setOpenMenuId(null);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const filteredUsers = users.filter(user => {
-        const matchesSearch = user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesRole = filterRole === 'all' || user.role === filterRole;
-        return matchesSearch && matchesRole;
-    });
-
-    const handleRoleChange = async () => {
-        if (!roleChangeUser || !newRole) return;
-
-        setUpdating(true);
+        // Fetch auth emails
         try {
-            const response = await fetch('/api/admin/users/role', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId: roleChangeUser.id,
-                    newRole: newRole,
-                }),
-            });
+            const res = await fetch('/api/admin/users');
+            const { emailMap } = await res.json();
+            setAuthEmails(emailMap || {});
+        } catch { }
 
-            const data = await response.json();
+        setLoading(false);
+    };
 
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to update role');
-            }
+    const selectUser = async (user: UserProfile) => {
+        setSelectedUser(user);
+        setLoadingNeeds(true);
+        const { data } = await supabase
+            .from('local_needs')
+            .select('id, title, category, upvotes, created_at')
+            .eq('user_id', user.id)
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false });
+        setUserNeeds(data || []);
+        setLoadingNeeds(false);
+    };
 
-            // Update local state
-            setUsers(users.map(u =>
-                u.id === roleChangeUser.id ? { ...u, role: newRole } : u
-            ));
-
-            setRoleChangeUser(null);
-            setNewRole('');
-            toast(`Successfully changed ${roleChangeUser.full_name}'s role to ${newRole}`, 'success');
-        } catch (error: any) {
-            console.error('Error updating role:', error);
-            toast('Failed to update role: ' + error.message, 'error');
-        } finally {
-            setUpdating(false);
+    const changeRole = async (userId: string, newRole: string) => {
+        const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+        if (error) {
+            toast('Failed to update role', 'error');
+        } else {
+            toast(`Role updated to ${newRole}`, 'success');
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+            if (selectedUser?.id === userId) setSelectedUser({ ...selectedUser, role: newRole });
         }
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'active': return 'bg-green-100 text-green-700';
-            case 'suspended': return 'bg-yellow-100 text-yellow-700';
-            case 'banned': return 'bg-red-100 text-red-700';
-            default: return 'bg-gray-100 text-gray-700';
+    const banUser = async (userId: string) => {
+        if (!confirm('Ban this user? This will hide all their content.')) return;
+        const { error } = await supabase.from('profiles').update({ deactivated_at: new Date().toISOString() }).eq('id', userId);
+        if (error) {
+            toast('Failed to ban user', 'error');
+        } else {
+            toast('User banned', 'success');
+            fetchUsers();
+            setSelectedUser(null);
         }
+    };
+
+    const unbanUser = async (userId: string) => {
+        const { error } = await supabase.from('profiles').update({ deactivated_at: null }).eq('id', userId);
+        if (error) {
+            toast('Failed to unban user', 'error');
+        } else {
+            toast('User unbanned', 'success');
+            fetchUsers();
+            setSelectedUser(null);
+        }
+    };
+
+    const filtered = users.filter(u => {
+        const matchSearch = !search ||
+            u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+            u.contact_email?.toLowerCase().includes(search.toLowerCase()) ||
+            authEmails[u.id]?.toLowerCase().includes(search.toLowerCase());
+        const matchRole = roleFilter === 'all' || u.role === roleFilter;
+        return matchSearch && matchRole;
+    });
+
+    const getRoleBadge = (role: string) => {
+        const colors: Record<string, string> = {
+            admin: 'bg-blue-500/20 text-blue-400',
+            moderator: 'bg-purple-500/20 text-purple-400',
+            client: 'bg-gray-500/20 text-gray-400',
+        };
+        return colors[role] || colors.client;
     };
 
     return (
-        <div className="space-y-6">
+        <div className="admin-animate-in space-y-5">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-                    <p className="text-gray-500">View and manage all registered users.</p>
+                    <h1 className="text-2xl font-bold text-white">Users</h1>
+                    <p className="text-sm text-gray-500 mt-1">{filtered.length} users found</p>
                 </div>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                    Export CSV
-                </button>
             </div>
 
             {/* Filters */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 justify-between">
+            <div className="flex gap-3">
                 <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                     <input
                         type="text"
-                        placeholder="Search users..."
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search by name or email..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="admin-input pl-10"
                     />
                 </div>
-                <div className="flex gap-3">
-                    <select
-                        className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                        value={filterRole}
-                        onChange={(e) => setFilterRole(e.target.value)}
-                    >
-                        <option value="all">All Roles</option>
-                        <option value="client">Clients</option>
-                        <option value="talent">Talents</option>
-                        <option value="admin">Admins</option>
-                    </select>
-                </div>
+                <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="admin-select">
+                    <option value="all">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="moderator">Moderator</option>
+                    <option value="client">Client</option>
+                </select>
             </div>
 
-            {/* Users Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Gender</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Employment</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Birth Year</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">Loading users...</td>
-                                </tr>
-                            ) : filteredUsers.length === 0 ? (
-                                <tr>
-                                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">No users found.</td>
-                                </tr>
-                            ) : (
-                                filteredUsers.map((user) => (
-                                    <tr key={user.id} className="hover:bg-gray-50 transition">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold">
-                                                    {user.full_name?.charAt(0) || '?'}
-                                                </div>
-                                                <div>
-                                                    <p className="font-medium text-gray-900">{user.full_name || 'Unknown'}</p>
-                                                    <p className="text-xs text-gray-500">{user.email}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' :
-                                                user.role === 'talent' ? 'bg-blue-100 text-blue-700' :
-                                                    'bg-gray-100 text-gray-700'
-                                                }`}>
-                                                {user.role}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(user.status || 'active')}`}>
-                                                {user.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600 capitalize">
-                                            {user.gender?.replace('_', ' ') || '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600 capitalize">
-                                            {user.employment_status?.replace('_', ' ') || '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            {user.year_of_birth || '—'}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            {user.created_at ? new Date(user.created_at).toLocaleDateString() : (user.updated_at ? new Date(user.updated_at).toLocaleDateString() : 'N/A')}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="relative" ref={openMenuId === user.id ? menuRef : null}>
-                                                <button
-                                                    onClick={() => setOpenMenuId(openMenuId === user.id ? null : user.id)}
-                                                    className="text-gray-400 hover:text-gray-600"
-                                                >
-                                                    <MoreVertical className="w-5 h-5" />
-                                                </button>
-                                                {openMenuId === user.id && (
-                                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                                                        <button
-                                                            onClick={() => {
-                                                                window.location.href = `/profile/${user.id}`;
-                                                                setOpenMenuId(null);
-                                                            }}
-                                                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700 flex items-center gap-2"
-                                                        >
-                                                            <CheckCircle className="w-4 h-4" />
-                                                            View Profile
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                setRoleChangeUser(user);
-                                                                setNewRole(user.role);
-                                                                setOpenMenuId(null);
-                                                            }}
-                                                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700 flex items-center gap-2"
-                                                        >
-                                                            <Shield className="w-4 h-4" />
-                                                            Change Role
-                                                        </button>
-                                                        <button
-                                                            onClick={async () => {
-                                                                const isBanned = user.status === 'banned';
-                                                                const action = isBanned ? 'unban' : 'ban';
-                                                                const confirmMsg = isBanned
-                                                                    ? `Unban ${user.full_name}? They will be able to log in again.`
-                                                                    : `Ban ${user.full_name}? This will:\n• Hide all their needs\n• Delete all their comments\n• Prevent them from logging in`;
-                                                                if (!confirm(confirmMsg)) {
-                                                                    setOpenMenuId(null);
-                                                                    return;
-                                                                }
-                                                                try {
-                                                                    const { data: { session } } = await supabase.auth.getSession();
-                                                                    const res = await fetch('/api/admin/ban', {
-                                                                        method: 'POST',
-                                                                        headers: {
-                                                                            'Content-Type': 'application/json',
-                                                                            'Authorization': `Bearer ${session?.access_token}`,
-                                                                        },
-                                                                        body: JSON.stringify({ userId: user.id, action }),
-                                                                    });
-                                                                    const data = await res.json();
-                                                                    if (!res.ok) throw new Error(data.error);
-                                                                    setUsers(users.map(u =>
-                                                                        u.id === user.id ? { ...u, status: isBanned ? 'active' : 'banned' } : u
-                                                                    ));
-                                                                    toast(data.message, 'success');
-                                                                } catch (err: any) {
-                                                                    toast('Error: ' + err.message, 'error');
-                                                                }
-                                                                setOpenMenuId(null);
-                                                            }}
-                                                            className={`w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-2 ${user.status === 'banned' ? 'text-green-600' : 'text-red-600'}`}
-                                                        >
-                                                            {user.status === 'banned' ? (
-                                                                <><CheckCircle className="w-4 h-4" /> Unban User</>
-                                                            ) : (
-                                                                <><Ban className="w-4 h-4" /> Ban User</>
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
+            <div className="flex gap-4">
+                {/* Users Table */}
+                <div className={`admin-card flex-1 overflow-hidden ${selectedUser ? 'max-w-[60%]' : ''}`}>
+                    {loading ? (
+                        <div className="flex justify-center py-12">
+                            <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent" />
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Gender</th>
+                                        <th>Employment</th>
+                                        <th>Joined</th>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                </thead>
+                                <tbody>
+                                    {filtered.map(user => (
+                                        <tr
+                                            key={user.id}
+                                            onClick={() => selectUser(user)}
+                                            className={`cursor-pointer ${selectedUser?.id === user.id ? '!bg-white/[0.08]' : ''} ${user.deactivated_at ? 'opacity-50' : ''}`}
+                                        >
+                                            <td>
+                                                <div className="flex items-center gap-3">
+                                                    {user.avatar_url ? (
+                                                        <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold">
+                                                            {user.full_name?.charAt(0)?.toUpperCase() || '?'}
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <span className="font-medium text-white">{user.full_name || '—'}</span>
+                                                        {user.deactivated_at && <span className="ml-2 text-[10px] text-red-400 font-bold">BANNED</span>}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="text-gray-400 text-xs">{authEmails[user.id] || user.contact_email || '—'}</td>
+                                            <td><span className={`admin-tag ${getRoleBadge(user.role)}`}>{user.role}</span></td>
+                                            <td className="text-gray-400 text-sm capitalize">{user.gender?.replace('_', ' ') || '—'}</td>
+                                            <td className="text-gray-400 text-sm capitalize">{user.employment_status?.replace('_', ' ') || '—'}</td>
+                                            <td className="text-gray-500 text-xs">{new Date(user.updated_at).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
-            </div>
 
-            {/* Role Change Modal */}
-            {roleChangeUser && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
-                        <div className="p-6 border-b border-gray-100">
-                            <h3 className="text-xl font-bold text-gray-900">Change User Role</h3>
-                            <p className="text-sm text-gray-500 mt-1">Update role for {roleChangeUser.full_name}</p>
+                {/* User Detail Panel */}
+                {selectedUser && (
+                    <div className="admin-card admin-slide-in w-[40%] flex-shrink-0 space-y-5">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-white">User Details</h3>
+                            <button onClick={() => setSelectedUser(null)} className="text-gray-500 hover:text-white">
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        {/* Profile Header */}
+                        <div className="flex items-center gap-4 p-4 rounded-lg bg-white/[0.03]">
+                            {selectedUser.avatar_url ? (
+                                <img src={selectedUser.avatar_url} alt="" className="w-14 h-14 rounded-full object-cover" />
+                            ) : (
+                                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xl font-bold">
+                                    {selectedUser.full_name?.charAt(0)?.toUpperCase()}
+                                </div>
+                            )}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Select New Role</label>
+                                <p className="font-bold text-white text-lg">{selectedUser.full_name}</p>
+                                <p className="text-sm text-gray-400">{authEmails[selectedUser.id] || selectedUser.contact_email || 'No email'}</p>
+                                <span className={`admin-tag mt-1 ${getRoleBadge(selectedUser.role)}`}>{selectedUser.role}</span>
+                            </div>
+                        </div>
+
+                        {/* Demographics */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <InfoBlock label="Gender" value={selectedUser.gender?.replace('_', ' ') || '—'} />
+                            <InfoBlock label="Birth Year" value={selectedUser.year_of_birth?.toString() || '—'} />
+                            <InfoBlock label="Employment" value={selectedUser.employment_status?.replace('_', ' ') || '—'} />
+                            <InfoBlock label="Country" value={selectedUser.country || '—'} />
+                        </div>
+
+                        {/* Actions */}
+                        <div className="space-y-2">
+                            <h4 className="admin-section-title">Actions</h4>
+                            <div className="flex flex-wrap gap-2">
                                 <select
-                                    value={newRole}
-                                    onChange={(e) => setNewRole(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={selectedUser.role}
+                                    onChange={e => changeRole(selectedUser.id, e.target.value)}
+                                    className="admin-select text-sm"
                                 >
                                     <option value="client">Client</option>
-                                    <option value="talent">Talent</option>
-                                    <option value="admin">Admin</option>
                                     <option value="moderator">Moderator</option>
+                                    <option value="admin">Admin</option>
                                 </select>
-                            </div>
-
-                            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                                <p className="text-xs text-blue-700">
-                                    <strong>Current Role:</strong> {roleChangeUser.role}
-                                </p>
+                                {selectedUser.deactivated_at ? (
+                                    <button onClick={() => unbanUser(selectedUser.id)} className="admin-btn admin-btn-success">
+                                        <Shield className="w-4 h-4" /> Unban
+                                    </button>
+                                ) : (
+                                    <button onClick={() => banUser(selectedUser.id)} className="admin-btn admin-btn-danger">
+                                        <Ban className="w-4 h-4" /> Ban User
+                                    </button>
+                                )}
                             </div>
                         </div>
 
-                        <div className="p-6 border-t border-gray-100 flex gap-3">
-                            <button
-                                onClick={() => {
-                                    setRoleChangeUser(null);
-                                    setNewRole('');
-                                }}
-                                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
-                                disabled={updating}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleRoleChange}
-                                disabled={updating || newRole === roleChangeUser.role}
-                                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {updating ? 'Updating...' : 'Update Role'}
-                            </button>
+                        {/* User's Needs */}
+                        <div>
+                            <h4 className="admin-section-title">Dropped Pins ({userNeeds.length})</h4>
+                            {loadingNeeds ? (
+                                <div className="flex justify-center py-4">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent" />
+                                </div>
+                            ) : userNeeds.length > 0 ? (
+                                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                                    {userNeeds.map(need => (
+                                        <div key={need.id} className="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+                                            <MapPin className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm text-white truncate">{need.title}</p>
+                                                <p className="text-xs text-gray-500">{need.category}</p>
+                                            </div>
+                                            <span className="text-xs text-cyan-400 font-bold">{need.upvotes}↑</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-600 italic">No needs dropped yet</p>
+                            )}
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
+        </div>
+    );
+}
+
+function InfoBlock({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="p-3 rounded-lg bg-white/[0.03]">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{label}</p>
+            <p className="text-sm text-white capitalize">{value}</p>
         </div>
     );
 }
