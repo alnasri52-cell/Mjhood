@@ -7,12 +7,14 @@ import { Search, Filter, MoreVertical, Shield, Ban, CheckCircle } from 'lucide-r
 interface UserProfile {
     id: string;
     full_name: string;
-    email?: string; // Email is in auth.users, not profiles usually, but we might have it or mock it
+    email?: string;
     role: string;
     created_at?: string;
     updated_at?: string;
-    status?: 'active' | 'suspended' | 'banned'; // Mocked for now
-    reputation_score?: number; // Mocked
+    status?: 'active' | 'suspended' | 'banned';
+    gender?: string;
+    employment_status?: string;
+    year_of_birth?: number;
 }
 
 export default function UserManagementPage() {
@@ -56,9 +58,8 @@ export default function UserManagementPage() {
                     });
                     return {
                         ...profile,
-                        email: authEmail || profile.contact_email || `${profile.full_name?.toLowerCase().replace(/\s/g, '.') || 'user'}@example.com`,
+                        email: authEmail || profile.contact_email || 'No email',
                         status: profile.banned ? 'banned' : 'active',
-                        reputation_score: Math.floor(Math.random() * 100)
                     };
                 });
 
@@ -68,9 +69,8 @@ export default function UserManagementPage() {
                 // Fallback to profiles without auth emails
                 const enrichedUsers = profiles.map((profile: any) => ({
                     ...profile,
-                    email: profile.contact_email || `${profile.full_name?.toLowerCase().replace(/\s/g, '.') || 'user'}@example.com`,
+                    email: profile.contact_email || 'No email',
                     status: profile.banned ? 'banned' : 'active',
-                    reputation_score: Math.floor(Math.random() * 100)
                 }));
                 setUsers(enrichedUsers);
             }
@@ -194,7 +194,9 @@ export default function UserManagementPage() {
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Reputation</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Gender</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Employment</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Birth Year</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                             </tr>
@@ -202,11 +204,11 @@ export default function UserManagementPage() {
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">Loading users...</td>
+                                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">Loading users...</td>
                                 </tr>
                             ) : filteredUsers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">No users found.</td>
+                                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">No users found.</td>
                                 </tr>
                             ) : (
                                 filteredUsers.map((user) => (
@@ -235,11 +237,14 @@ export default function UserManagementPage() {
                                                 {user.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-1">
-                                                <Shield className="w-4 h-4 text-green-500" />
-                                                <span className="font-medium text-gray-700">{user.reputation_score || 95}</span>
-                                            </div>
+                                        <td className="px-6 py-4 text-sm text-gray-600 capitalize">
+                                            {user.gender?.replace('_', ' ') || '—'}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-600 capitalize">
+                                            {user.employment_status?.replace('_', ' ') || '—'}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                            {user.year_of_birth || '—'}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-500">
                                             {user.created_at ? new Date(user.created_at).toLocaleDateString() : (user.updated_at ? new Date(user.updated_at).toLocaleDateString() : 'N/A')}

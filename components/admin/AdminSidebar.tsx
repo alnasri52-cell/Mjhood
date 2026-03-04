@@ -6,16 +6,10 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import {
     LayoutDashboard,
     Users,
-    Flag,
     BarChart3,
-    Settings,
     LogOut,
     ShieldAlert,
-    Activity,
     Trash2,
-    User,
-    Briefcase,
-    Shield,
     MessageSquare,
     Camera
 } from 'lucide-react';
@@ -38,15 +32,12 @@ export default function AdminSidebar({
     const allNavItems = [
         { icon: LayoutDashboard, label: 'Dashboard', href: '/admin', permission: null },
         { icon: Users, label: 'User Management', href: '/admin/users', permission: 'users' },
-        { icon: Briefcase, label: 'Services', href: '/admin/services', permission: 'services' },
         { icon: MessageSquare, label: 'Needs', href: '/admin/needs', permission: 'needs' },
         { icon: ShieldAlert, label: 'Trust & Safety', href: '/admin/trust', permission: 'trust' },
         { icon: Camera, label: 'Fulfillment Queue', href: '/admin/fulfillments', permission: null },
-        { icon: Users, label: 'Team', href: '/admin/admins', permission: null }, // Always show for admins/moderators
+        { icon: Users, label: 'Team', href: '/admin/admins', permission: null },
         { icon: BarChart3, label: 'Investor Data', href: '/admin/investor', permission: null },
-        { icon: Activity, label: 'System Health', href: '/admin/system', permission: null },
         { icon: Trash2, label: 'Trash', href: '/admin/trash', permission: 'trash' },
-        { icon: Settings, label: 'Settings', href: '/admin/settings', permission: null },
     ];
 
     // Filter nav items based on role and permissions

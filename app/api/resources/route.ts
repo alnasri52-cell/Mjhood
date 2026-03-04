@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimit } from '@/lib/rateLimit';
 
 function getSupabaseAdmin() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,6 +15,9 @@ function getSupabaseAdmin() {
  */
 export async function GET(request: NextRequest) {
     try {
+        // Rate limit: 100 reads per minute
+        const limited = rateLimit(request, 'resources-read', 100, 60_000);
+        if (limited) return limited;
         const { searchParams } = new URL(request.url);
         const category = searchParams.get('category');
         const userId = searchParams.get('user_id');

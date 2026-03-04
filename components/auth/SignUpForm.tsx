@@ -18,7 +18,10 @@ export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormPro
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
-    const [country, setCountry] = useState('SA'); // Default to Saudi Arabia
+    const [country, setCountry] = useState('SA');
+    const [yearOfBirth, setYearOfBirth] = useState('');
+    const [gender, setGender] = useState('');
+    const [employmentStatus, setEmploymentStatus] = useState('');
     // Default to 'client' - users can upgrade to 'talent' later
     const [role, setRole] = useState<'client' | 'talent'>('client');
     const [loading, setLoading] = useState(false);
@@ -53,8 +56,11 @@ export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormPro
                         role: role,
                         full_name: fullName,
                         username: username || '',
-                        contact_email: email || '', // Store real email if provided
-                        country: country, // Save country code
+                        contact_email: email || '',
+                        country: country,
+                        year_of_birth: yearOfBirth ? parseInt(yearOfBirth) : null,
+                        gender: gender || null,
+                        employment_status: employmentStatus || null,
                     },
                 },
             });
@@ -164,6 +170,55 @@ export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormPro
                         required
                         className="mt-1"
                     />
+                </div>
+
+                {/* Demographics */}
+                <div className="grid grid-cols-3 gap-3">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">{t('yearOfBirth' as any) || 'Year of Birth'}</label>
+                        <select
+                            value={yearOfBirth}
+                            onChange={(e) => setYearOfBirth(e.target.value)}
+                            required
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
+                        >
+                            <option value="">{t('select' as any) || 'Select'}</option>
+                            {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - 16 - i).map(year => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">{t('gender' as any) || 'Gender'}</label>
+                        <select
+                            value={gender}
+                            onChange={(e) => setGender(e.target.value)}
+                            required
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
+                        >
+                            <option value="">{t('select' as any) || 'Select'}</option>
+                            <option value="male">{t('male' as any) || 'Male'}</option>
+                            <option value="female">{t('female' as any) || 'Female'}</option>
+                            <option value="prefer_not_to_say">{t('preferNotToSay' as any) || 'Prefer not to say'}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">{t('employmentStatus' as any) || 'Employment'}</label>
+                        <select
+                            value={employmentStatus}
+                            onChange={(e) => setEmploymentStatus(e.target.value)}
+                            required
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black bg-white"
+                        >
+                            <option value="">{t('select' as any) || 'Select'}</option>
+                            <option value="employed">{t('employed' as any) || 'Employed'}</option>
+                            <option value="self_employed">{t('selfEmployed' as any) || 'Self-Employed'}</option>
+                            <option value="student">{t('student' as any) || 'Student'}</option>
+                            <option value="unemployed">{t('unemployed' as any) || 'Unemployed'}</option>
+                            <option value="retired">{t('retired' as any) || 'Retired'}</option>
+                            <option value="prefer_not_to_say">{t('preferNotToSay' as any) || 'Prefer not to say'}</option>
+                        </select>
+                    </div>
                 </div>
 
                 {/* Terms & Privacy Checkbox */}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, MapPin, ThumbsUp, UserPlus, TrendingUp, MessageSquare } from 'lucide-react';
+import { Users, MapPin, ThumbsUp, UserPlus, TrendingUp, MessageSquare, Zap } from 'lucide-react';
 import { supabase } from '@/lib/database/supabase';
 
 interface DashboardStats {
@@ -16,6 +16,7 @@ interface DashboardStats {
     recentUsers: any[];
     recentNeeds: any[];
     topCategories: { category: string; count: number }[];
+    trendingNeeds: { id: string; title: string; category: string; upvotes: number; velocity: string }[];
 }
 
 export default function AdminDashboard() {
@@ -31,6 +32,7 @@ export default function AdminDashboard() {
         recentUsers: [],
         recentNeeds: [],
         topCategories: [],
+        trendingNeeds: [],
     });
     const [loading, setLoading] = useState(true);
 
@@ -54,6 +56,7 @@ export default function AdminDashboard() {
                     { data: recentUsers },
                     { data: recentNeeds },
                     { data: allNeeds },
+                    { data: velocityNeeds },
                 ] = await Promise.all([
                     supabase.from('profiles').select('*', { count: 'exact', head: true }),
                     supabase.from('local_needs').select('*', { count: 'exact', head: true }).is('deleted_at', null),
@@ -66,6 +69,7 @@ export default function AdminDashboard() {
                     supabase.from('profiles').select('id, full_name, created_at').order('created_at', { ascending: false }).limit(5),
                     supabase.from('local_needs').select('id, title, category, created_at, upvotes').is('deleted_at', null).order('created_at', { ascending: false }).limit(5),
                     supabase.from('local_needs').select('category').is('deleted_at', null),
+                    supabase.from('local_needs').select('id, title, category, upvotes, created_at').is('deleted_at', null).gt('upvotes', 0).order('upvotes', { ascending: false }).limit(10),
                 ]);
 
                 // Calculate top categories
@@ -76,6 +80,19 @@ export default function AdminDashboard() {
                 const topCategories = Object.entries(categoryCounts)
                     .map(([category, count]) => ({ category, count }))
                     .sort((a, b) => b.count - a.count)
+                    .slice(0, 5);
+
+                // Calculate velocity for trending needs
+                const nowMs = Date.now();
+                const trendingNeeds = (velocityNeeds || [])
+                    .map(n => {
+                        const daysOld = Math.max(1, (nowMs - new Date(n.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                        return {
+                            ...n,
+                            velocity: ((n.upvotes || 0) / daysOld).toFixed(2),
+                        };
+                    })
+                    .sort((a, b) => parseFloat(b.velocity) - parseFloat(a.velocity))
                     .slice(0, 5);
 
                 setStats({
@@ -90,6 +107,7 @@ export default function AdminDashboard() {
                     recentUsers: recentUsers || [],
                     recentNeeds: recentNeeds || [],
                     topCategories,
+                    trendingNeeds,
                 });
             } catch (error) {
                 console.error('Dashboard error:', error);
@@ -137,6 +155,38 @@ export default function AdminDashboard() {
                         <p className="text-xs text-green-600 mt-1">{stat.sub}</p>
                     </div>
                 ))}
+            </div>
+
+            {/* Trending Needs — Velocity */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div className="flex items-center gap-2 mb-4">
+                    <Zap className="w-5 h-5 text-orange-500" />
+                    <h2 className="font-bold text-lg text-gray-900">Trending Needs</h2>
+                    <span className="text-xs text-gray-400 ml-2">ranked by votes/day</span>
+                </div>
+                <div className="space-y-3">
+                    {stats.trendingNeeds.length === 0 ? (
+                        <p className="text-gray-500 text-sm">No trending needs yet.</p>
+                    ) : (
+                        stats.trendingNeeds.map((need, i) => (
+                            <div key={need.id} className="flex items-center gap-4 py-2 border-b border-gray-50 last:border-0">
+                                <span className="w-7 h-7 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 font-bold text-sm flex-shrink-0">
+                                    {i + 1}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 truncate">{need.title}</p>
+                                    <p className="text-xs text-gray-400">{need.category}</p>
+                                </div>
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                    <span className="text-sm font-bold text-gray-700">👍 {need.upvotes}</span>
+                                    <span className="px-2 py-1 bg-orange-50 text-orange-700 rounded text-xs font-bold">
+                                        {need.velocity}/day
+                                    </span>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
             </div>
 
             {/* Bottom Grid */}

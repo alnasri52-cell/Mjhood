@@ -123,6 +123,7 @@ export default function NeedsPage() {
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Votes</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Velocity</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                             </tr>
@@ -130,11 +131,11 @@ export default function NeedsPage() {
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">Loading needs...</td>
+                                    <td colSpan={9} className="px-6 py-8 text-center text-gray-500">Loading needs...</td>
                                 </tr>
                             ) : filteredNeeds.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">No needs found.</td>
+                                    <td colSpan={9} className="px-6 py-8 text-center text-gray-500">No needs found.</td>
                                 </tr>
                             ) : (
                                 filteredNeeds.map((need) => (
@@ -169,6 +170,17 @@ export default function NeedsPage() {
                                                     <span className="text-sm font-medium">{need.downvotes}</span>
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {(() => {
+                                                const daysOld = Math.max(1, (Date.now() - new Date(need.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                                                const velocity = ((need.upvotes || 0) / daysOld).toFixed(1);
+                                                return (
+                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${parseFloat(velocity) > 1 ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-500'}`}>
+                                                        {velocity}/day
+                                                    </span>
+                                                );
+                                            })()}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-500">
                                             {new Date(need.created_at).toLocaleDateString()}

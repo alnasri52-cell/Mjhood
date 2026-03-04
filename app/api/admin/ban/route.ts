@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimit } from '@/lib/rateLimit';
 
 // Lazy-init to avoid build-time crash when env vars aren't set
 function getSupabaseAdmin() {
@@ -13,6 +14,10 @@ function getSupabaseAdmin() {
 
 export async function POST(req: NextRequest) {
     try {
+        // Rate limit: 10 admin actions per minute
+        const limited = rateLimit(req, 'admin-ban', 10, 60_000);
+        if (limited) return limited;
+
         const supabaseAdmin = getSupabaseAdmin();
         const { userId, action } = await req.json();
 

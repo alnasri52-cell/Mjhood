@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimit } from '@/lib/rateLimit';
 
 // Lazy-init to avoid build-time crash when env vars aren't set
 function getSupabaseAdmin() {
@@ -20,6 +21,10 @@ function getSupabaseAdmin() {
  */
 export async function POST(request: NextRequest) {
     try {
+        // Rate limit: 30 votes per minute per IP
+        const limited = rateLimit(request, 'vote', 30, 60_000);
+        if (limited) return limited;
+
         const supabaseAdmin = getSupabaseAdmin();
         const body = await request.json();
         const { needId, voteType, fingerprint } = body;
@@ -39,26 +44,28 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Determine voter_identifier
+        // Determine voter_identifier — MUST be authenticated
         let voterIdentifier: string;
 
-        // Check if user is authenticated via Authorization header
         const authHeader = request.headers.get('authorization');
-        if (authHeader?.startsWith('Bearer ')) {
-            const token = authHeader.replace('Bearer ', '');
-            const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-            if (!authError && user) {
-                // Authenticated user — use their user_id
-                voterIdentifier = `user:${user.id}`;
-            } else {
-                // Token invalid, fall back to guest identification
-                voterIdentifier = buildGuestIdentifier(request, fingerprint);
-            }
-        } else {
-            // No auth header — guest voter
-            voterIdentifier = buildGuestIdentifier(request, fingerprint);
+        if (!authHeader?.startsWith('Bearer ')) {
+            return NextResponse.json(
+                { error: 'Authentication required to vote' },
+                { status: 401 }
+            );
         }
+
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+        if (authError || !user) {
+            return NextResponse.json(
+                { error: 'Invalid or expired session. Please log in again.' },
+                { status: 401 }
+            );
+        }
+
+        voterIdentifier = `user:${user.id}`;
 
         // Attempt to insert the vote (UNIQUE constraint handles dedup)
         const { data: voteData, error: voteError } = await supabaseAdmin
