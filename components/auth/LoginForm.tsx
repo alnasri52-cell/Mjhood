@@ -37,13 +37,22 @@ export default function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProp
 
             if (error) throw error;
 
+            // Set admin bypass cookie (if admin, silently fails for non-admins)
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.access_token) {
+                    await fetch('/api/admin-bypass', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ access_token: session.access_token }),
+                    });
+                }
+            } catch { }
+
             if (onSuccess) {
                 onSuccess();
             } else {
-                // Check for next param
                 const next = searchParams.get('next');
-                console.log('Login success. Next param:', next);
-                console.log('Redirecting to:', next || '/map');
                 router.push(next || '/map');
             }
         } catch (error: any) {
