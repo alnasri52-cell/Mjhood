@@ -167,30 +167,29 @@ export default function AdminDashboard() {
                 {/* Category Breakdown */}
                 <div className="lg:col-span-2 admin-card">
                     <h3 className="admin-section-title">Top Categories by Demand</h3>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.categoryBreakdown} layout="vertical" margin={{ left: 10, right: 20 }}>
-                                <XAxis type="number" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                                <YAxis
-                                    type="category"
-                                    dataKey="name"
-                                    tick={{ fill: '#94a3b8', fontSize: 11 }}
-                                    axisLine={false}
-                                    tickLine={false}
-                                    width={150}
-                                    tickFormatter={(value: string) => value.length > 20 ? value.slice(0, 18) + '…' : value}
-                                />
-                                <Tooltip
-                                    contentStyle={{ background: '#1a1d27', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f1f5f9' }}
-                                    cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                                />
-                                <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={20}>
-                                    {stats.categoryBreakdown.map((_, idx) => (
-                                        <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
+                    <div className="space-y-2.5 max-h-72 overflow-y-auto pr-2">
+                        {stats.categoryBreakdown.map((cat, idx) => {
+                            const maxCount = stats.categoryBreakdown[0]?.count || 1;
+                            const pct = (cat.count / maxCount) * 100;
+                            return (
+                                <div key={cat.name}>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs text-gray-300 truncate max-w-[200px]">{cat.name}</span>
+                                        <span className="text-xs font-bold text-gray-400 ml-2">{cat.count}</span>
+                                    </div>
+                                    <div className="h-5 bg-white/[0.03] rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full transition-all duration-500"
+                                            style={{
+                                                width: `${pct}%`,
+                                                background: CHART_COLORS[idx % CHART_COLORS.length],
+                                                minWidth: '8px',
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 
