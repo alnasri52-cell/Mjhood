@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
-import { Search, Download, MapPin, ThumbsUp, ThumbsDown, Eye, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Search, Download, MapPin, ThumbsUp, ThumbsDown, Eye, Trash2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/components/admin/AdminToast';
 
 interface Need {
@@ -34,6 +34,8 @@ export default function NeedsEnginePage() {
     const [sortDir, setSortDir] = useState<SortDir>('desc');
     const [categories, setCategories] = useState<string[]>([]);
     const [selectedNeed, setSelectedNeed] = useState<Need | null>(null);
+    const [page, setPage] = useState(1);
+    const perPage = 20;
 
     useEffect(() => { fetchNeeds(); }, []);
 
@@ -80,6 +82,12 @@ export default function NeedsEnginePage() {
             else if (sortField === 'title') cmp = (a.title || '').localeCompare(b.title || '');
             return sortDir === 'asc' ? cmp : -cmp;
         });
+
+    const totalPages = Math.ceil(filtered.length / perPage);
+    const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+
+    // Reset to page 1 when filters change
+    useEffect(() => { setPage(1); }, [search, categoryFilter, minVotes, sortField, sortDir]);
 
     const exportCSV = () => {
         const headers = ['Title', 'Category', 'Upvotes', 'Downvotes', 'Latitude', 'Longitude', 'Posted By', 'Date'];
@@ -163,73 +171,102 @@ export default function NeedsEnginePage() {
                         <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent" />
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="admin-table">
-                            <thead>
-                                <tr>
-                                    <th className="cursor-pointer" onClick={() => toggleSort('title')}>
-                                        Need <SortIcon field="title" />
-                                    </th>
-                                    <th className="cursor-pointer" onClick={() => toggleSort('category')}>
-                                        Category <SortIcon field="category" />
-                                    </th>
-                                    <th className="cursor-pointer" onClick={() => toggleSort('upvotes')}>
-                                        Votes <SortIcon field="upvotes" />
-                                    </th>
-                                    <th>Posted By</th>
-                                    <th className="cursor-pointer" onClick={() => toggleSort('created_at')}>
-                                        Date <SortIcon field="created_at" />
-                                    </th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filtered.map(need => (
-                                    <tr key={need.id}>
-                                        <td>
-                                            <p className="text-white font-medium truncate max-w-[200px]">{need.title}</p>
-                                            {need.description && (
-                                                <p className="text-xs text-gray-500 truncate max-w-[200px]">{need.description}</p>
-                                            )}
-                                        </td>
-                                        <td><span className="admin-tag bg-green-500/10 text-green-400">{need.category}</span></td>
-                                        <td>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-cyan-400 font-bold">{need.upvotes}</span>
-                                                <ThumbsUp className="w-3 h-3 text-cyan-400" />
-                                                <span className="text-gray-600">|</span>
-                                                <span className="text-red-400">{need.downvotes}</span>
-                                                <ThumbsDown className="w-3 h-3 text-red-400" />
-                                            </div>
-                                        </td>
-                                        <td className="text-gray-400 text-sm">{(need.profiles as any)?.full_name || 'Anonymous'}</td>
-                                        <td className="text-gray-500 text-xs">{new Date(need.created_at).toLocaleDateString()}</td>
-                                        <td>
-                                            <div className="flex gap-1">
-                                                <button
-                                                    onClick={() => window.open(`/need/${need.id}`, '_blank')}
-                                                    className="p-1.5 rounded hover:bg-white/10 text-gray-500 hover:text-white transition"
-                                                    title="View"
-                                                >
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => deleteNeed(need.id)}
-                                                    className="p-1.5 rounded hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
+                    <>
+                        <div className="overflow-x-auto">
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th className="cursor-pointer" onClick={() => toggleSort('title')}>
+                                            Need <SortIcon field="title" />
+                                        </th>
+                                        <th className="cursor-pointer" onClick={() => toggleSort('category')}>
+                                            Category <SortIcon field="category" />
+                                        </th>
+                                        <th className="cursor-pointer" onClick={() => toggleSort('upvotes')}>
+                                            Votes <SortIcon field="upvotes" />
+                                        </th>
+                                        <th>Posted By</th>
+                                        <th className="cursor-pointer" onClick={() => toggleSort('created_at')}>
+                                            Date <SortIcon field="created_at" />
+                                        </th>
+                                        <th>Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        {filtered.length === 0 && (
-                            <p className="text-center text-gray-600 py-12">No needs match your filters</p>
+                                </thead>
+                                <tbody>
+                                    {paginated.map(need => (
+                                        <tr key={need.id}>
+                                            <td>
+                                                <p className="text-white font-medium truncate max-w-[200px]">{need.title}</p>
+                                                {need.description && (
+                                                    <p className="text-xs text-gray-500 truncate max-w-[200px]">{need.description}</p>
+                                                )}
+                                            </td>
+                                            <td><span className="admin-tag bg-green-500/10 text-green-400">{need.category}</span></td>
+                                            <td>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-cyan-400 font-bold">{need.upvotes}</span>
+                                                    <ThumbsUp className="w-3 h-3 text-cyan-400" />
+                                                    <span className="text-gray-600">|</span>
+                                                    <span className="text-red-400">{need.downvotes}</span>
+                                                    <ThumbsDown className="w-3 h-3 text-red-400" />
+                                                </div>
+                                            </td>
+                                            <td className="text-gray-400 text-sm">{(need.profiles as any)?.full_name || 'Anonymous'}</td>
+                                            <td className="text-gray-500 text-xs">{new Date(need.created_at).toLocaleDateString()}</td>
+                                            <td>
+                                                <div className="flex gap-1">
+                                                    <button
+                                                        onClick={() => window.open(`/need/${need.id}`, '_blank')}
+                                                        className="p-1.5 rounded hover:bg-white/10 text-gray-500 hover:text-white transition"
+                                                        title="View"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => deleteNeed(need.id)}
+                                                        className="p-1.5 rounded hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            {filtered.length === 0 && (
+                                <p className="text-center text-gray-600 py-12">No needs match your filters</p>
+                            )}
+                        </div>
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between px-4 py-3 border-t border-white/5">
+                                <p className="text-xs text-gray-500">
+                                    Showing {(page - 1) * perPage + 1}–{Math.min(page * perPage, filtered.length)} of {filtered.length}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={page === 1}
+                                        className="admin-btn admin-btn-ghost text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" /> Prev
+                                    </button>
+                                    <span className="text-xs text-gray-400 px-2">
+                                        {page} / {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={page === totalPages}
+                                        className="admin-btn admin-btn-ghost text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                                    >
+                                        Next <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
                         )}
-                    </div>
+                    </>
                 )}
             </div>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
-import { Search, X, MapPin, Calendar, Shield, Ban, ChevronRight } from 'lucide-react';
+import { Search, X, MapPin, Calendar, Shield, Ban, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useToast } from '@/components/admin/AdminToast';
 
 interface UserProfile {
@@ -38,6 +38,8 @@ export default function UsersPage() {
     const [userNeeds, setUserNeeds] = useState<UserNeed[]>([]);
     const [loadingNeeds, setLoadingNeeds] = useState(false);
     const [authEmails, setAuthEmails] = useState<Record<string, string>>({});
+    const [page, setPage] = useState(1);
+    const perPage = 20;
 
     useEffect(() => { fetchUsers(); }, []);
 
@@ -116,6 +118,12 @@ export default function UsersPage() {
         return matchSearch && matchRole;
     });
 
+    const totalPages = Math.ceil(filtered.length / perPage);
+    const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+
+    // Reset to page 1 when filters change
+    useEffect(() => { setPage(1); }, [search, roleFilter]);
+
     const getRoleBadge = (role: string) => {
         const colors: Record<string, string> = {
             admin: 'bg-blue-500/20 text-blue-400',
@@ -162,50 +170,79 @@ export default function UsersPage() {
                             <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent" />
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="admin-table">
-                                <thead>
-                                    <tr>
-                                        <th>User</th>
-                                        <th>Email</th>
-                                        <th>Role</th>
-                                        <th>Gender</th>
-                                        <th>Employment</th>
-                                        <th>Joined</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filtered.map(user => (
-                                        <tr
-                                            key={user.id}
-                                            onClick={() => selectUser(user)}
-                                            className={`cursor-pointer ${selectedUser?.id === user.id ? '!bg-white/[0.08]' : ''} ${user.deactivated_at ? 'opacity-50' : ''}`}
-                                        >
-                                            <td>
-                                                <div className="flex items-center gap-3">
-                                                    {user.avatar_url ? (
-                                                        <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold">
-                                                            {user.full_name?.charAt(0)?.toUpperCase() || '?'}
-                                                        </div>
-                                                    )}
-                                                    <div>
-                                                        <span className="font-medium text-white">{user.full_name || '—'}</span>
-                                                        {user.deactivated_at && <span className="ml-2 text-[10px] text-red-400 font-bold">BANNED</span>}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="text-gray-400 text-xs">{authEmails[user.id] || user.contact_email || '—'}</td>
-                                            <td><span className={`admin-tag ${getRoleBadge(user.role)}`}>{user.role}</span></td>
-                                            <td className="text-gray-400 text-sm capitalize">{user.gender?.replace('_', ' ') || '—'}</td>
-                                            <td className="text-gray-400 text-sm capitalize">{user.employment_status?.replace('_', ' ') || '—'}</td>
-                                            <td className="text-gray-500 text-xs">{new Date(user.updated_at).toLocaleDateString()}</td>
+                        <>
+                            <div className="overflow-x-auto">
+                                <table className="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Gender</th>
+                                            <th>Employment</th>
+                                            <th>Joined</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        {paginated.map(user => (
+                                            <tr
+                                                key={user.id}
+                                                onClick={() => selectUser(user)}
+                                                className={`cursor-pointer ${selectedUser?.id === user.id ? '!bg-white/[0.08]' : ''} ${user.deactivated_at ? 'opacity-50' : ''}`}
+                                            >
+                                                <td>
+                                                    <div className="flex items-center gap-3">
+                                                        {user.avatar_url ? (
+                                                            <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold">
+                                                                {user.full_name?.charAt(0)?.toUpperCase() || '?'}
+                                                            </div>
+                                                        )}
+                                                        <div>
+                                                            <span className="font-medium text-white">{user.full_name || '—'}</span>
+                                                            {user.deactivated_at && <span className="ml-2 text-[10px] text-red-400 font-bold">BANNED</span>}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="text-gray-400 text-xs">{authEmails[user.id] || user.contact_email || '—'}</td>
+                                                <td><span className={`admin-tag ${getRoleBadge(user.role)}`}>{user.role}</span></td>
+                                                <td className="text-gray-400 text-sm capitalize">{user.gender?.replace('_', ' ') || '—'}</td>
+                                                <td className="text-gray-400 text-sm capitalize">{user.employment_status?.replace('_', ' ') || '—'}</td>
+                                                <td className="text-gray-500 text-xs">{new Date(user.updated_at).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-between px-4 py-3 border-t border-white/5">
+                                    <p className="text-xs text-gray-500">
+                                        Showing {(page - 1) * perPage + 1}–{Math.min(page * perPage, filtered.length)} of {filtered.length}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                                            disabled={page === 1}
+                                            className="admin-btn admin-btn-ghost text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                                        >
+                                            <ChevronLeft className="w-4 h-4" /> Prev
+                                        </button>
+                                        <span className="text-xs text-gray-400 px-2">
+                                            {page} / {totalPages}
+                                        </span>
+                                        <button
+                                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={page === totalPages}
+                                            className="admin-btn admin-btn-ghost text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                                        >
+                                            Next <ChevronRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
 
