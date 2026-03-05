@@ -48,7 +48,7 @@ export default function AdminDashboard() {
             ] = await Promise.all([
                 supabase.from('profiles').select('*', { count: 'exact', head: true }),
                 supabase.from('local_needs').select('*', { count: 'exact', head: true }).is('deleted_at', null),
-                supabase.from('need_votes').select('*', { count: 'exact', head: true }),
+                supabase.from('local_needs').select('upvotes, downvotes').is('deleted_at', null),
                 supabase.from('flagged_content').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
                 supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('updated_at', todayStart),
                 supabase.from('local_needs').select('*', { count: 'exact', head: true }).gte('created_at', todayStart).is('deleted_at', null),
@@ -80,7 +80,7 @@ export default function AdminDashboard() {
             setStats({
                 totalUsers: usersRes.count || 0,
                 activeNeeds: needsRes.count || 0,
-                totalVotes: votesRes.count || 0,
+                totalVotes: (votesRes.data || []).reduce((sum: number, n: any) => sum + (n.upvotes || 0) + (n.downvotes || 0), 0),
                 pendingReports: reportsRes.count || 0,
                 usersToday: usersTodayRes.count || 0,
                 needsToday: needsTodayRes.count || 0,
