@@ -169,9 +169,17 @@ export default function AdminDashboard() {
                     <h3 className="admin-section-title">Top Categories by Demand</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.categoryBreakdown} layout="vertical" margin={{ left: 80 }}>
+                            <BarChart data={stats.categoryBreakdown} layout="vertical" margin={{ left: 10, right: 20 }}>
                                 <XAxis type="number" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                                <YAxis type="category" dataKey="name" tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} width={75} />
+                                <YAxis
+                                    type="category"
+                                    dataKey="name"
+                                    tick={{ fill: '#94a3b8', fontSize: 11 }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    width={150}
+                                    tickFormatter={(value: string) => value.length > 20 ? value.slice(0, 18) + '…' : value}
+                                />
                                 <Tooltip
                                     contentStyle={{ background: '#1a1d27', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f1f5f9' }}
                                     cursor={{ fill: 'rgba(255,255,255,0.03)' }}
