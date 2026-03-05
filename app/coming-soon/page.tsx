@@ -33,20 +33,15 @@ export default function ComingSoonPage() {
                             style={{ background: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}
                         />
                         <Image
-                            src="/logo.jpg"
+                            src="/mjhood-logo.jpg"
                             alt="Mjhood"
-                            width={120}
-                            height={120}
-                            className="rounded-2xl relative z-10 shadow-2xl"
+                            width={280}
+                            height={280}
+                            className="relative z-10"
                             priority
                         />
                     </div>
                 </div>
-
-                {/* Title */}
-                <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 tracking-tight">
-                    Mjhood
-                </h1>
 
                 {/* Tagline */}
                 <p className="text-lg md:text-xl text-gray-400 mb-2 font-light">
