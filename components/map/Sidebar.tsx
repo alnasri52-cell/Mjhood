@@ -166,7 +166,7 @@ export default function Sidebar({ onOpenGuide, onClose }: SidebarProps = {}) {
                         <img
                             src="/mjhood_symbol_final.png"
                             alt="Mjhood Symbol"
-                            className="h-12 w-auto object-contain"
+                            className="h-20 w-auto object-contain"
                         />
                         <img
                             src="/mjhood_logo_text_final.png"
