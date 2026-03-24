@@ -131,21 +131,12 @@ export default function Sidebar({ onOpenGuide, onClose }: SidebarProps = {}) {
 
     const navItems = [
         { icon: Home, label: 'home', href: '/' },
+        { icon: HandHeart, label: 'needsLabel', href: '/needs' },
         { icon: Search, label: 'advancedSearch', href: '/search' },
         // { icon: MessageSquare, label: 'messages', href: '/messages', authRequired: true }, // Hidden — future paid feature
         { icon: User, label: 'profile', href: `/profile/${user?.id}`, authRequired: true },
         { icon: LayoutDashboard, label: 'Admin Portal', href: '/admin', authRequired: true, role: 'admin' },
     ];
-
-    // Add "My Needs" for all authenticated users (direct link, no dropdown)
-    if (user) {
-        navItems.splice(3, 0, {
-            icon: HandHeart,
-            label: 'needsLabel',
-            href: '/map-profile/needs',
-            authRequired: true
-        });
-    }
 
     const filteredNavItems = navItems.filter(item => {
         if (item.authRequired && !user) return false;
