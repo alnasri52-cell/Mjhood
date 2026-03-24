@@ -60,7 +60,7 @@ export default function AdminSidebar({
 
             // Pending reports badge
             const { count } = await supabase
-                .from('flagged_content')
+                .from('reports')
                 .select('*', { count: 'exact', head: true })
                 .eq('status', 'pending');
             setPendingReports(count || 0);

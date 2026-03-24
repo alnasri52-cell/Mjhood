@@ -49,7 +49,7 @@ export default function AdminDashboard() {
                 supabase.from('profiles').select('*', { count: 'exact', head: true }),
                 supabase.from('local_needs').select('*', { count: 'exact', head: true }).is('deleted_at', null),
                 supabase.from('local_needs').select('upvotes, downvotes').is('deleted_at', null),
-                supabase.from('flagged_content').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+                supabase.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
                 supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('updated_at', todayStart),
                 supabase.from('local_needs').select('*', { count: 'exact', head: true }).gte('created_at', todayStart).is('deleted_at', null),
                 supabase.from('need_votes').select('*', { count: 'exact', head: true }).gte('created_at', todayStart),

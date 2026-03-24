@@ -2,22 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
-import { Shield, CheckCircle, Trash2, Ban, Eye, Clock, AlertTriangle, RotateCcw } from 'lucide-react';
+import { Shield, CheckCircle, Trash2, Ban, Clock, AlertTriangle, RotateCcw } from 'lucide-react';
 import { useToast } from '@/components/admin/AdminToast';
 
 interface Report {
     id: string;
-    content_type: string;
-    content_id: string;
+    target_type: string;
+    target_id: string;
     reason: string;
-    description: string;
+    note: string | null;
+    details: string | null;
     reporter_id: string;
     created_at: string;
     status: string;
-    content_title?: string;
-    content_owner_id?: string;
-    content_owner_name?: string;
+    // Enriched
     reporter_name?: string;
+    target_title?: string;
+    target_user_id?: string;
+    target_user_name?: string;
 }
 
 interface DeletedItem {
@@ -36,27 +38,61 @@ export default function ModerationPage() {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'pending' | 'all'>('pending');
 
-    useEffect(() => { fetchData(); }, [tab]);
+    useEffect(() => { fetchData(); }, [tab, filter]);
 
     const fetchData = async () => {
         setLoading(true);
         if (tab === 'reports') {
-            let query = supabase.from('flagged_content').select('*').order('created_at', { ascending: false });
+            let query = supabase
+                .from('reports')
+                .select('*')
+                .order('created_at', { ascending: false });
+
             if (filter === 'pending') query = query.eq('status', 'pending');
             const { data } = await query;
 
-            // Enrich with names
             if (data && data.length > 0) {
-                const userIds = [...new Set([...data.map(d => d.reporter_id), ...data.map(d => d.content_owner_id)].filter(Boolean))];
-                const { data: profiles } = await supabase.from('profiles').select('id, full_name').in('id', userIds);
+                // Collect reporter IDs
+                const reporterIds = [...new Set(data.map(d => d.reporter_id).filter(Boolean))];
+                const { data: reporterProfiles } = await supabase.from('profiles').select('id, full_name').in('id', reporterIds);
                 const nameMap: Record<string, string> = {};
-                profiles?.forEach(p => { nameMap[p.id] = p.full_name; });
+                reporterProfiles?.forEach(p => { nameMap[p.id] = p.full_name; });
 
-                setReports(data.map(r => ({
-                    ...r,
-                    reporter_name: nameMap[r.reporter_id] || 'Unknown',
-                    content_owner_name: nameMap[r.content_owner_id] || 'Unknown',
-                })));
+                // Enrich with target content info
+                const enriched: Report[] = [];
+                for (const r of data) {
+                    let target_title = '';
+                    let target_user_id = '';
+                    let target_user_name = '';
+
+                    if (r.target_type === 'need') {
+                        const { data: need } = await supabase
+                            .from('local_needs')
+                            .select('title, user_id')
+                            .eq('id', r.target_id)
+                            .single();
+                        if (need) {
+                            target_title = need.title;
+                            target_user_id = need.user_id;
+                        }
+                    } else if (r.target_type === 'user') {
+                        target_user_id = r.target_id;
+                    }
+
+                    if (target_user_id && !nameMap[target_user_id]) {
+                        const { data: p } = await supabase.from('profiles').select('full_name').eq('id', target_user_id).single();
+                        if (p) nameMap[target_user_id] = p.full_name;
+                    }
+
+                    enriched.push({
+                        ...r,
+                        reporter_name: nameMap[r.reporter_id] || 'Anonymous',
+                        target_title,
+                        target_user_id,
+                        target_user_name: nameMap[target_user_id] || 'Unknown',
+                    });
+                }
+                setReports(enriched);
             } else {
                 setReports([]);
             }
@@ -74,7 +110,7 @@ export default function ModerationPage() {
     };
 
     const ignoreReport = async (id: string) => {
-        const { error } = await supabase.from('flagged_content').update({ status: 'resolved' }).eq('id', id);
+        const { error } = await supabase.from('reports').update({ status: 'resolved' }).eq('id', id);
         if (error) toast('Failed to dismiss', 'error');
         else {
             toast('Report dismissed', 'success');
@@ -84,28 +120,30 @@ export default function ModerationPage() {
 
     const deleteContent = async (report: Report) => {
         if (!confirm('Delete this content?')) return;
-        const table = report.content_type === 'comment' ? 'need_comments' : 'local_needs';
-        const { error: delError } = await supabase
-            .from(table)
-            .update({ deleted_at: new Date().toISOString() })
-            .eq('id', report.content_id);
 
-        const { error: flagError } = await supabase
-            .from('flagged_content')
-            .update({ status: 'deleted' })
-            .eq('id', report.id);
-
-        if (delError || flagError) toast('Error deleting content', 'error');
-        else {
-            toast('Content deleted', 'success');
-            setReports(prev => prev.filter(r => r.id !== report.id));
+        if (report.target_type === 'need') {
+            const { error: delError } = await supabase
+                .from('local_needs')
+                .update({ deleted_at: new Date().toISOString() })
+                .eq('id', report.target_id);
+            if (delError) { toast('Error deleting content', 'error'); return; }
+        } else if (report.target_type === 'comment') {
+            const { error: delError } = await supabase
+                .from('need_comments')
+                .update({ deleted_at: new Date().toISOString() })
+                .eq('id', report.target_id);
+            if (delError) { toast('Error deleting content', 'error'); return; }
         }
+
+        await supabase.from('reports').update({ status: 'deleted' }).eq('id', report.id);
+        toast('Content deleted', 'success');
+        setReports(prev => prev.filter(r => r.id !== report.id));
     };
 
     const banUser = async (report: Report) => {
-        if (!confirm('BAN this user? All their content will be hidden.')) return;
-        const userId = report.content_owner_id;
+        const userId = report.target_user_id;
         if (!userId) { toast('No user to ban', 'error'); return; }
+        if (!confirm(`BAN "${report.target_user_name}"? All their content will be hidden.`)) return;
 
         // Ban user
         const { error: banErr } = await supabase
@@ -114,18 +152,18 @@ export default function ModerationPage() {
             .eq('id', userId);
 
         // Soft-delete all their needs
-        const { error: needsErr } = await supabase
+        await supabase
             .from('local_needs')
             .update({ deleted_at: new Date().toISOString() })
             .eq('user_id', userId)
             .is('deleted_at', null);
 
         // Resolve the report
-        await supabase.from('flagged_content').update({ status: 'banned' }).eq('id', report.id);
+        await supabase.from('reports').update({ status: 'banned' }).eq('id', report.id);
 
         if (banErr) toast('Failed to ban user', 'error');
         else {
-            toast(`User ${report.content_owner_name} banned — all content hidden`, 'success');
+            toast(`User ${report.target_user_name} banned — all content hidden`, 'success');
             setReports(prev => prev.filter(r => r.id !== report.id));
         }
     };
@@ -140,9 +178,12 @@ export default function ModerationPage() {
     };
 
     const getReasonColor = (reason: string) => {
-        if (reason?.includes('spam')) return 'bg-amber-500/20 text-amber-400';
-        if (reason?.includes('hate') || reason?.includes('harassment')) return 'bg-red-500/20 text-red-400';
-        if (reason?.includes('inappropriate')) return 'bg-purple-500/20 text-purple-400';
+        const r = reason?.toLowerCase() || '';
+        if (r.includes('spam') || r.includes('scam')) return 'bg-amber-500/20 text-amber-400';
+        if (r.includes('hate') || r.includes('harassment') || r.includes('offensive')) return 'bg-red-500/20 text-red-400';
+        if (r.includes('inappropriate')) return 'bg-purple-500/20 text-purple-400';
+        if (r.includes('misleading') || r.includes('duplicate')) return 'bg-orange-500/20 text-orange-400';
+        if (r.includes('wrong location')) return 'bg-blue-500/20 text-blue-400';
         return 'bg-gray-500/20 text-gray-400';
     };
 
@@ -164,7 +205,7 @@ export default function ModerationPage() {
                     className={`px-4 py-2 rounded-md text-sm font-medium transition ${tab === 'reports' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                     <AlertTriangle className="w-4 h-4 inline mr-2" />
-                    Reports {reports.length > 0 && tab !== 'reports' && <span className="ml-1 text-red-400">({reports.length})</span>}
+                    Reports {reports.length > 0 && <span className="ml-1 text-red-400">({reports.length})</span>}
                 </button>
                 <button
                     onClick={() => setTab('deleted')}
@@ -203,47 +244,63 @@ export default function ModerationPage() {
                                 <div key={report.id} className="p-4 rounded-lg bg-white/[0.02] border border-white/5 hover:border-white/10 transition">
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-2">
+                                            <div className="flex items-center gap-2 mb-2 flex-wrap">
                                                 <span className={`admin-tag ${getReasonColor(report.reason)}`}>{report.reason}</span>
-                                                <span className="text-[10px] text-gray-600">{report.content_type}</span>
+                                                <span className="text-[10px] text-gray-600">{report.target_type}</span>
                                                 <span className="text-[10px] text-gray-600">•</span>
                                                 <span className="text-[10px] text-gray-600">
                                                     {new Date(report.created_at).toLocaleDateString()}
                                                 </span>
+                                                {report.status !== 'pending' && (
+                                                    <span className="admin-tag bg-gray-600/20 text-gray-400">{report.status}</span>
+                                                )}
                                             </div>
-                                            {report.description && (
-                                                <p className="text-sm text-gray-300 mb-2">{report.description}</p>
+                                            {report.target_title && (
+                                                <p className="text-sm text-gray-200 mb-1 font-medium">
+                                                    &quot;{report.target_title}&quot;
+                                                </p>
+                                            )}
+                                            {(report.note || report.details) && (
+                                                <p className="text-sm text-gray-400 mb-2">{report.note || report.details}</p>
                                             )}
                                             <p className="text-xs text-gray-500">
                                                 Reported by <span className="text-gray-400">{report.reporter_name}</span>
-                                                {' '}against <span className="text-gray-400">{report.content_owner_name}</span>
+                                                {report.target_user_name && (
+                                                    <> against <span className="text-gray-400">{report.target_user_name}</span></>
+                                                )}
                                             </p>
                                         </div>
 
                                         {/* One-click actions */}
-                                        <div className="flex gap-2 flex-shrink-0">
-                                            <button
-                                                onClick={() => ignoreReport(report.id)}
-                                                className="admin-btn admin-btn-ghost text-xs"
-                                                title="Dismiss report"
-                                            >
-                                                <CheckCircle className="w-4 h-4" /> Ignore
-                                            </button>
-                                            <button
-                                                onClick={() => deleteContent(report)}
-                                                className="admin-btn admin-btn-ghost text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
-                                                title="Delete the content"
-                                            >
-                                                <Trash2 className="w-4 h-4" /> Delete
-                                            </button>
-                                            <button
-                                                onClick={() => banUser(report)}
-                                                className="admin-btn admin-btn-danger text-xs"
-                                                title="Ban user and hide all their content"
-                                            >
-                                                <Ban className="w-4 h-4" /> Ban
-                                            </button>
-                                        </div>
+                                        {report.status === 'pending' && (
+                                            <div className="flex gap-2 flex-shrink-0">
+                                                <button
+                                                    onClick={() => ignoreReport(report.id)}
+                                                    className="admin-btn admin-btn-ghost text-xs"
+                                                    title="Dismiss report"
+                                                >
+                                                    <CheckCircle className="w-4 h-4" /> Ignore
+                                                </button>
+                                                {report.target_type !== 'user' && (
+                                                    <button
+                                                        onClick={() => deleteContent(report)}
+                                                        className="admin-btn admin-btn-ghost text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                                                        title="Delete the content"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" /> Delete
+                                                    </button>
+                                                )}
+                                                {report.target_user_id && (
+                                                    <button
+                                                        onClick={() => banUser(report)}
+                                                        className="admin-btn admin-btn-danger text-xs"
+                                                        title="Ban user and hide all their content"
+                                                    >
+                                                        <Ban className="w-4 h-4" /> Ban
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
