@@ -201,13 +201,6 @@ function MapContent({ searchTerm = '', selectedCategory = '' }: NeedsMapProps) {
     const handleVote = async (needId: string, type: 'up' | 'down') => {
         if (votedNeeds.has(needId)) return;
 
-        // Require authentication for voting
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-            openAuthModal();
-            return;
-        }
-
         // Optimistic update
         setNeeds(prev => prev.map(n => {
             if (n.id === needId) {

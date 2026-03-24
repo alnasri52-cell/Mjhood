@@ -44,28 +44,24 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Determine voter_identifier — MUST be authenticated
+        // Determine voter_identifier
         let voterIdentifier: string;
 
         const authHeader = request.headers.get('authorization');
-        if (!authHeader?.startsWith('Bearer ')) {
-            return NextResponse.json(
-                { error: 'Authentication required to vote' },
-                { status: 401 }
-            );
+        if (authHeader?.startsWith('Bearer ')) {
+            const token = authHeader.replace('Bearer ', '');
+            const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+            if (!authError && user) {
+                voterIdentifier = `user:${user.id}`;
+            } else {
+                // Invalid token — fall back to guest identifier
+                voterIdentifier = buildGuestIdentifier(request, fingerprint);
+            }
+        } else {
+            // No auth — guest vote using IP + fingerprint
+            voterIdentifier = buildGuestIdentifier(request, fingerprint);
         }
-
-        const token = authHeader.replace('Bearer ', '');
-        const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-        if (authError || !user) {
-            return NextResponse.json(
-                { error: 'Invalid or expired session. Please log in again.' },
-                { status: 401 }
-            );
-        }
-
-        voterIdentifier = `user:${user.id}`;
 
         // Attempt to insert the vote (UNIQUE constraint handles dedup)
         const { data: voteData, error: voteError } = await supabaseAdmin

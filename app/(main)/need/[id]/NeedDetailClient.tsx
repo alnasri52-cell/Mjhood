@@ -295,6 +295,7 @@ export default function NeedDetailClient({ params }: { params: Promise<{ id: str
     const [votedComments, setVotedComments] = useState<Set<string>>(new Set());
     const [showReportModal, setShowReportModal] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
+    const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
     const fetchComments = useCallback(async () => {
         const { data, error } = await supabase
@@ -575,12 +576,10 @@ export default function NeedDetailClient({ params }: { params: Promise<{ id: str
                         {need.image_urls && need.image_urls.length > 0 && (
                             <div className="mb-8">
                                 <div className="flex gap-3 overflow-x-auto pb-2">
-                                    {need.image_urls.map((url, i) => (
-                                        <a
+                                    {need.image_urls.map((url: string, i: number) => (
+                                        <button
                                             key={i}
-                                            href={url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                                            onClick={() => setLightboxUrl(url)}
                                             className="flex-shrink-0"
                                         >
                                             <img
@@ -588,7 +587,7 @@ export default function NeedDetailClient({ params }: { params: Promise<{ id: str
                                                 alt={`${need.title} - ${i + 1}`}
                                                 className="w-40 h-40 object-cover rounded-xl border border-gray-200 hover:opacity-90 transition cursor-zoom-in"
                                             />
-                                        </a>
+                                        </button>
                                     ))}
                                 </div>
                             </div>
@@ -738,6 +737,27 @@ export default function NeedDetailClient({ params }: { params: Promise<{ id: str
                     targetType="need"
                     targetName={need.title}
                 />
+            )}
+
+            {/* Image Lightbox */}
+            {lightboxUrl && (
+                <div
+                    className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out"
+                    onClick={() => setLightboxUrl(null)}
+                >
+                    <button
+                        className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/40 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold z-10"
+                        onClick={() => setLightboxUrl(null)}
+                    >
+                        ×
+                    </button>
+                    <img
+                        src={lightboxUrl}
+                        alt="Full size"
+                        className="max-w-full max-h-[90vh] object-contain rounded-lg"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
             )}
         </div>
     );
