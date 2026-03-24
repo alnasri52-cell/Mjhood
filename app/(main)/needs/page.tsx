@@ -90,6 +90,8 @@ function formatTimeAgo(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString();
 }
 
+const RIYADH_CENTER = { latitude: 24.7136, longitude: 46.6753 };
+
 export default function NeedsFeedPage() {
     const { t, dir } = useLanguage();
 
@@ -100,7 +102,7 @@ export default function NeedsFeedPage() {
     const [loading, setLoading] = useState(true);
 
     // Location
-    const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+    const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number }>(RIYADH_CENTER);
     const [selectedRadius, setSelectedRadius] = useState(25);
     const [showRadiusPicker, setShowRadiusPicker] = useState(false);
     const [locationDenied, setLocationDenied] = useState(false);
