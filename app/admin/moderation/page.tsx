@@ -79,6 +79,18 @@ export default function ModerationPage() {
                             target_category = need.category || '';
                             target_user_id = need.user_id;
                         }
+                    } else if (r.target_type === 'service') {
+                        const { data: svc } = await supabase
+                            .from('services')
+                            .select('title, description, category, user_id')
+                            .eq('id', r.target_id)
+                            .single();
+                        if (svc) {
+                            target_title = svc.title || '';
+                            target_description = svc.description || '';
+                            target_category = svc.category || '';
+                            target_user_id = svc.user_id || '';
+                        }
                     } else if (r.target_type === 'user') {
                         target_user_id = r.target_id;
                     }
