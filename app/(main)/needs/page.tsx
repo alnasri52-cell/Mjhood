@@ -6,12 +6,15 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { generateFingerprint } from '@/lib/utils/fingerprint';
 import { LocalNeedCategory } from '@/lib/constants';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import {
     ThumbsUp, MapPin, Layers, CheckCircle2, Flame, Sparkles, ChevronDown,
     Navigation, ShoppingCart, Pill, DollarSign, Trees, DoorClosed,
     Moon, School, Stethoscope, Dumbbell, Coffee, Bus, Mail, BookOpen,
-    Users, HelpCircle, Locate
+    Users, HelpCircle, Locate, X
 } from 'lucide-react';
+
+const SearchLocationPicker = dynamic(() => import('@/components/map/SearchLocationPicker'), { ssr: false });
 
 interface Need {
     id: string;
@@ -92,25 +95,6 @@ function formatTimeAgo(dateStr: string): string {
 
 const RIYADH_CENTER = { latitude: 24.7136, longitude: 46.6753 };
 
-const SAUDI_CITIES = [
-    { name: 'All Saudi Arabia', nameAr: 'كل السعودية', lat: 0, lng: 0 },
-    { name: 'Riyadh', nameAr: 'الرياض', lat: 24.7136, lng: 46.6753 },
-    { name: 'Jeddah', nameAr: 'جدة', lat: 21.4858, lng: 39.1925 },
-    { name: 'Makkah', nameAr: 'مكة المكرمة', lat: 21.3891, lng: 39.8579 },
-    { name: 'Madinah', nameAr: 'المدينة المنورة', lat: 24.4539, lng: 39.6142 },
-    { name: 'Dammam', nameAr: 'الدمام', lat: 26.3927, lng: 49.9777 },
-    { name: 'Khobar', nameAr: 'الخبر', lat: 26.2794, lng: 50.2083 },
-    { name: 'Dhahran', nameAr: 'الظهران', lat: 26.2361, lng: 50.0393 },
-    { name: 'Buraydah', nameAr: 'بريدة', lat: 26.3292, lng: 43.9750 },
-    { name: 'Tabuk', nameAr: 'تبوك', lat: 28.3838, lng: 36.5550 },
-    { name: 'Abha', nameAr: 'أبها', lat: 18.2164, lng: 42.5053 },
-    { name: 'Taif', nameAr: 'الطائف', lat: 21.2703, lng: 40.4158 },
-    { name: 'Hail', nameAr: 'حائل', lat: 27.5114, lng: 41.7208 },
-    { name: 'Najran', nameAr: 'نجران', lat: 17.4933, lng: 44.1277 },
-    { name: 'Jazan', nameAr: 'جازان', lat: 16.8892, lng: 42.5611 },
-    { name: 'Yanbu', nameAr: 'ينبع', lat: 24.0895, lng: 38.0618 },
-];
-
 export default function NeedsFeedPage() {
     const { t, dir } = useLanguage();
 
@@ -120,13 +104,11 @@ export default function NeedsFeedPage() {
     const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
     const [loading, setLoading] = useState(true);
 
-    // Location
-    const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number }>(RIYADH_CENTER);
-    const [selectedRadius, setSelectedRadius] = useState(25);
-    const [showRadiusPicker, setShowRadiusPicker] = useState(false);
-    const [locationDenied, setLocationDenied] = useState(false);
-    const [selectedCity, setSelectedCity] = useState('');  // empty = my location
-    const [showCityPicker, setShowCityPicker] = useState(false);
+    // Location — map picker based (like app)
+    const [searchCenter, setSearchCenter] = useState<{ latitude: number; longitude: number } | null>(null);
+    const [selectedRadius, setSelectedRadius] = useState(10);
+    const [locationFilterEnabled, setLocationFilterEnabled] = useState(false);
+    const [showMapPicker, setShowMapPicker] = useState(false);
 
     // Voting
     const [votedNeeds, setVotedNeeds] = useState<Set<string>>(new Set());
@@ -135,20 +117,8 @@ export default function NeedsFeedPage() {
     // Image lightbox
     const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
-    // Request location
-    useEffect(() => {
-        if (!navigator.geolocation) {
-            setLocationDenied(true);
-            return;
-        }
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
-            },
-            () => setLocationDenied(true),
-            { enableHighAccuracy: false, timeout: 10000 }
-        );
-    }, []);
+    // No auto-location on mount — user explicitly picks via map
+    // (matching app's search behavior)
 
     // Fetch needs
     const fetchNeeds = useCallback(async () => {
@@ -173,11 +143,11 @@ export default function NeedsFeedPage() {
     useEffect(() => {
         let filtered = [...allNeeds];
 
-        if (userLocation && !locationDenied) {
+        if (locationFilterEnabled && searchCenter) {
             filtered = filtered.filter(n => {
                 if (!n.latitude || !n.longitude) return false;
                 return haversineDistance(
-                    userLocation.latitude, userLocation.longitude,
+                    searchCenter.latitude, searchCenter.longitude,
                     n.latitude, n.longitude
                 ) <= selectedRadius;
             });
@@ -201,7 +171,7 @@ export default function NeedsFeedPage() {
 
         setFilteredNeeds(filtered);
         setDisplayCount(PAGE_SIZE);
-    }, [allNeeds, activeTab, userLocation, selectedRadius]);
+    }, [allNeeds, activeTab, locationFilterEnabled, searchCenter, selectedRadius]);
 
     const loadMore = () => {
         if (displayCount < filteredNeeds.length) {
@@ -294,105 +264,29 @@ export default function NeedsFeedPage() {
                     <div className="flex items-center justify-between">
                         <h1 className="text-2xl font-extrabold text-gray-900">{t('needsLabel')}</h1>
 
-                        {/* Radius chip */}
-                        {userLocation && (
-                            <div className="relative">
-                                <button
-                                    onClick={() => setShowRadiusPicker(!showRadiusPicker)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-[#00AEEF] border border-blue-100 text-xs font-semibold hover:bg-blue-100 transition"
-                                >
-                                    <Navigation className="w-3 h-3" />
-                                    {t('withinKm')} {selectedRadius} km
-                                    <ChevronDown className="w-3 h-3" />
-                                </button>
-
-                                {/* Dropdown */}
-                                {showRadiusPicker && (
-                                    <div className="absolute top-full mt-1 right-0 bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden z-50 w-28">
-                                        {RADIUS_OPTIONS.map(r => (
-                                            <button
-                                                key={r}
-                                                onClick={() => { setSelectedRadius(r); setShowRadiusPicker(false); }}
-                                                className={`w-full px-4 py-2.5 text-sm font-medium text-left hover:bg-gray-50 flex items-center justify-between transition ${
-                                                    r === selectedRadius ? 'text-[#00AEEF] bg-blue-50' : 'text-gray-700'
-                                                }`}
-                                            >
-                                                {r} km
-                                                {r === selectedRadius && <CheckCircle2 className="w-3.5 h-3.5" />}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* City picker — always available */}
-                        <div className="relative">
+                        {/* Location button — opens map picker */}
+                        <div className="flex items-center gap-2">
                             <button
-                                onClick={() => setShowCityPicker(!showCityPicker)}
+                                onClick={() => setShowMapPicker(true)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
-                                    selectedCity
+                                    locationFilterEnabled
                                         ? 'bg-blue-50 text-[#00AEEF] border-blue-100 hover:bg-blue-100'
-                                        : locationDenied
-                                            ? 'bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-100'
-                                            : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100'
+                                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
                                 }`}
                             >
-                                <MapPin className="w-3 h-3" />
-                                {selectedCity
-                                    ? (dir === 'rtl'
-                                        ? SAUDI_CITIES.find(c => c.name === selectedCity)?.nameAr
-                                        : selectedCity)
-                                    : locationDenied
-                                        ? (dir === 'rtl' ? 'اختر مدينة' : 'Choose City')
-                                        : (dir === 'rtl' ? 'موقعي' : 'My Location')}
-                                <ChevronDown className="w-3 h-3" />
+                                <MapPin className="w-3.5 h-3.5" />
+                                {locationFilterEnabled
+                                    ? `${dir === 'rtl' ? 'ضمن' : 'Within'} ${selectedRadius} km`
+                                    : (dir === 'rtl' ? 'اختر موقع' : 'Set Location')}
                             </button>
-
-                            {showCityPicker && (
-                                <div className="absolute top-full mt-1 right-0 bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden z-50 w-44 max-h-64 overflow-y-auto">
-                                    {/* My Location option */}
-                                    {!locationDenied && (
-                                        <button
-                                            onClick={() => {
-                                                setSelectedCity('');
-                                                setShowCityPicker(false);
-                                            }}
-                                            className={`w-full px-4 py-2.5 text-sm font-medium text-left hover:bg-gray-50 flex items-center justify-between transition ${
-                                                !selectedCity ? 'text-green-600 bg-green-50' : 'text-gray-700'
-                                            }`}
-                                        >
-                                            <span className="flex items-center gap-1.5">
-                                                <Locate className="w-3 h-3" />
-                                                {dir === 'rtl' ? 'موقعي' : 'My Location'}
-                                            </span>
-                                            {!selectedCity && <CheckCircle2 className="w-3.5 h-3.5" />}
-                                        </button>
-                                    )}
-                                    {SAUDI_CITIES.map(city => (
-                                        <button
-                                            key={city.name}
-                                            onClick={() => {
-                                                if (city.lat === 0) {
-                                                    // "All Saudi Arabia" — disable distance filter
-                                                    setSelectedCity(city.name);
-                                                    setLocationDenied(true);
-                                                } else {
-                                                    setSelectedCity(city.name);
-                                                    setUserLocation({ latitude: city.lat, longitude: city.lng });
-                                                    setLocationDenied(false);
-                                                }
-                                                setShowCityPicker(false);
-                                            }}
-                                            className={`w-full px-4 py-2.5 text-sm font-medium text-left hover:bg-gray-50 flex items-center justify-between transition ${
-                                                selectedCity === city.name ? 'text-[#00AEEF] bg-blue-50' : 'text-gray-700'
-                                            }`}
-                                        >
-                                            {dir === 'rtl' ? city.nameAr : city.name}
-                                            {selectedCity === city.name && <CheckCircle2 className="w-3.5 h-3.5" />}
-                                        </button>
-                                    ))}
-                                </div>
+                            {locationFilterEnabled && (
+                                <button
+                                    onClick={() => { setLocationFilterEnabled(false); setSearchCenter(null); }}
+                                    className="w-6 h-6 flex items-center justify-center rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition"
+                                    title={dir === 'rtl' ? 'مسح' : 'Clear'}
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
                             )}
                         </div>
                     </div>
@@ -555,10 +449,18 @@ export default function NeedsFeedPage() {
                 )}
             </div>
 
-            {/* Close pickers on click outside */}
-            {(showRadiusPicker || showCityPicker) && (
-                <div className="fixed inset-0 z-40" onClick={() => { setShowRadiusPicker(false); setShowCityPicker(false); }} />
-            )}
+            {/* Map Location Picker Modal */}
+            <SearchLocationPicker
+                isOpen={showMapPicker}
+                onClose={() => setShowMapPicker(false)}
+                onConfirm={(center, radius) => {
+                    setSearchCenter(center);
+                    setSelectedRadius(radius);
+                    setLocationFilterEnabled(true);
+                }}
+                initialCenter={searchCenter}
+                initialRadius={selectedRadius}
+            />
 
             {/* Image Lightbox */}
             {lightboxUrl && (
