@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
-import { Shield, CheckCircle, Trash2, Ban, Clock, AlertTriangle, RotateCcw } from 'lucide-react';
+import { Shield, CheckCircle, Trash2, Ban, AlertTriangle, RotateCcw, ChevronDown, ChevronUp, ExternalLink, MessageSquare, User, FileText } from 'lucide-react';
 import { useToast } from '@/components/admin/AdminToast';
 
 interface Report {
@@ -18,6 +18,8 @@ interface Report {
     // Enriched
     reporter_name?: string;
     target_title?: string;
+    target_description?: string;
+    target_category?: string;
     target_user_id?: string;
     target_user_name?: string;
 }
@@ -37,6 +39,7 @@ export default function ModerationPage() {
     const [deletedItems, setDeletedItems] = useState<DeletedItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'pending' | 'all'>('pending');
+    const [expandedId, setExpandedId] = useState<string | null>(null);
 
     useEffect(() => { fetchData(); }, [tab, filter]);
 
@@ -52,27 +55,28 @@ export default function ModerationPage() {
             const { data } = await query;
 
             if (data && data.length > 0) {
-                // Collect reporter IDs
                 const reporterIds = [...new Set(data.map(d => d.reporter_id).filter(Boolean))];
                 const { data: reporterProfiles } = await supabase.from('profiles').select('id, full_name').in('id', reporterIds);
                 const nameMap: Record<string, string> = {};
                 reporterProfiles?.forEach(p => { nameMap[p.id] = p.full_name; });
 
-                // Enrich with target content info
                 const enriched: Report[] = [];
                 for (const r of data) {
                     let target_title = '';
+                    let target_description = '';
+                    let target_category = '';
                     let target_user_id = '';
-                    let target_user_name = '';
 
                     if (r.target_type === 'need') {
                         const { data: need } = await supabase
                             .from('local_needs')
-                            .select('title, user_id')
+                            .select('title, description, category, user_id')
                             .eq('id', r.target_id)
                             .single();
                         if (need) {
                             target_title = need.title;
+                            target_description = need.description || '';
+                            target_category = need.category || '';
                             target_user_id = need.user_id;
                         }
                     } else if (r.target_type === 'user') {
@@ -88,6 +92,8 @@ export default function ModerationPage() {
                         ...r,
                         reporter_name: nameMap[r.reporter_id] || 'Anonymous',
                         target_title,
+                        target_description,
+                        target_category,
                         target_user_id,
                         target_user_name: nameMap[target_user_id] || 'Unknown',
                     });
@@ -97,7 +103,6 @@ export default function ModerationPage() {
                 setReports([]);
             }
         } else {
-            // Deleted items
             const { data: needs } = await supabase
                 .from('local_needs')
                 .select('id, title, category, deleted_at')
@@ -109,61 +114,68 @@ export default function ModerationPage() {
         setLoading(false);
     };
 
-    const ignoreReport = async (id: string) => {
+    const dismissReport = async (id: string) => {
         const { error } = await supabase.from('reports').update({ status: 'resolved' }).eq('id', id);
         if (error) toast('Failed to dismiss', 'error');
         else {
-            toast('Report dismissed', 'success');
+            toast('Report dismissed — no action taken', 'success');
             setReports(prev => prev.filter(r => r.id !== id));
         }
     };
 
     const deleteContent = async (report: Report) => {
-        if (!confirm('Delete this content?')) return;
+        if (!confirm(`This will soft-delete the reported ${report.target_type}. The content owner will no longer see it. Continue?`)) return;
 
         if (report.target_type === 'need') {
-            const { error: delError } = await supabase
+            const { error } = await supabase
                 .from('local_needs')
                 .update({ deleted_at: new Date().toISOString() })
                 .eq('id', report.target_id);
-            if (delError) { toast('Error deleting content', 'error'); return; }
+            if (error) { toast('Error deleting content', 'error'); return; }
         } else if (report.target_type === 'comment') {
-            const { error: delError } = await supabase
+            const { error } = await supabase
                 .from('need_comments')
                 .update({ deleted_at: new Date().toISOString() })
                 .eq('id', report.target_id);
-            if (delError) { toast('Error deleting content', 'error'); return; }
+            if (error) { toast('Error deleting content', 'error'); return; }
         }
 
         await supabase.from('reports').update({ status: 'deleted' }).eq('id', report.id);
-        toast('Content deleted', 'success');
+        toast('Content removed successfully', 'success');
+        setReports(prev => prev.filter(r => r.id !== report.id));
+    };
+
+    const warnUser = async (report: Report) => {
+        const userId = report.target_user_id;
+        if (!userId) { toast('No user to warn', 'error'); return; }
+
+        // Just resolve the report and mark as warned
+        await supabase.from('reports').update({ status: 'warned' }).eq('id', report.id);
+        toast(`Report marked as warned — user "${report.target_user_name}" noted`, 'success');
         setReports(prev => prev.filter(r => r.id !== report.id));
     };
 
     const banUser = async (report: Report) => {
         const userId = report.target_user_id;
         if (!userId) { toast('No user to ban', 'error'); return; }
-        if (!confirm(`BAN "${report.target_user_name}"? All their content will be hidden.`)) return;
+        if (!confirm(`BAN "${report.target_user_name}"? All their content will be hidden and they won't be able to use the app.`)) return;
 
-        // Ban user
         const { error: banErr } = await supabase
             .from('profiles')
             .update({ deactivated_at: new Date().toISOString() })
             .eq('id', userId);
 
-        // Soft-delete all their needs
         await supabase
             .from('local_needs')
             .update({ deleted_at: new Date().toISOString() })
             .eq('user_id', userId)
             .is('deleted_at', null);
 
-        // Resolve the report
         await supabase.from('reports').update({ status: 'banned' }).eq('id', report.id);
 
         if (banErr) toast('Failed to ban user', 'error');
         else {
-            toast(`User ${report.target_user_name} banned — all content hidden`, 'success');
+            toast(`User "${report.target_user_name}" banned — all content hidden`, 'success');
             setReports(prev => prev.filter(r => r.id !== report.id));
         }
     };
@@ -179,13 +191,25 @@ export default function ModerationPage() {
 
     const getReasonColor = (reason: string) => {
         const r = reason?.toLowerCase() || '';
-        if (r.includes('spam') || r.includes('scam')) return 'bg-amber-500/20 text-amber-400';
-        if (r.includes('hate') || r.includes('harassment') || r.includes('offensive')) return 'bg-red-500/20 text-red-400';
-        if (r.includes('inappropriate')) return 'bg-purple-500/20 text-purple-400';
-        if (r.includes('misleading') || r.includes('duplicate')) return 'bg-orange-500/20 text-orange-400';
-        if (r.includes('wrong location')) return 'bg-blue-500/20 text-blue-400';
+        if (r.includes('spam') || r.includes('scam') || r.includes('مزعج')) return 'bg-amber-500/20 text-amber-400';
+        if (r.includes('hate') || r.includes('harassment') || r.includes('offensive') || r.includes('مسيئة')) return 'bg-red-500/20 text-red-400';
+        if (r.includes('inappropriate') || r.includes('غير لائق')) return 'bg-purple-500/20 text-purple-400';
+        if (r.includes('misleading') || r.includes('duplicate') || r.includes('مكرر') || r.includes('مضلل')) return 'bg-orange-500/20 text-orange-400';
+        if (r.includes('wrong location') || r.includes('خاطئ')) return 'bg-blue-500/20 text-blue-400';
         return 'bg-gray-500/20 text-gray-400';
     };
+
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'resolved': return 'bg-green-500/20 text-green-400';
+            case 'deleted': return 'bg-red-500/20 text-red-400';
+            case 'banned': return 'bg-red-600/20 text-red-500';
+            case 'warned': return 'bg-yellow-500/20 text-yellow-400';
+            default: return 'bg-gray-500/20 text-gray-400';
+        }
+    };
+
+    const isExpanded = (id: string) => expandedId === id;
 
     return (
         <div className="admin-animate-in space-y-5">
@@ -194,7 +218,7 @@ export default function ModerationPage() {
                     <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                         <Shield className="w-6 h-6 text-red-400" /> Moderation
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Triage reported content and manage deleted items</p>
+                    <p className="text-sm text-gray-500 mt-1">Review reports, take action on content and users</p>
                 </div>
             </div>
 
@@ -241,67 +265,140 @@ export default function ModerationPage() {
                     ) : (
                         <div className="space-y-3">
                             {reports.map(report => (
-                                <div key={report.id} className="p-4 rounded-lg bg-white/[0.02] border border-white/5 hover:border-white/10 transition">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                                <span className={`admin-tag ${getReasonColor(report.reason)}`}>{report.reason}</span>
-                                                <span className="text-[10px] text-gray-600">{report.target_type}</span>
-                                                <span className="text-[10px] text-gray-600">•</span>
-                                                <span className="text-[10px] text-gray-600">
-                                                    {new Date(report.created_at).toLocaleDateString()}
+                                <div key={report.id} className="rounded-lg bg-white/[0.02] border border-white/5 hover:border-white/10 transition overflow-hidden">
+                                    {/* Clickable header row */}
+                                    <button
+                                        onClick={() => setExpandedId(isExpanded(report.id) ? null : report.id)}
+                                        className="w-full p-4 flex items-center justify-between text-left"
+                                    >
+                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                            <span className={`admin-tag text-xs flex-shrink-0 ${getReasonColor(report.reason)}`}>
+                                                {report.reason}
+                                            </span>
+                                            <span className="text-sm text-gray-300 truncate">
+                                                {report.target_title || report.target_user_name || report.target_id}
+                                            </span>
+                                            <span className="text-[10px] text-gray-600 flex-shrink-0">
+                                                {report.target_type}
+                                            </span>
+                                            {report.status !== 'pending' && (
+                                                <span className={`admin-tag text-[10px] flex-shrink-0 ${getStatusBadge(report.status)}`}>
+                                                    {report.status}
                                                 </span>
-                                                {report.status !== 'pending' && (
-                                                    <span className="admin-tag bg-gray-600/20 text-gray-400">{report.status}</span>
-                                                )}
-                                            </div>
-                                            {report.target_title && (
-                                                <p className="text-sm text-gray-200 mb-1 font-medium">
-                                                    &quot;{report.target_title}&quot;
-                                                </p>
                                             )}
-                                            {(report.note || report.details) && (
-                                                <p className="text-sm text-gray-400 mb-2">{report.note || report.details}</p>
-                                            )}
-                                            <p className="text-xs text-gray-500">
-                                                Reported by <span className="text-gray-400">{report.reporter_name}</span>
-                                                {report.target_user_name && (
-                                                    <> against <span className="text-gray-400">{report.target_user_name}</span></>
-                                                )}
-                                            </p>
                                         </div>
+                                        <div className="flex items-center gap-3 flex-shrink-0">
+                                            <span className="text-[11px] text-gray-600">
+                                                {new Date(report.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                            {isExpanded(report.id) ? (
+                                                <ChevronUp className="w-4 h-4 text-gray-500" />
+                                            ) : (
+                                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                                            )}
+                                        </div>
+                                    </button>
 
-                                        {/* One-click actions */}
-                                        {report.status === 'pending' && (
-                                            <div className="flex gap-2 flex-shrink-0">
-                                                <button
-                                                    onClick={() => ignoreReport(report.id)}
-                                                    className="admin-btn admin-btn-ghost text-xs"
-                                                    title="Dismiss report"
-                                                >
-                                                    <CheckCircle className="w-4 h-4" /> Ignore
-                                                </button>
-                                                {report.target_type !== 'user' && (
-                                                    <button
-                                                        onClick={() => deleteContent(report)}
-                                                        className="admin-btn admin-btn-ghost text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
-                                                        title="Delete the content"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" /> Delete
-                                                    </button>
-                                                )}
-                                                {report.target_user_id && (
-                                                    <button
-                                                        onClick={() => banUser(report)}
-                                                        className="admin-btn admin-btn-danger text-xs"
-                                                        title="Ban user and hide all their content"
-                                                    >
-                                                        <Ban className="w-4 h-4" /> Ban
-                                                    </button>
+                                    {/* Expanded details */}
+                                    {isExpanded(report.id) && (
+                                        <div className="px-4 pb-4 border-t border-white/5 pt-3 space-y-4">
+                                            {/* Details grid */}
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <p className="text-[11px] text-gray-600 uppercase tracking-wider mb-1">Reporter</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <User className="w-3.5 h-3.5 text-gray-500" />
+                                                        <span className="text-sm text-gray-300">{report.reporter_name}</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[11px] text-gray-600 uppercase tracking-wider mb-1">Content Owner</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <User className="w-3.5 h-3.5 text-gray-500" />
+                                                        <span className="text-sm text-gray-300">{report.target_user_name}</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[11px] text-gray-600 uppercase tracking-wider mb-1">Type</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <FileText className="w-3.5 h-3.5 text-gray-500" />
+                                                        <span className="text-sm text-gray-300 capitalize">{report.target_type}</span>
+                                                    </div>
+                                                </div>
+                                                {report.target_category && (
+                                                    <div>
+                                                        <p className="text-[11px] text-gray-600 uppercase tracking-wider mb-1">Category</p>
+                                                        <span className="text-sm text-gray-300">{report.target_category}</span>
+                                                    </div>
                                                 )}
                                             </div>
-                                        )}
-                                    </div>
+
+                                            {/* Reported content */}
+                                            {report.target_title && (
+                                                <div className="p-3 rounded-lg bg-white/[0.03] border border-white/5">
+                                                    <p className="text-[11px] text-gray-600 uppercase tracking-wider mb-1">Reported Content</p>
+                                                    <p className="text-sm text-white font-medium">{report.target_title}</p>
+                                                    {report.target_description && (
+                                                        <p className="text-xs text-gray-400 mt-1 line-clamp-3">{report.target_description}</p>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Reporter's note */}
+                                            {(report.note || report.details) && (
+                                                <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <MessageSquare className="w-3.5 h-3.5 text-amber-400" />
+                                                        <p className="text-[11px] text-amber-400 uppercase tracking-wider">Reporter&apos;s Note</p>
+                                                    </div>
+                                                    <p className="text-sm text-gray-300">{report.note || report.details}</p>
+                                                </div>
+                                            )}
+
+                                            {/* Actions */}
+                                            {report.status === 'pending' && (
+                                                <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+                                                    <button
+                                                        onClick={() => dismissReport(report.id)}
+                                                        className="admin-btn admin-btn-ghost text-xs flex items-center gap-1.5"
+                                                        title="No action needed — dismiss this report"
+                                                    >
+                                                        <CheckCircle className="w-4 h-4" /> Dismiss
+                                                    </button>
+
+                                                    {report.target_user_id && (
+                                                        <button
+                                                            onClick={() => warnUser(report)}
+                                                            className="admin-btn admin-btn-ghost text-xs border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 flex items-center gap-1.5"
+                                                            title="Mark as warned — keep content but note the user"
+                                                        >
+                                                            <AlertTriangle className="w-4 h-4" /> Warn
+                                                        </button>
+                                                    )}
+
+                                                    {report.target_type !== 'user' && (
+                                                        <button
+                                                            onClick={() => deleteContent(report)}
+                                                            className="admin-btn admin-btn-ghost text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10 flex items-center gap-1.5"
+                                                            title="Remove the reported content (soft-delete)"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" /> Remove Content
+                                                        </button>
+                                                    )}
+
+                                                    {report.target_user_id && (
+                                                        <button
+                                                            onClick={() => banUser(report)}
+                                                            className="admin-btn admin-btn-danger text-xs flex items-center gap-1.5"
+                                                            title="Ban user and hide ALL their content permanently"
+                                                        >
+                                                            <Ban className="w-4 h-4" /> Ban User
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
