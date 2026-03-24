@@ -333,6 +333,30 @@ export default function ModerationPage() {
                                                 )}
                                             </div>
 
+                                            {/* Quick links to view reported content */}
+                                            <div className="flex gap-2 flex-wrap">
+                                                {report.target_type === 'need' && report.target_id && (
+                                                    <a
+                                                        href={`/need/${report.target_id}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="admin-btn admin-btn-ghost text-xs flex items-center gap-1.5 text-blue-400 border-blue-500/30 hover:bg-blue-500/10"
+                                                    >
+                                                        <ExternalLink className="w-3.5 h-3.5" /> View Need
+                                                    </a>
+                                                )}
+                                                {report.target_user_id && (
+                                                    <a
+                                                        href={`/profile/${report.target_user_id}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="admin-btn admin-btn-ghost text-xs flex items-center gap-1.5 text-blue-400 border-blue-500/30 hover:bg-blue-500/10"
+                                                    >
+                                                        <ExternalLink className="w-3.5 h-3.5" /> View User Profile
+                                                    </a>
+                                                )}
+                                            </div>
+
                                             {/* Reported content */}
                                             {report.target_title && (
                                                 <div className="p-3 rounded-lg bg-white/[0.03] border border-white/5">
