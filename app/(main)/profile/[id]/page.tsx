@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Calendar, Flag, Ban, MapPin } from 'lucide-react';
+import { ArrowLeft, Calendar, Flag, Ban, MapPin, ThumbsUp } from 'lucide-react';
 import { supabase } from '@/lib/database/supabase';
 import { notFound } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
@@ -15,20 +15,12 @@ interface Profile {
     updated_at: string;
 }
 
-interface Need {
-    id: string;
-    title: string;
-    category: string;
-    upvotes: number;
-    downvotes: number;
-    created_at: string;
-}
-
 export default function PublicProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const { t, dir } = useLanguage();
     const { id } = React.use(params);
     const [profile, setProfile] = useState<Profile | null>(null);
-    const [needs, setNeeds] = useState<Need[]>([]);
+    const [needsCount, setNeedsCount] = useState(0);
+    const [totalVotes, setTotalVotes] = useState(0);
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [showReportModal, setShowReportModal] = useState(false);
@@ -57,16 +49,18 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
             }
             setProfile(profileData);
 
-            // Fetch needs authored by this user
+            // Fetch needs count and total votes (not the actual needs)
             const { data: needsData } = await supabase
                 .from('local_needs')
-                .select('id, title, category, upvotes, downvotes, created_at')
+                .select('upvotes, downvotes')
                 .eq('user_id', id)
                 .is('deleted_at', null)
-                .eq('status', 'active')
-                .order('created_at', { ascending: false });
+                .eq('status', 'active');
 
-            setNeeds(needsData || []);
+            const needs = needsData || [];
+            setNeedsCount(needs.length);
+            setTotalVotes(needs.reduce((sum, n) => sum + (n.upvotes || 0) + (n.downvotes || 0), 0));
+
             setLoading(false);
         };
 
@@ -131,6 +125,28 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                         {dir === 'rtl' ? `انضم في ${joinedDate}` : `Joined ${joinedDate}`}
                     </div>
 
+                    {/* Stats Counters — matching app */}
+                    <div className="flex justify-center gap-8 mt-6">
+                        <div className="text-center">
+                            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 mx-auto mb-1">
+                                <MapPin className="w-5 h-5 text-[#00AEEF]" />
+                            </div>
+                            <span className="text-2xl font-bold text-gray-900">{needsCount}</span>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                                {dir === 'rtl' ? 'احتياجات' : 'Needs Posted'}
+                            </p>
+                        </div>
+                        <div className="text-center">
+                            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-50 mx-auto mb-1">
+                                <ThumbsUp className="w-5 h-5 text-green-600" />
+                            </div>
+                            <span className="text-2xl font-bold text-gray-900">{totalVotes}</span>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                                {dir === 'rtl' ? 'إجمالي التصويتات' : 'Total Votes'}
+                            </p>
+                        </div>
+                    </div>
+
                     {/* Block & Report Buttons */}
                     {currentUser && currentUser.id !== id && (
                         <div className="flex items-center justify-center gap-3 mt-6">
@@ -152,49 +168,6 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                     )}
                 </div>
 
-                {/* Authored Needs */}
-                <div className="mt-8">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <MapPin className="w-5 h-5 text-[#00AEEF]" />
-                        {dir === 'rtl' ? 'الاحتياجات المنشورة' : 'Published Needs'}
-                        {needs.length > 0 && (
-                            <span className="text-sm font-normal text-gray-400">({needs.length})</span>
-                        )}
-                    </h2>
-
-                    {needs.length === 0 ? (
-                        <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
-                            <MapPin className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                            <p className="text-gray-400 text-sm">
-                                {dir === 'rtl' ? 'لا توجد احتياجات منشورة بعد.' : 'No needs published yet.'}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {needs.map(need => (
-                                <Link
-                                    key={need.id}
-                                    href={`/need/${need.id}`}
-                                    className="block bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md transition"
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-semibold text-gray-900 truncate">{need.title}</h3>
-                                            <span className="inline-block mt-1 px-2 py-0.5 bg-[#00AEEF]/10 text-[#00AEEF] text-xs font-medium rounded-full">
-                                                {need.category}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-xs text-gray-400">
-                                            <span className="text-green-600 font-medium">👍 {need.upvotes || 0}</span>
-                                            <span className="text-red-500 font-medium">👎 {need.downvotes || 0}</span>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
                 {/* Privacy Notice */}
                 <div className="mt-8 bg-blue-50 p-4 rounded-xl text-sm text-blue-700 flex items-start gap-2">
                     <span className="text-lg">🛡️</span>
@@ -206,12 +179,12 @@ export default function PublicProfilePage({ params }: { params: Promise<{ id: st
                 </div>
             </main>
 
-            {/* Report Modal */}
+            {/* Report Modal — fixed: targetType is "user" not "need" */}
             <ReportModal
                 isOpen={showReportModal}
                 onClose={() => setShowReportModal(false)}
                 targetId={id}
-                targetType="need"
+                targetType="user"
                 targetName={profile.full_name}
             />
         </div>

@@ -4,16 +4,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/database/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, MapPin } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import ImageUpload from '@/components/ui/ImageUpload';
 import Modal from '@/components/ui/Modal';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import dynamic from 'next/dynamic';
-
-const LocationPicker = dynamic(() => import('@/components/map/LocationPicker'), {
-    ssr: false,
-    loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center text-gray-400">Loading map...</div>
-});
 
 export default function EditProfilePage() {
     const { t, dir } = useLanguage();
@@ -22,22 +16,9 @@ export default function EditProfilePage() {
     const [saving, setSaving] = useState(false);
     const [user, setUser] = useState<any>(null);
 
-    // Form State
+    // Form State — only name + avatar
     const [fullName, setFullName] = useState('');
-    const [phone, setPhone] = useState('');
-    const [contactEmail, setContactEmail] = useState('');
     const [avatarUrl, setAvatarUrl] = useState('');
-    const [instagram, setInstagram] = useState('');
-    const [twitter, setTwitter] = useState('');
-    const [website, setWebsite] = useState('');
-
-    // Bio & Profile State
-    const [role, setRole] = useState('client');
-    const [bio, setBio] = useState('');
-
-    // Location State
-    const [latitude, setLatitude] = useState<number | null>(null);
-    const [longitude, setLongitude] = useState<number | null>(null);
 
     // Modal state
     const [showModal, setShowModal] = useState(false);
@@ -58,37 +39,17 @@ export default function EditProfilePage() {
 
                 const { data: profile, error } = await supabase
                     .from('profiles')
-                    .select('*')
+                    .select('full_name, avatar_url')
                     .eq('id', authUser.id)
                     .single();
 
                 if (error) {
                     console.error('Error fetching profile:', error);
-                    // Don't block the page, just log the error
                 }
 
                 if (profile) {
                     setFullName(profile.full_name || '');
-                    setPhone(profile.phone || '');
-                    setContactEmail(profile.contact_email || '');
                     setAvatarUrl(profile.avatar_url || '');
-                    setRole(profile.role || 'client');
-                    setBio(profile.service_description || '');
-
-                    // Set location
-                    if (profile.service_location_lat && profile.service_location_lng) {
-                        setLatitude(profile.service_location_lat);
-                        setLongitude(profile.service_location_lng);
-                    } else if (profile.latitude && profile.longitude) {
-                        // Fallback to old columns if new ones are empty
-                        setLatitude(profile.latitude);
-                        setLongitude(profile.longitude);
-                    }
-
-                    const socials = profile.social_links || {};
-                    setInstagram(socials.instagram || '');
-                    setTwitter(socials.twitter || '');
-                    setWebsite(socials.website || '');
                 }
 
                 setLoading(false);
@@ -99,7 +60,7 @@ export default function EditProfilePage() {
         };
 
         getProfile();
-    }, []); // Remove router from dependencies
+    }, []);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -107,24 +68,10 @@ export default function EditProfilePage() {
 
         setSaving(true);
         try {
-            const socialLinks = {
-                instagram,
-                twitter,
-                website
-            };
-
-            const updates: any = {
+            const updates = {
                 full_name: fullName,
-                phone,
-                contact_email: contactEmail,
                 avatar_url: avatarUrl,
-                social_links: socialLinks,
                 updated_at: new Date().toISOString(),
-                service_location_lat: latitude,
-                service_location_lng: longitude,
-                latitude: latitude,
-                longitude: longitude,
-                service_description: bio,
             };
 
             const { error } = await supabase
@@ -141,7 +88,6 @@ export default function EditProfilePage() {
             setModalType('success');
             setShowModal(true);
 
-            // Redirect to map profile after successful save
             setTimeout(() => {
                 router.back();
             }, 1000);
@@ -154,7 +100,6 @@ export default function EditProfilePage() {
             setSaving(false);
         }
     };
-
 
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center">{t('loading')}</div>;
@@ -199,128 +144,6 @@ export default function EditProfilePage() {
                             defaultImage={avatarUrl}
                             onUpload={setAvatarUrl}
                         />
-                    </div>
-
-                    {/* Location Section */}
-                    <div className="border-b border-gray-100 pb-4 mb-4 pt-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <MapPin className="w-5 h-5 text-indigo-600" />
-                            <h2 className="text-xl font-semibold text-gray-900">{t('location')}</h2>
-                        </div>
-                        <p className="text-gray-500 text-sm mb-4">{t('serviceLocationDesc')}</p>
-
-                        <div className="bg-gray-50 rounded-lg p-1 border border-gray-200">
-                            <LocationPicker
-                                value={latitude && longitude ? { lat: latitude, lng: longitude } : undefined}
-                                onChange={(lat, lng) => {
-                                    setLatitude(lat);
-                                    setLongitude(lng);
-                                }}
-                            />
-                        </div>
-                        {(!latitude || !longitude) && (
-                            <p className="text-sm text-yellow-600 mt-2 flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                                {t('selectLocationError')}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* About / Bio */}
-                    <div className="border-b border-gray-100 pb-4 mb-4 pt-4">
-                        <h2 className="text-xl font-semibold text-gray-900">{t('bioAbout')}</h2>
-                        <p className="text-gray-500 text-sm">{t('tellNeighbors')}</p>
-                    </div>
-
-                    <div>
-                        <textarea
-                            rows={4}
-                            value={bio}
-                            onChange={(e) => setBio(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black placeholder:text-gray-500"
-                            placeholder={t('tellNeighbors')}
-                        />
-                    </div>
-
-                    {/* Social Media */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">{t('socialMedia')}</label>
-                        <p className="text-xs text-gray-500 mb-3">{t('connectProfiles')}</p>
-
-                        <div className="space-y-3">
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">{t('instagramUsername')}</label>
-                                <div className="relative rounded-md shadow-sm">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span className="text-gray-500 sm:text-sm">@</span>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={instagram}
-                                        onChange={(e) => setInstagram(e.target.value)}
-                                        className="w-full pl-7 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black placeholder:text-gray-500"
-                                        placeholder="username"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">{t('twitterUsername')}</label>
-                                <div className="relative rounded-md shadow-sm">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span className="text-gray-500 sm:text-sm">@</span>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={twitter}
-                                        onChange={(e) => setTwitter(e.target.value)}
-                                        className="w-full pl-7 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black placeholder:text-gray-500"
-                                        placeholder="username"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">{t('websiteUrl')}</label>
-                                <input
-                                    type="url"
-                                    value={website}
-                                    onChange={(e) => setWebsite(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black placeholder:text-gray-500"
-                                    placeholder="https://..."
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="border-b border-gray-100 pb-4 mb-4 pt-4">
-                        <h2 className="text-xl font-semibold text-gray-900">{t('contactDetails')}</h2>
-                        <p className="text-gray-500 text-sm">{t('howReachYou')}</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('phoneNumber')}</label>
-                            <input
-                                type="tel"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black placeholder:text-gray-500"
-                                placeholder="+966 5..."
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('publicEmail')}</label>
-                            <input
-                                type="email"
-                                value={contactEmail}
-                                onChange={(e) => setContactEmail(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-black placeholder:text-gray-500"
-                                placeholder="contact@example.com"
-                            />
-                        </div>
                     </div>
 
                     <div className="pt-4">
