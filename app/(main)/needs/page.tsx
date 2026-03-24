@@ -152,7 +152,7 @@ export default function NeedsFeedPage() {
     useEffect(() => {
         let filtered = [...allNeeds];
 
-        if (userLocation) {
+        if (userLocation && !locationDenied) {
             filtered = filtered.filter(n => {
                 if (!n.latitude || !n.longitude) return false;
                 return haversineDistance(
